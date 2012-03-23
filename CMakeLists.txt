@@ -2,5 +2,5 @@
 # executed from 'project/build' with 'cmake ../'.
 cmake_minimum_required(VERSION 2.6)
 include($ENV{ROCK_CMAKE_MACROS}/Rock.cmake)
-rock_init(underwater_localization 0.1)
+rock_init(uw_localization 0.1)
 rock_standard_layout()

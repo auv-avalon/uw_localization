@@ -1,7 +1,18 @@
-rock_library(underwater_localization
-    SOURCES Dummy.cpp
-    HEADERS Dummy.hpp)
+set(CPP_FILES
+    geometry.cpp
+    filters/particle_filter.cpp
+    )
 
-rock_executable(underwater_localization_bin Main.cpp
-    DEPS underwater_localization)
+set(HPP_FILES
+    geometry.hpp
+    filters/particle_filter.hpp
+    types/particle.hpp
+    )
+
+rock_library(uw_localization
+    SOURCES ${CPP_FILES}
+    HEADERS ${H_FILES}
+    DEPS_PKGCONFIG base-types
+    DEPS_PKGCONFIG yaml-cpp
+    DEPS_PKGCONFIG machine_learning)
 
