@@ -1,10 +1,10 @@
 set(CPP_FILES
-    geometry.cpp
+    math/geometry.cpp
     filters/particle_filter.cpp
     )
 
 set(HPP_FILES
-    geometry.hpp
+    math/geometry.hpp
     filters/particle_filter.hpp
     types/particle.hpp
     )
