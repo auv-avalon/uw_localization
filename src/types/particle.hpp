@@ -10,6 +10,7 @@
 
 #include <base/pose.h>
 #include <base/time.h>
+#include <vector>
 
 namespace uw_localization {
 
