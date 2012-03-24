@@ -12,7 +12,8 @@ set(HPP_FILES
 rock_library(uw_localization
     SOURCES ${CPP_FILES}
     HEADERS ${HPP_FILES}
-    DEPS_PKGCONFIG base-types
     DEPS_PKGCONFIG yaml-cpp
-    DEPS_PKGCONFIG machine_learning)
+    DEPS_PKGCONFIG machine_learning 
+    DEPS_PKGCONFIG base-types 
+    DEPS_PKGCONFIG eigen3)
 
