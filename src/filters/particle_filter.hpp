@@ -12,6 +12,8 @@
 #include <machine_learning/RandomNumbers.hpp>
 #include <base/samples/rigid_body_state.h>
 #include <uw_localization/types/particle.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 namespace uw_localization {
 
@@ -27,8 +29,6 @@ class DebugWriter {
 };
 
 
-
-
 template<typename P, typename Z, typename M>
 class Perception { 
  public:
@@ -40,7 +40,7 @@ class Perception {
      * \param sensor current representation for a measurement of a sensor
      * \param updated state current representation of a state hypothesis (from a single particle)
      * \param map current representation for a given map hypothesis
-     * \return probability of a plausible particle set
+     * \return updated state and probability of a plausible particle set (can be a constant if not used)
      */
     virtual double perception(P& state, const Z& sensor, const M& map) = 0;
 };
@@ -56,11 +56,12 @@ class Dynamic {
      * probability xt[m] ~ P(xt | xt-1, ut). Keep in mind xt[m] is just a sample
      * and must be involved with a gaussian bias (requirement for particle filters)
      *
-     * \param state current representation of a state hypothesis (from a single particle)
+     * \param state updates current representation of a state hypothesis (from a single particle)
      * \param motion current representation of a motion call
-     * \return a new state sample depending on we were in state xt-1 and we move with ut
+     * \returns updated state sample depending on we were in state xt-1 and we move with ut and
+     *     measurement plausibility (can be a constant if not used)
      */
-    virtual P dynamic(const P& state, const U& motion) = 0;
+    virtual double dynamic(P& state, const U& motion) = 0;
 };
 
 
@@ -128,15 +129,12 @@ class ParticleFilter {
     /*
      * generate a new particle sample in a guassian space
      * \param mean position
-     * \param cov 
+     * \param cov for this particle
+     * \param yaw_mean normalized yaw between -PI and PI
+     * \param yaw_cov variance for yaw
      */
-    virtual P generateState(const base::Position mean, 
-            const base::Matrix3d& cov,
-            double yaw_mean,
-            double yaw_cov,
-            double value);
-
-   
+    virtual P generateState(const base::Position mean, const base::Matrix3d& cov,
+            double yaw_mean, double yaw_cov) const = 0;
 
     /**
      * updates the current particle set for an incoming motion action depending
@@ -149,13 +147,7 @@ class ParticleFilter {
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
-        std::vector<P> set;
-
-        for(StateIterator it = states.begin(); it != states.end(); it++) {
-            set.push_back(model->dynamic(*it, motion));
-        }
-
-        particle_set.particles = set;
+        updateParticleSet(boost::bind(&Dynamic<P,U>::dynamic, model, _1, motion));
     }
 
 
@@ -172,6 +164,9 @@ class ParticleFilter {
         // brutal hack and performance could suffer a little, but it works
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
+        updateParticleSet(boost::bind(&Perception<P, Z, M>::perception, model, _1, sensor, map));
+
+        /*
         unsigned best_particle_index = 0;
         double sum_weight = 0.0;
         double confidence = 0.0;
@@ -186,6 +181,56 @@ class ParticleFilter {
 
         for(StateIterator it = states.begin(); it != states.end(); it++) {
             confidence += model->perception(*it, sensor, map);
+            sum_weight += get_weight(*it);
+
+            if(get_weight(*it) > max_weight)
+                best_particle_index = index++;
+            else
+                index++;
+
+            mean += position(*it);
+        }
+
+        mean_position = (mean / states.size());
+
+        particle_set.particles.clear();
+
+        for(StateIterator it = states.begin(); it != states.end(); it++) {
+            Particle p;
+            p.position = position(*it);
+            p.yaw = yaw(*it);
+            p.norm_weight = get_weight(*it) / sum_weight;
+
+            // calculate covariance for this set
+            base::Vector3d pos_s = position(*it) - mean;
+            variance += pos_s * pos_s.transpose();
+
+            particle_set.particles.push_back(p);
+        }
+
+        cov_position = (variance / (states.size() + 1));
+
+        particle_set.confidence = (confidence / states.size());
+        particle_set.max_particle_index = best_particle_index;
+        */
+    }
+
+    void updateParticleSet(const boost::function1<double, P&>& update)
+    {
+        unsigned best_particle_index = 0;
+        double sum_weight = 0.0;
+        double confidence = 0.0;
+        double max_weight = 0.0;
+
+        particle_set.particles.clear();
+
+        base::Position mean(0.0, 0.0, 0.0);
+        base::Matrix3d variance = base::Matrix3d::Zero();
+
+        unsigned index = 0;
+
+        for(StateIterator it = states.begin(); it != states.end(); it++) {
+            confidence += update(*it);
             sum_weight += get_weight(*it);
 
             if(get_weight(*it) > max_weight)

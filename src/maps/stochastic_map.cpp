@@ -44,6 +44,7 @@ unsigned Node::getChildSize() const
 
 
 LandmarkNode::LandmarkNode(const std::string& caption, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov)
+    : Node(caption), params(mean, cov) 
 {
 }
 
