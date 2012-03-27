@@ -43,6 +43,11 @@ class Perception {
      * \return updated state and probability of a plausible particle set (can be a constant if not used)
      */
     virtual double perception(P& state, const Z& sensor, const M& map) = 0;
+
+    /**
+     * preprocessing hook for executing code before all perception updates
+     */
+    virtual void preprocessing(const Z& sensor, const M& map) {}
 };
 
 
@@ -63,6 +68,11 @@ class Dynamic {
      *     measurement plausibility (can be a constant if not used)
      */
     virtual double dynamic(P& state, const U& motion) = 0;
+
+    /**
+     * preprocessing hook for executing code before all perception updates
+     */
+    virtual void preprocessing(const U& sensor) {}
 };
 
 
@@ -79,7 +89,14 @@ class ParticleFilter {
   protected:
     ParticleFilter() {}
     virtual ~ParticleFilter() {}
-    
+
+   /**
+    * initialize this filter with new particle samples 
+    */
+   virtual void initialize(std::vector<P>& set, int numbers,
+           const Eigen::Vector3d& pos, const Eigen::Matrix3d& pos_covariance,
+           double yaw, double yaw_covariance) = 0; 
+
    /**
      * get a general position representation from a given abstract pose particles
      *
@@ -137,6 +154,8 @@ class ParticleFilter {
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
+        model->preprocessing(motion);
+
         updateParticleSet(boost::bind(&Dynamic<P, U>::dynamic, model, _1, motion));
     }
 
@@ -153,6 +172,8 @@ class ParticleFilter {
     void observe(const Z& sensor, const M& map) {
         // brutal hack and performance could suffer a little, but it works
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
+
+        model->preprocessing(sensor, map);
 
         updateParticleSet(boost::bind(&Perception<P, Z, M>::perception, model, _1, sensor, map));
     }
