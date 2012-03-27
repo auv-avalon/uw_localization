@@ -56,6 +56,7 @@ class Dynamic {
      * probability xt[m] ~ P(xt | xt-1, ut). Keep in mind xt[m] is just a sample
      * and must be involved with a gaussian bias (requirement for particle filters)
      *
+     * \param perception type (useful for differ perceptions with same update type)
      * \param state updates current representation of a state hypothesis (from a single particle)
      * \param motion current representation of a motion call
      * \returns updated state sample depending on we were in state xt-1 and we move with ut and
@@ -72,7 +73,7 @@ class Dynamic {
  * already provides importance resampling with a low variance sampler and uses a given estimation 
  * model for processing each particle representation
  */
-template <typename P, typename M>
+template <typename P>
 class ParticleFilter {
     typedef typename std::vector<P>::iterator StateIterator;
   protected:
@@ -87,14 +88,12 @@ class ParticleFilter {
      */
     virtual base::Vector3d position(const P& state) const = 0;
 
-
     /**
-     * get a general orientation representation from a gvien abstract pose particles
-     *
-     * \ param state of type P
-     * \return a standard orientation
+     * get a general orientation representation from a given abstract poste particle
+     * \param state of type P
+     * \return a standard orientation (quaternion)
      */
-    virtual double yaw(const P& state) const = 0;
+    virtual base::Orientation orientation(const P& state) const = 0;
 
 
     /**
@@ -103,7 +102,7 @@ class ParticleFilter {
      * \param state of type P
      * \return current weight for this state 
      */
-    virtual double get_weight(const P& state) const = 0;
+    virtual double getWeight(const P& state) const = 0;
 
 
     /**
@@ -112,29 +111,20 @@ class ParticleFilter {
      * \param state of type P
      * \param new weight
      */
-    virtual void set_weight(P& state, double value) = 0;
+    virtual void setWeight(P& state, double value) = 0;
  
-
+    
+    
     /**
      * create a position sample from the the given particle set. Assure
      * you are getting only a valid position after a measurement update
      * (after dynamics the mean is outdated again)
      *
-     * Implementation can choose to use the particle with the maximum weight
-     * or to use an average value
+     * Implementation can override this method for choosing  average value
      */
-    virtual const base::samples::RigidBodyState& estimate_pose() const = 0;
+    virtual base::samples::RigidBodyState& estimate() = 0;
 
 
-    /*
-     * generate a new particle sample in a guassian space
-     * \param mean position
-     * \param cov for this particle
-     * \param yaw_mean normalized yaw between -PI and PI
-     * \param yaw_cov variance for yaw
-     */
-    virtual P generateState(const base::Position mean, const base::Matrix3d& cov,
-            double yaw_mean, double yaw_cov) const = 0;
 
     /**
      * updates the current particle set for an incoming motion action depending
@@ -147,7 +137,7 @@ class ParticleFilter {
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
-        updateParticleSet(boost::bind(&Dynamic<P,U>::dynamic, model, _1, motion));
+        updateParticleSet(boost::bind(&Dynamic<P, U>::dynamic, model, _1, motion));
     }
 
 
@@ -159,61 +149,15 @@ class ParticleFilter {
      * \param map current map for this particle
      * \return global propability current particle set is not in kidnapping problem
      */
-    template<typename Z>
+    template<typename Z, typename M>
     void observe(const Z& sensor, const M& map) {
         // brutal hack and performance could suffer a little, but it works
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
         updateParticleSet(boost::bind(&Perception<P, Z, M>::perception, model, _1, sensor, map));
-
-        /*
-        unsigned best_particle_index = 0;
-        double sum_weight = 0.0;
-        double confidence = 0.0;
-        double max_weight = 0.0;
-
-        particle_set.particles.clear();
-
-        base::Position mean(0.0, 0.0, 0.0);
-        base::Matrix3d variance = base::Matrix3d::Zero();
-
-        unsigned index = 0;
-
-        for(StateIterator it = states.begin(); it != states.end(); it++) {
-            confidence += model->perception(*it, sensor, map);
-            sum_weight += get_weight(*it);
-
-            if(get_weight(*it) > max_weight)
-                best_particle_index = index++;
-            else
-                index++;
-
-            mean += position(*it);
-        }
-
-        mean_position = (mean / states.size());
-
-        particle_set.particles.clear();
-
-        for(StateIterator it = states.begin(); it != states.end(); it++) {
-            Particle p;
-            p.position = position(*it);
-            p.yaw = yaw(*it);
-            p.norm_weight = get_weight(*it) / sum_weight;
-
-            // calculate covariance for this set
-            base::Vector3d pos_s = position(*it) - mean;
-            variance += pos_s * pos_s.transpose();
-
-            particle_set.particles.push_back(p);
-        }
-
-        cov_position = (variance / (states.size() + 1));
-
-        particle_set.confidence = (confidence / states.size());
-        particle_set.max_particle_index = best_particle_index;
-        */
     }
+
+
 
     void updateParticleSet(const boost::function1<double, P&>& update)
     {
@@ -224,16 +168,16 @@ class ParticleFilter {
 
         particle_set.particles.clear();
 
-        base::Position mean(0.0, 0.0, 0.0);
+        base::Position mean = base::Position::Zero();
         base::Matrix3d variance = base::Matrix3d::Zero();
 
         unsigned index = 0;
 
         for(StateIterator it = states.begin(); it != states.end(); it++) {
             confidence += update(*it);
-            sum_weight += get_weight(*it);
+            sum_weight += getWeight(*it);
 
-            if(get_weight(*it) > max_weight)
+            if(getWeight(*it) > max_weight)
                 best_particle_index = index++;
             else
                 index++;
@@ -248,8 +192,8 @@ class ParticleFilter {
         for(StateIterator it = states.begin(); it != states.end(); it++) {
             Particle p;
             p.position = position(*it);
-            p.yaw = yaw(*it);
-            p.norm_weight = get_weight(*it) / sum_weight;
+            p.yaw = base::getYaw(orientation(*it));
+            p.norm_weight = getWeight(*it) / sum_weight;
 
             // calculate covariance for this set
             base::Vector3d pos_s = position(*it) - mean;
