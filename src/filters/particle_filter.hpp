@@ -251,7 +251,7 @@ class ParticleFilter {
               return;
 
           double m_inv = 1.0 / states.size();
-          machine_learning::UniformRandom random = machine_learning::Random::uniform(0.0, m_inv);
+          machine_learning::UniformRealRandom random = machine_learning::Random::uniform_real(0.0, m_inv);
 
           const std::vector<Particle>& p = particle_set.particles;
           
