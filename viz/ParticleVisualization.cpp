@@ -1,5 +1,4 @@
 #include "ParticleVisualization.hpp"
-
 #include <osg/Geometry>
 
 #define DATA(attribute) (p->attribute)
@@ -34,11 +33,14 @@ ParticleVisualization::ParticleVisualization()
             DATA(color_map).push_back(osg::Vec4(1.0f, i / 127.0f, 0.0f, 1.0f));
         else
             DATA(color_map).push_back(osg::Vec4(1.0f - ((i - 128) / 127.0f), 1.0f, 0.0f, 1.0f));
-
-        DATA(color_map).push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
     }
 
-   p->max_particle_height = 4.0; 
+   DATA(color_map).push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+   p->max_particle_height = 2.0;
+   p->show_highlight = true;
+   p->show_scaling = true;
+   p->show_colors = true;
 }
 
 ParticleVisualization::~ParticleVisualization()
@@ -143,9 +145,9 @@ ParticleVisualization::updateMainNode( osg::Node* node )
         
         if(DATA(show_highlight) && index == set.max_particle_index)
             DATA(colors)->push_back(BLUE);
-        else if(DATA(show_colors))
+        else if(DATA(show_colors)) {
             DATA(colors)->push_back(GRADIENT(weight));
-        else
+        } else
             DATA(colors)->push_back(GRADIENT(0.5));
 
         index++;

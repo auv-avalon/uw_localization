@@ -86,14 +86,14 @@ class Dynamic {
 template <typename P>
 class ParticleFilter {
     typedef typename std::vector<P>::iterator StateIterator;
-  protected:
+  public:
     ParticleFilter() {}
     virtual ~ParticleFilter() {}
 
    /**
     * initialize this filter with new particle samples 
     */
-   virtual void initialize(std::vector<P>& set, int numbers,
+   virtual void initialize(int numbers,
            const Eigen::Vector3d& pos, const Eigen::Matrix3d& pos_covariance,
            double yaw, double yaw_covariance) = 0; 
 

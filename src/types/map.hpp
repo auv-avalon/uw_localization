@@ -9,10 +9,13 @@
 #define UW_LOCALIZATION_SAMPLES_MAP_HPP_
 
 #include <base/eigen.h>
+#include <string>
 
 namespace uw_localization {
 
 struct Landmark {
+    Landmark() : mean(0.0, 0.0, 0.0), covariance(base::Matrix3d::Identity()) {}
+
     /** current landmark description **/
     std::string caption;
 

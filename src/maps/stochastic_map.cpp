@@ -124,7 +124,7 @@ std::vector<LandmarkNode*> Node::getLandmarks(const std::string& caption)
 // ----------------------------------------------------------------------------
 
 
-LandmarkNode::LandmarkNode(const std::string& caption, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov)
+LandmarkNode::LandmarkNode(const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const std::string& caption)
     : Node(caption), params(mean, cov), drawer(machine_learning::Random::multi_gaussian<3>(mean, cov))
 {
 }
@@ -149,10 +149,9 @@ boost::tuple<LandmarkNode*, double> LandmarkNode::getProbability(const std::stri
 // ----------------------------------------------------------------------------
 
 
-StochasticMap::StochasticMap(double w, double h, double d)
-    : Map(w, h, d)
+StochasticMap::StochasticMap(double w, double h, double d, Node* root)
+    : Map(w, h, d), root(root)
 {
-    root = new Node("root");
 }
 
 
@@ -197,7 +196,11 @@ LandmarkMap StochasticMap::getMap()
         mark.caption = landmarks[i]->getCaption();
         mark.mean = landmarks[i]->mean();
         mark.covariance = landmarks[i]->covariance();
+
+        map.landmarks.push_back(mark);
     }
+
+    return map;
 }
 
 

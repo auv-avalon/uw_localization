@@ -45,7 +45,7 @@ private:
 
 class LandmarkNode : public Node {
 public:
-  LandmarkNode(const std::string& caption, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov);
+  LandmarkNode(const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const std::string& caption = "");
   virtual ~LandmarkNode();
 
   virtual int getNodeType() const { return NODE_LANDMARK; }
@@ -65,7 +65,7 @@ private:
 
 class StochasticMap : public Map {
 public:
-  StochasticMap(double w, double h, double d);
+  StochasticMap(double w, double h, double d, Node* root);
   virtual ~StochasticMap();
 
   virtual std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);
