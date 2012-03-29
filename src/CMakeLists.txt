@@ -9,6 +9,7 @@ set(HPP_FILES
     math/geometry.hpp
     filters/particle_filter.hpp
     types/particle.hpp
+    types/map.hpp
     maps/map.hpp
     maps/stochastic_map.hpp
     )

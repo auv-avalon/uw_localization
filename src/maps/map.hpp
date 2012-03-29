@@ -19,6 +19,7 @@ public:
   virtual bool belongsToWorld(const Eigen::Vector3d& point) const;
 
   virtual void setWorldLimitations(double width, double height, double depth);
+  virtual Eigen::Vector3d getLimitations() const;
 
 private:
   double width;

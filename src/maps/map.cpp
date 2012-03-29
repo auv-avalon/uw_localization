@@ -18,6 +18,10 @@ void Map::setWorldLimitations(double w, double h, double d)
     depth = d;
 }
 
+Eigen::Vector3d Map::getLimitations() const
+{
+    return Eigen::Vector3d(width, height, depth);
+}
 
 bool Map::belongsToWorld(const Eigen::Vector3d& point) const
 {

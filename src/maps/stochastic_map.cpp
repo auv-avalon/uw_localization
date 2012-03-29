@@ -183,4 +183,22 @@ boost::tuple<LandmarkNode*, double> StochasticMap::getProbability(const std::str
 }
 
 
+LandmarkMap StochasticMap::getMap()
+{
+    LandmarkMap map;
+
+    map.limitations = getLimitations();
+
+    std::vector<LandmarkNode*> landmarks = root->getLandmarks();
+
+    for(unsigned i = 0; i < landmarks.size(); i++) {
+        Landmark mark;
+
+        mark.caption = landmarks[i]->getCaption();
+        mark.mean = landmarks[i]->mean();
+        mark.covariance = landmarks[i]->covariance();
+    }
+}
+
+
 }

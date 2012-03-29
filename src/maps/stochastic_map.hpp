@@ -7,6 +7,7 @@
 #include <machine_learning/RandomNumbers.hpp>
 #include <boost/tuple/tuple.hpp>
 #include "map.hpp"
+#include "../types/map.hpp"
 
 namespace uw_localization {
 
@@ -19,8 +20,6 @@ class Node {
 public:
   Node(const std::string& caption = "");
   virtual ~Node();
-
-  virtual int getNodeType() const { return NODE_GROUP; }
   
   void addChild(Node* child);
   Node* getChild(unsigned index);
@@ -29,9 +28,11 @@ public:
 
   unsigned getChildSize() const;
 
+  virtual int getNodeType() const { return NODE_GROUP; }
+  
   virtual boost::tuple<LandmarkNode*, double> getProbability(const std::string& caption, const Eigen::Vector3d& v);
 
-  std::vector<LandmarkNode*> getLandmarks(const std::string& caption);
+  std::vector<LandmarkNode*> getLandmarks(const std::string& caption = "");
 
   const std::string& getCaption() const { return caption; }
   std::string& getCaption() { return caption; }
@@ -53,6 +54,9 @@ public:
 
   Eigen::Vector3d draw();
 
+  const Eigen::Vector3d& mean() const { return params.mean; }
+  const Eigen::Matrix3d& covariance() const { return params.covariance; }
+
 private:
   machine_learning::GaussParam<3> params;
   machine_learning::MultiNormalRandom<3> drawer;
@@ -66,6 +70,7 @@ public:
 
   virtual std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);
   virtual boost::tuple<LandmarkNode*, double> getProbability(const std::string& caption, const Eigen::Vector3d& v);
+  virtual LandmarkMap getMap();
 
 private:
   Node* root;
