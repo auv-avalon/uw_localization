@@ -182,6 +182,66 @@ boost::tuple<LandmarkNode*, double> StochasticMap::getProbability(const std::str
 }
 
 
+bool StochasticMap::toYaml(std::ostream& stream)
+{
+}
+
+
+void operator>>(const YAML::Node& node, Eigen::Vector3d& v)
+{
+    node[0] >> v.x();
+    node[1] >> v.y();
+    node[2] >> v.z();
+}
+
+
+void operator>>(const YAML::Node& node, Eigen::Matrix3d& cov)
+{
+    unsigned index = 0;
+    for(unsigned i = 0; i < 3; i++) {
+        for(unsigned j = 0; j < 3; j++) {
+            node[index++] >> cov(i, j);
+        }
+    }
+}
+
+
+bool StochasticMap::fromYaml(std::istream& stream)
+{
+    if(stream.fail()) {
+        std::cerr << "Could not open input stream" << std::endl;
+        return false;
+    }
+
+    delete root;
+
+    root = new Node("root");
+
+    YAML::Parser parser(stream);
+    YAML::Node doc;
+    Eigen::Vector3d parse_limit;
+    Eigen::Vector3d parse_translation;
+
+    while(parser.GetNextDocument(doc)) {
+        doc["limits"] >> parse_limit;
+        doc["translation"] >> parse_translation;
+
+        if(const YAML::Node* pName = doc.FindValue("mean")) {
+            Eigen::Vector3d mean;
+            Eigen::Matrix3d cov;
+
+            *pName >> mean;
+            (*pName)["cov"] >> cov;
+        } else {
+            std::string name;
+            *pName >> name;
+
+            std::cout << ":: " << name << std::endl;
+        }
+    }
+}
+
+
 LandmarkMap StochasticMap::getMap()
 {
     LandmarkMap map;

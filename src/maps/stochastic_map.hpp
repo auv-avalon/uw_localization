@@ -2,10 +2,12 @@
 #define UW_LOCALIZATION_MAPS_STOCHASTIC_MAPS
 
 #include <string>
+#include <yaml-cpp/yaml.h>
 #include <Eigen/Core>
 #include <machine_learning/GaussianParameters.hpp>
 #include <machine_learning/RandomNumbers.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <iostream>
 #include "map.hpp"
 #include "../types/map.hpp"
 
@@ -72,9 +74,16 @@ public:
   virtual boost::tuple<LandmarkNode*, double> getProbability(const std::string& caption, const Eigen::Vector3d& v);
   virtual LandmarkMap getMap();
 
+  bool toYaml(std::ostream& stream);
+  bool fromYaml(std::istream& stream);
+
 private:
   Node* root;
 };
+
+void operator>>(const YAML::Node& node, Eigen::Vector3d& v);
+void operator>>(const YAML::Node& node, Eigen::Matrix3d& cov);
+
 
 }
 
