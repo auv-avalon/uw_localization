@@ -7,10 +7,8 @@
 namespace uw_localization {
 
 class Map {
-  static const double UNLIMITED = -1;
-
 public:
-  Map(double width = UNLIMITED, double height = UNLIMITED, double depth = UNLIMITED);
+  Map(const Eigen::Vector3d& limitations, const Eigen::Translation3d& translation);
   ~Map();
 
 public:
@@ -21,10 +19,9 @@ public:
   virtual void setWorldLimitations(double width, double height, double depth);
   virtual Eigen::Vector3d getLimitations() const;
 
-private:
-  double width;
-  double height;
-  double depth;
+protected:
+  Eigen::Vector3d limitations;
+  Eigen::Translation3d translation;
 };
 
 

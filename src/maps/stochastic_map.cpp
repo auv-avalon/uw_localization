@@ -149,8 +149,8 @@ boost::tuple<LandmarkNode*, double> LandmarkNode::getProbability(const std::stri
 // ----------------------------------------------------------------------------
 
 
-StochasticMap::StochasticMap(double w, double h, double d, Node* root)
-    : Map(w, h, d), root(root)
+StochasticMap::StochasticMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root)
+    : Map(limits, t), root(root)
 {
 }
 
@@ -187,6 +187,7 @@ LandmarkMap StochasticMap::getMap()
     LandmarkMap map;
 
     map.limitations = getLimitations();
+    map.translation = Eigen::Vector3d(translation.x(), translation.y(), translation.z());
 
     std::vector<LandmarkNode*> landmarks = root->getLandmarks();
 

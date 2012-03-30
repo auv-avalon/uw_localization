@@ -2,9 +2,10 @@
 
 namespace uw_localization {
 
-Map::Map(double w, double h, double d)
- : width(w), height(h), depth(d) 
+Map::Map(const Eigen::Vector3d& l, const Eigen::Translation3d& t)
+ : limitations(l), translation(t)
 {}
+
 
 Map::~Map()
 {
@@ -13,23 +14,25 @@ Map::~Map()
 
 void Map::setWorldLimitations(double w, double h, double d)
 {
-    width = w;
-    height = h;
-    depth = d;
+    limitations = Eigen::Vector3d(w, h, d);
 }
 
 Eigen::Vector3d Map::getLimitations() const
 {
-    return Eigen::Vector3d(width, height, depth);
+    return limitations;
 }
 
-bool Map::belongsToWorld(const Eigen::Vector3d& point) const
-{
-    Eigen::Vector3d p = point;//  * LimitsToWorld.linear();
 
-    return ((p.x() >= 0.0 && p.x() <= width) || width < 0.0)
-        && ((p.y() >= 0.0 && p.y() <= height) || height < 0.0)
-        && ((p.z() >= 0.0 && p.z() <= depth) || depth < 0.0);
+bool Map::belongsToWorld(const Eigen::Vector3d& p) const
+{
+    Eigen::Vector3d null(0.0, 0.0, 0.0);
+    
+    Eigen::Vector3d ref = Eigen::Affine3d(translation) * null;
+    Eigen::Vector3d l = ref + limitations;
+
+    return (p.x() >= ref.x() && p.x() <= l.x()) 
+        && (p.y() >= ref.y() && p.y() <= l.y())
+        && (p.z() >= ref.z() && p.z() <= l.z());
 }
 
 }

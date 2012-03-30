@@ -65,7 +65,7 @@ private:
 
 class StochasticMap : public Map {
 public:
-  StochasticMap(double w, double h, double d, Node* root);
+  StochasticMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root);
   virtual ~StochasticMap();
 
   virtual std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);

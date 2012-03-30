@@ -31,6 +31,9 @@ struct LandmarkMap {
     /** current world limitations **/
     base::Vector3d limitations;
 
+    /** translation for limitations to reference frame **/
+    base::Vector3d translation;
+
     /** current landmarks for this map **/
     std::vector<uw_localization::Landmark> landmarks;
 };
