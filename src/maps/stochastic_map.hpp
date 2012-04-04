@@ -67,6 +67,7 @@ private:
 
 class StochasticMap : public Map {
 public:
+  StochasticMap(const std::string& map);
   StochasticMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root);
   virtual ~StochasticMap();
 
@@ -77,14 +78,15 @@ public:
   bool toYaml(std::ostream& stream);
   bool fromYaml(std::istream& stream);
 
+private: 
+  void parseYamlNode(const YAML::Node& node, Node* root);
+
 private:
   Node* root;
 };
 
 void operator>>(const YAML::Node& node, Eigen::Vector3d& v);
 void operator>>(const YAML::Node& node, Eigen::Matrix3d& cov);
-
-
 }
 
 #endif

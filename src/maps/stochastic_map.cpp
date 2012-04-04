@@ -1,12 +1,15 @@
 #include "stochastic_map.hpp"
+#include <stack>
 #include <limits>
+#include <fstream>
 #include <algorithm>
+#include <boost/assert.hpp>
 
 using namespace machine_learning;
 
 namespace uw_localization {
 
-Node::Node(const std::string& caption)
+Node::Node(const std::string& caption) : caption(caption)
 {
 }
 
@@ -148,6 +151,12 @@ boost::tuple<LandmarkNode*, double> LandmarkNode::getProbability(const std::stri
 
 // ----------------------------------------------------------------------------
 
+StochasticMap::StochasticMap(const std::string& map) : Map(), root(0) 
+{
+    std::ifstream fin(map.c_str());
+    fromYaml(fin);
+}
+
 
 StochasticMap::StochasticMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root)
     : Map(limits, t), root(root)
@@ -184,6 +193,7 @@ boost::tuple<LandmarkNode*, double> StochasticMap::getProbability(const std::str
 
 bool StochasticMap::toYaml(std::ostream& stream)
 {
+    return false;
 }
 
 
@@ -213,7 +223,8 @@ bool StochasticMap::fromYaml(std::istream& stream)
         return false;
     }
 
-    delete root;
+    if(root)
+        delete root;
 
     root = new Node("root");
 
@@ -223,23 +234,56 @@ bool StochasticMap::fromYaml(std::istream& stream)
     Eigen::Vector3d parse_translation;
 
     while(parser.GetNextDocument(doc)) {
-        doc["limits"] >> parse_limit;
-        doc["translation"] >> parse_translation;
+        doc["metrics"] >> parse_limit;
+        doc["reference"] >> parse_translation;
+	const YAML::Node& root_node = doc["root"];
 
-        if(const YAML::Node* pName = doc.FindValue("mean")) {
-            Eigen::Vector3d mean;
-            Eigen::Matrix3d cov;
-
-            *pName >> mean;
-            (*pName)["cov"] >> cov;
-        } else {
-            std::string name;
-            *pName >> name;
-
-            std::cout << ":: " << name << std::endl;
-        }
+	parseYamlNode(root_node, root);
     }
+    return true;
 }
+
+
+
+void StochasticMap::parseYamlNode(const YAML::Node& node, Node* root)
+{
+	if(node.GetType() == YAML::CT_MAP && node.FindValue("mean")) {
+		Eigen::Vector3d mean;
+		Eigen::Matrix3d cov;
+		std::string caption = "";
+
+		std::cout << "add object to " << root->getCaption() << std::endl;
+		
+
+		node["mean"] >> mean;
+		node["cov"] >> cov;
+
+		if(node.FindValue("caption"))
+			node["caption"] >> caption;
+
+		root->addChild(new LandmarkNode(mean, cov, caption));
+	} else if(node.GetType() == YAML::CT_MAP && !node.FindValue("mean")) {
+		for(YAML::Iterator it = node.begin(); it != node.end(); ++it) {
+			std::string groupname;
+			it.first() >> groupname;
+
+			Node* group = new Node(groupname);
+			
+                        std::cout << "Group found: " << group->getCaption() << std::endl;
+			
+                        root->addChild(group);
+			parseYamlNode(it.second(), group);
+		}
+	} else if(node.GetType() == YAML::CT_SEQUENCE) {
+		for(YAML::Iterator it = node.begin(); it != node.end(); ++it) {
+			parseYamlNode(*it, root);
+		}
+	} else {
+		std::cerr << "Failure in map yaml parsing." << std::endl;
+		BOOST_ASSERT(0);
+	}
+}
+
 
 
 LandmarkMap StochasticMap::getMap()

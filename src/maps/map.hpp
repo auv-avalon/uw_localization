@@ -8,6 +8,7 @@ namespace uw_localization {
 
 class Map {
 public:
+  Map();
   Map(const Eigen::Vector3d& limitations, const Eigen::Translation3d& translation);
   ~Map();
 

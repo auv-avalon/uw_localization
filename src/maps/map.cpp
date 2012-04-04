@@ -2,6 +2,15 @@
 
 namespace uw_localization {
 
+
+Map::Map() 
+ : limitations(Eigen::Vector3d(10.0, 10.0, 10.0))
+ , translation(Eigen::Translation3d(0.0, 0.0, 0.0))
+{
+}
+
+
+
 Map::Map(const Eigen::Vector3d& l, const Eigen::Translation3d& t)
  : limitations(l), translation(t)
 {}
