@@ -58,7 +58,7 @@ unsigned Node::getChildSize() const
 }
 
 
-boost::tuple<LandmarkNode*, double> Node::getProbability(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<Node*, double> Node::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
 {
     size_t found = caption.find(".");
     std::string current;
@@ -71,11 +71,11 @@ boost::tuple<LandmarkNode*, double> Node::getProbability(const std::string& capt
         current = caption;
     }
 
-    boost::tuple<LandmarkNode*, double> max(0, std::numeric_limits<double>::min());
+    boost::tuple<Node*, double> max(0, std::numeric_limits<double>::min());
 
     if(getCaption() == current || current.empty()) {
         for(unsigned i = 0; i < children.size(); i++) {
-            boost::tuple<LandmarkNode*, double> tmp = children[i]->getProbability(next, v);
+            boost::tuple<Node*, double> tmp = children[i]->getNearestDistance(next, v);
 
             if(tmp.get<1>() > max.get<1>())
                 max = tmp;
@@ -86,7 +86,7 @@ boost::tuple<LandmarkNode*, double> Node::getProbability(const std::string& capt
 }
 
 
-std::vector<LandmarkNode*> Node::getLandmarks(const std::string& caption) 
+std::vector<Node*> Node::getLeafs(const std::string& caption) 
 {
     size_t found = caption.find(".");
     std::string current;
@@ -99,19 +99,20 @@ std::vector<LandmarkNode*> Node::getLandmarks(const std::string& caption)
         current = caption;
     }
 
-    std::vector<LandmarkNode*> nodes;
+    std::vector<Node*> nodes;
 
     if(getCaption() == current || current.empty()) {
         for(unsigned i = 0; i < children.size(); i++) {
             std::vector<LandmarkNode*> v;
             switch(children[i]->getNodeType()) {
                 case NODE_GROUP:
-                    v = children[i]->getLandmarks(next);
+                    v = children[i]->getLeafs(next);
                     nodes.insert(nodes.end(), v.begin(), v.end());
                     break;
 
+                case NODE_LINE:
                 case NODE_LANDMARK:
-                    nodes.push_back(dynamic_cast<LandmarkNode*>(children[i]));
+                    nodes.push_back(children[i]);
                     break;
                 default:
                     break;
@@ -129,13 +130,11 @@ std::vector<LandmarkNode*> Node::getLandmarks(const std::string& caption)
 
 LandmarkNode::LandmarkNode(const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const std::string& caption)
     : Node(caption), params(mean, cov), drawer(machine_learning::Random::multi_gaussian<3>(mean, cov))
-{
-}
+{}
 
 
 LandmarkNode::~LandmarkNode()
-{
-}
+{}
 
 
 Eigen::Vector3d LandmarkNode::draw()
@@ -144,10 +143,34 @@ Eigen::Vector3d LandmarkNode::draw()
 }
 
 
-boost::tuple<LandmarkNode*, double> LandmarkNode::getProbability(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<Node*, double> LandmarkNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
 {
-    return boost::tuple<LandmarkNode*, double>(this, params.gaussian(v));
+    return boost::tuple<Node*, double>(this, params.mahalanobis(v));
 }
+
+// ----------------------------------------------------------------------------
+
+
+LineNode::LineNode(const Line& line, double height, const std::string& caption = "")
+    : Node(caption), line(line), height(height)
+{}
+
+
+LineNode::~LineNode()
+{}
+
+
+Eigen::Vector3d LineNode::draw()
+{
+    return Eigen::Vector3d();
+}
+
+
+boost::tuple<Node*, double> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
+{
+}
+
+
 
 // ----------------------------------------------------------------------------
 
@@ -170,24 +193,24 @@ NodeMap::~NodeMap()
 }
 
 
-std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > NodeMap::drawSamples(const std::string& caption, int numbers) 
+std::vector<boost::tuple<Node*, Eigen::Vector3d> > NodeMap::drawSamples(const std::string& caption, int numbers) 
 {
     std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > list;
-    std::vector<LandmarkNode*> nodes = root->getLandmarks(caption);
+    std::vector<LandmarkNode*> nodes = root->getLeafs(caption);
     UniformIntRandom rand = Random::uniform_int(0, nodes.size() - 1);
 
     for(unsigned i = 0; i < numbers; i++) {
-        LandmarkNode* node = nodes[rand()];
-        list.push_back(boost::tuple<LandmarkNode*, Eigen::Vector3d>(node, node->draw()));
+        Node* node = nodes[rand()];
+        list.push_back(boost::tuple<kNode*, Eigen::Vector3d>(node, node->draw()));
     }
 
     return list;
 }
 
 
-boost::tuple<LandmarkNode*, double> NodeMap::getProbability(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<Node*, double> NodeMap::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
 {
-    return root->getProbability(caption, v);
+    return root->getNearestDistance(caption, v);
 }
 
 
@@ -297,16 +320,23 @@ MixedMap NodeMap::getMap()
     map.limitations = getLimitations();
     map.translation = Eigen::Vector3d(translation.x(), translation.y(), translation.z());
 
-    std::vector<LandmarkNode*> landmarks = root->getLandmarks();
+    std::vector<Node*> leafs = root->getLeafs();
+    Landmark mark;
 
     for(unsigned i = 0; i < landmarks.size(); i++) {
-        Landmark mark;
+        switch(leafs[i]->getNodeType()) {
+        case NODE_LANDMARK:
+           
+    	    mark.caption = leafs[i]->getCaption();
+	    mark.mean = dynamic_cast<LandmarkNode*>(leafs[i])->mean();
+	    mark.covariance = dynamic_cast<LandmarkNode*>(leafs[i])->covariance();
+        
+            map.landmarks.push_back(mark);
 
-        mark.caption = landmarks[i]->getCaption();
-        mark.mean = landmarks[i]->mean();
-        mark.covariance = landmarks[i]->covariance();
-
-        map.landmarks.push_back(mark);
+        case NODE_LINE:
+        default:
+	    break;
+        }
     }
 
     return map;

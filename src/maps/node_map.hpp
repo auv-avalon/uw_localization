@@ -15,6 +15,7 @@ namespace uw_localization {
 
 const int NODE_GROUP = 0;
 const int NODE_LANDMARK = 1;
+const int NODE_LINE = 2;
 
 class LandmarkNode;
 
@@ -32,9 +33,13 @@ public:
 
   virtual int getNodeType() const { return NODE_GROUP; }
   
-  virtual boost::tuple<LandmarkNode*, double> getProbability(const std::string& caption, const Eigen::Vector3d& v);
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
 
-  std::vector<LandmarkNode*> getLandmarks(const std::string& caption = "");
+  virtual Eigen::Vector3d draw() {
+     throw std::runtime_error("not supported by Node class");
+  }
+
+  std::vector<Node*> getLeafs(const std::string& caption = "");
 
   const std::string& getCaption() const { return caption; }
   std::string& getCaption() { return caption; }
@@ -45,6 +50,25 @@ private:
 };
 
 
+class LineNode : public Node {
+  LineNode(const Line& line, double height, const std::string& caption = "");
+  virtual ~LineNode();
+
+  virtual int getNodeType() const { return NODE_LINE; }
+  
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
+
+  virtual Eigen::Vector3d draw();
+  
+  const Line& getLine() const { return line; }
+  const double getHeight() const { return height; }
+
+private:
+  Line line; 
+  double height;
+};
+
+
 class LandmarkNode : public Node {
 public:
   LandmarkNode(const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const std::string& caption = "");
@@ -52,9 +76,9 @@ public:
 
   virtual int getNodeType() const { return NODE_LANDMARK; }
   
-  virtual boost::tuple<LandmarkNode*, double> getProbability(const std::string& caption, const Eigen::Vector3d& v);
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
 
-  Eigen::Vector3d draw();
+  virtual Eigen::Vector3d draw();
 
   const Eigen::Vector3d& mean() const { return params.mean; }
   const Eigen::Matrix3d& covariance() const { return params.covariance; }
@@ -71,8 +95,10 @@ public:
   NodeMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root);
   virtual ~NodeMap();
 
-  virtual std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);
-  virtual boost::tuple<LandmarkNode*, double> getProbability(const std::string& caption, const Eigen::Vector3d& v);
+  virtual std::vector<boost::tuple<Node*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);
+
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
+
   virtual MixedMap getMap();
 
   bool toYaml(std::ostream& stream);
