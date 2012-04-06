@@ -27,8 +27,8 @@ struct Landmark {
 };
 
 
-struct Line {
-    Line() : position(0.0, 0.0, 0.0), width(1.0), height(1.0), orientation(0.0) {}
+struct Linemark {
+    Linemark() : position(0.0, 0.0, 0.0), width(1.0), height(1.0), orientation(0.0) {}
 
     /** current position for this line **/
     base::Vector3d position;
@@ -55,7 +55,7 @@ struct MixedMap {
     std::vector<uw_localization::Landmark> landmarks;
 
     /** wall lines in this map **/
-    std::vector<uw_localization::Line> lines;
+    std::vector<uw_localization::Linemark> lines;
 };
 
 

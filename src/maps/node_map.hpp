@@ -9,6 +9,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <iostream>
 #include "map.hpp"
+#include "../math/geometry.hpp"
 #include "../types/map.hpp"
 
 namespace uw_localization {
@@ -51,6 +52,7 @@ private:
 
 
 class LineNode : public Node {
+public:
   LineNode(const Line& line, double height, const std::string& caption = "");
   virtual ~LineNode();
 
@@ -112,6 +114,7 @@ private:
 };
 
 void operator>>(const YAML::Node& node, Eigen::Vector3d& v);
+void operator>>(const YAML::Node& node, Eigen::Vector2d& v);
 void operator>>(const YAML::Node& node, Eigen::Matrix3d& cov);
 }
 

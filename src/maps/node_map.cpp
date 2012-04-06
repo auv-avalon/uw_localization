@@ -103,7 +103,7 @@ std::vector<Node*> Node::getLeafs(const std::string& caption)
 
     if(getCaption() == current || current.empty()) {
         for(unsigned i = 0; i < children.size(); i++) {
-            std::vector<LandmarkNode*> v;
+            std::vector<Node*> v;
             switch(children[i]->getNodeType()) {
                 case NODE_GROUP:
                     v = children[i]->getLeafs(next);
@@ -151,7 +151,7 @@ boost::tuple<Node*, double> LandmarkNode::getNearestDistance(const std::string& 
 // ----------------------------------------------------------------------------
 
 
-LineNode::LineNode(const Line& line, double height, const std::string& caption = "")
+LineNode::LineNode(const Line& line, double height, const std::string& caption)
     : Node(caption), line(line), height(height)
 {}
 
@@ -168,6 +168,7 @@ Eigen::Vector3d LineNode::draw()
 
 boost::tuple<Node*, double> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
 {
+    return boost::tuple<Node*, double>();
 }
 
 
@@ -195,13 +196,13 @@ NodeMap::~NodeMap()
 
 std::vector<boost::tuple<Node*, Eigen::Vector3d> > NodeMap::drawSamples(const std::string& caption, int numbers) 
 {
-    std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > list;
-    std::vector<LandmarkNode*> nodes = root->getLeafs(caption);
+    std::vector<boost::tuple<Node*, Eigen::Vector3d> > list;
+    std::vector<Node*> nodes = root->getLeafs(caption);
     UniformIntRandom rand = Random::uniform_int(0, nodes.size() - 1);
 
     for(unsigned i = 0; i < numbers; i++) {
         Node* node = nodes[rand()];
-        list.push_back(boost::tuple<kNode*, Eigen::Vector3d>(node, node->draw()));
+        list.push_back(boost::tuple<Node*, Eigen::Vector3d>(node, node->draw()));
     }
 
     return list;
@@ -226,6 +227,13 @@ void operator>>(const YAML::Node& node, Eigen::Vector3d& v)
     node[1] >> v.y();
     node[2] >> v.z();
 }
+
+void operator>>(const YAML::Node& node, Eigen::Vector2d& v)
+{
+    node[0] >> v.x();
+    node[1] >> v.y();
+}
+
 
 
 void operator>>(const YAML::Node& node, Eigen::Matrix3d& cov)
@@ -274,13 +282,10 @@ bool NodeMap::fromYaml(std::istream& stream)
 
 void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 {
+        std::string caption = "";
 	if(node.GetType() == YAML::CT_MAP && node.FindValue("mean")) {
 		Eigen::Vector3d mean;
 		Eigen::Matrix3d cov;
-		std::string caption = "";
-
-		std::cout << "add object to " << root->getCaption() << std::endl;
-		
 
 		node["mean"] >> mean;
 		node["cov"] >> cov;
@@ -289,14 +294,35 @@ void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 			node["caption"] >> caption;
 
 		root->addChild(new LandmarkNode(mean, cov, caption));
+        } else if(node.GetType() == YAML::CT_MAP && node.FindValue("line")) {
+		Eigen::Vector3d pos;
+		double width;
+		double height;
+		double orientation;
+
+		node["line"] >> pos;
+		node["size"][0] >> width;
+		node["size"][1] >> height;
+		node["orientation"] >> orientation;
+
+		if(node.FindValue("caption"))
+			node["caption"] >> caption;
+
+		Eigen::Affine3d r(Eigen::AngleAxisd(orientation, Eigen::Vector3d::UnitZ()));
+
+	        base::Vector3d p(pos + base::Vector3d(width / 2.0, 0.0, 0.0));
+		base::Vector3d q(pos - base::Vector3d(width / 2.0, 0.0, 0.0));
+
+		Line line = Line::fromTwoPoints(r * p, r * q);
+		
+		root->addChild(new LineNode(line, height, caption));
+
 	} else if(node.GetType() == YAML::CT_MAP) {
 		for(YAML::Iterator it = node.begin(); it != node.end(); ++it) {
 			std::string groupname;
 			it.first() >> groupname;
 
 			Node* group = new Node(groupname);
-			
-                        std::cout << "Group found: " << group->getCaption() << std::endl;
 			
                         root->addChild(group);
 			parseYamlNode(it.second(), group);
@@ -323,7 +349,7 @@ MixedMap NodeMap::getMap()
     std::vector<Node*> leafs = root->getLeafs();
     Landmark mark;
 
-    for(unsigned i = 0; i < landmarks.size(); i++) {
+    for(unsigned i = 0; i < leafs.size(); i++) {
         switch(leafs[i]->getNodeType()) {
         case NODE_LANDMARK:
            
