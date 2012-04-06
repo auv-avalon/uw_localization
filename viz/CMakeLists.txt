@@ -10,11 +10,11 @@ rock_vizkit_plugin(uw_localization_laserscan-viz
    MOC LaserScanVisualization.hpp
    HEADERS LaserScanVisualization.hpp)
 
-rock_vizkit_plugin(uw_localization_landmark-viz
-   LandmarkVisualization.cpp
+rock_vizkit_plugin(uw_localization_mixedmap-viz
+   MixedMapVisualization.cpp
    DEPS uw_localization
-   MOC LandmarkVisualization.hpp
-   HEADERS LandmarkVisualization.hpp)
+   MOC MixedMapVisualization.hpp
+   HEADERS MixedMapVisualization.hpp)
 
 
 

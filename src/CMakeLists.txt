@@ -2,7 +2,7 @@ set(CPP_FILES
     math/geometry.cpp
     filters/particle_filter.cpp
     maps/map.cpp
-    maps/stochastic_map.cpp
+    maps/node_map.cpp
     )
 
 set(HPP_FILES
@@ -11,7 +11,7 @@ set(HPP_FILES
     types/particle.hpp
     types/map.hpp
     maps/map.hpp
-    maps/stochastic_map.hpp
+    maps/node_map.hpp
     )
 
 rock_library(uw_localization

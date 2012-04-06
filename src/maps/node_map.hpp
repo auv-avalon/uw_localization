@@ -65,15 +65,15 @@ private:
 };
 
 
-class StochasticMap : public Map {
+class NodeMap : public Map {
 public:
-  StochasticMap(const std::string& map);
-  StochasticMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root);
-  virtual ~StochasticMap();
+  NodeMap(const std::string& map);
+  NodeMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root);
+  virtual ~NodeMap();
 
   virtual std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);
   virtual boost::tuple<LandmarkNode*, double> getProbability(const std::string& caption, const Eigen::Vector3d& v);
-  virtual LandmarkMap getMap();
+  virtual MixedMap getMap();
 
   bool toYaml(std::ostream& stream);
   bool fromYaml(std::istream& stream);

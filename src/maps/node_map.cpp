@@ -1,4 +1,4 @@
-#include "stochastic_map.hpp"
+#include "node_map.hpp"
 #include <stack>
 #include <limits>
 #include <fstream>
@@ -151,26 +151,26 @@ boost::tuple<LandmarkNode*, double> LandmarkNode::getProbability(const std::stri
 
 // ----------------------------------------------------------------------------
 
-StochasticMap::StochasticMap(const std::string& map) : Map(), root(0) 
+NodeMap::NodeMap(const std::string& map) : Map(), root(0) 
 {
     std::ifstream fin(map.c_str());
     fromYaml(fin);
 }
 
 
-StochasticMap::StochasticMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root)
+NodeMap::NodeMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root)
     : Map(limits, t), root(root)
 {
 }
 
 
-StochasticMap::~StochasticMap()
+NodeMap::~NodeMap()
 {
     delete root;
 }
 
 
-std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > StochasticMap::drawSamples(const std::string& caption, int numbers) 
+std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > NodeMap::drawSamples(const std::string& caption, int numbers) 
 {
     std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > list;
     std::vector<LandmarkNode*> nodes = root->getLandmarks(caption);
@@ -185,13 +185,13 @@ std::vector<boost::tuple<LandmarkNode*, Eigen::Vector3d> > StochasticMap::drawSa
 }
 
 
-boost::tuple<LandmarkNode*, double> StochasticMap::getProbability(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<LandmarkNode*, double> NodeMap::getProbability(const std::string& caption, const Eigen::Vector3d& v)
 {
     return root->getProbability(caption, v);
 }
 
 
-bool StochasticMap::toYaml(std::ostream& stream)
+bool NodeMap::toYaml(std::ostream& stream)
 {
     return false;
 }
@@ -216,7 +216,7 @@ void operator>>(const YAML::Node& node, Eigen::Matrix3d& cov)
 }
 
 
-bool StochasticMap::fromYaml(std::istream& stream)
+bool NodeMap::fromYaml(std::istream& stream)
 {
     if(stream.fail()) {
         std::cerr << "Could not open input stream" << std::endl;
@@ -240,12 +240,16 @@ bool StochasticMap::fromYaml(std::istream& stream)
 
 	parseYamlNode(root_node, root);
     }
+
+    limitations = parse_limit;
+    translation = Eigen::Translation3d(parse_translation);
+
     return true;
 }
 
 
 
-void StochasticMap::parseYamlNode(const YAML::Node& node, Node* root)
+void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 {
 	if(node.GetType() == YAML::CT_MAP && node.FindValue("mean")) {
 		Eigen::Vector3d mean;
@@ -262,7 +266,7 @@ void StochasticMap::parseYamlNode(const YAML::Node& node, Node* root)
 			node["caption"] >> caption;
 
 		root->addChild(new LandmarkNode(mean, cov, caption));
-	} else if(node.GetType() == YAML::CT_MAP && !node.FindValue("mean")) {
+	} else if(node.GetType() == YAML::CT_MAP) {
 		for(YAML::Iterator it = node.begin(); it != node.end(); ++it) {
 			std::string groupname;
 			it.first() >> groupname;
@@ -286,9 +290,9 @@ void StochasticMap::parseYamlNode(const YAML::Node& node, Node* root)
 
 
 
-LandmarkMap StochasticMap::getMap()
+MixedMap NodeMap::getMap()
 {
-    LandmarkMap map;
+    MixedMap map;
 
     map.limitations = getLimitations();
     map.translation = Eigen::Vector3d(translation.x(), translation.y(), translation.z());

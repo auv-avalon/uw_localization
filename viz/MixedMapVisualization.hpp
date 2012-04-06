@@ -1,5 +1,5 @@
-#ifndef UW_LOCALIZATION_LANDMARKVISUALIZATION_HPP
-#define UW_LOCALIZATION_LANDMARKVISUALIZATION_HPP
+#ifndef UW_LOCALIZATION_MIXEDMAPVISUALIZATION_HPP
+#define UW_LOCALIZATION_MIXEDMAPVISUALIZATION_HPP
 
 #include <boost/noncopyable.hpp>
 #include <vizkit/Vizkit3DPlugin.hpp>
@@ -8,22 +8,22 @@
 
 namespace vizkit {
 
-class LandmarkVisualization 
-    : public vizkit::Vizkit3DPlugin<uw_localization::LandmarkMap>
+class MixedMapVisualization 
+    : public vizkit::Vizkit3DPlugin<uw_localization::MixedMap>
     , boost::noncopyable
 {
     Q_OBJECT
 public:
-    LandmarkVisualization();
-    ~LandmarkVisualization();
+    MixedMapVisualization();
+    ~MixedMapVisualization();
 
 protected:
     virtual osg::ref_ptr<osg::Node> createMainNode();
     virtual void updateMainNode(osg::Node* node);
-    virtual void updateDataIntern(uw_localization::LandmarkMap const& map);
+    virtual void updateDataIntern(uw_localization::MixedMap const& map);
 
 private:
-    uw_localization::LandmarkMap map;
+    uw_localization::MixedMap map;
     osg::ref_ptr<osg::Geometry> geom;
     osg::ref_ptr<osg::Vec3Array> vertices;
     osg::ref_ptr<osg::Vec4Array> colors;

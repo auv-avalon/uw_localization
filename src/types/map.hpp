@@ -27,15 +27,35 @@ struct Landmark {
 };
 
 
-struct LandmarkMap {
+struct Line {
+    Line() : position(0.0, 0.0, 0.0), width(1.0), height(1.0), orientation(0.0) {}
+
+    /** current position for this line **/
+    base::Vector3d position;
+
+    /** width / scaling of this line in world **/
+    double width;
+
+    /** height of this line in world **/
+    double height;
+
+    /** orientation of this line **/
+    double orientation; 
+};
+
+
+struct MixedMap {
     /** current world limitations **/
     base::Vector3d limitations;
 
     /** translation for limitations to reference frame **/
     base::Vector3d translation;
 
-    /** current landmarks for this map **/
+    /** landmarks for this map **/
     std::vector<uw_localization::Landmark> landmarks;
+
+    /** wall lines in this map **/
+    std::vector<uw_localization::Line> lines;
 };
 
 
