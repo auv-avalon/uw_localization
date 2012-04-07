@@ -365,6 +365,7 @@ MixedMap NodeMap::getMap()
 	    landmark.covariance = dynamic_cast<LandmarkNode*>(leafs[i])->covariance();
         
             map.landmarks.push_back(landmark);
+	    break;
 
         case NODE_LINE:
 	    linemark.from = dynamic_cast<LineNode*>(leafs[i])->getLine().from();
@@ -372,6 +373,7 @@ MixedMap NodeMap::getMap()
 	    linemark.height = dynamic_cast<LineNode*>(leafs[i])->getHeight();
 
 	    map.lines.push_back(linemark);
+	    break;
 	     	    
         default:
 	    break;
