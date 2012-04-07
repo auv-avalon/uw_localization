@@ -208,7 +208,7 @@ NodeMap::~NodeMap()
 }
 
 
-std::vector<boost::tuple<Node*, Eigen::Vector3d> > NodeMap::drawSamples(const std::string& caption, int numbers) 
+std::vector<boost::tuple<Node*, Eigen::Vector3d> > NodeMap::drawSamples(const std::string& caption, int numbers) const 
 {
     std::vector<boost::tuple<Node*, Eigen::Vector3d> > list;
     std::vector<Node*> nodes = root->getLeafs(caption);
@@ -223,7 +223,7 @@ std::vector<boost::tuple<Node*, Eigen::Vector3d> > NodeMap::drawSamples(const st
 }
 
 
-boost::tuple<Node*, double> NodeMap::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
+boost::tuple<Node*, double> NodeMap::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x) const
 {
     return root->getNearestDistance(caption, v, x);
 }

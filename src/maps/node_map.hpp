@@ -100,11 +100,11 @@ public:
   NodeMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root);
   virtual ~NodeMap();
 
-  virtual std::vector<boost::tuple<Node*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);
+  virtual std::vector<boost::tuple<Node*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers) const;
 
   virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, 
-	const Eigen::Vector3d& v, const Eigen::Vector3d& x);
-
+	const Eigen::Vector3d& v, const Eigen::Vector3d& x) const;
+ 
   virtual MixedMap getMap();
 
   bool toYaml(std::ostream& stream);
