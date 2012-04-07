@@ -58,7 +58,7 @@ unsigned Node::getChildSize() const
 }
 
 
-boost::tuple<Node*, double> Node::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<Node*, double> Node::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
 {
     size_t found = caption.find(".");
     std::string current;
@@ -71,18 +71,18 @@ boost::tuple<Node*, double> Node::getNearestDistance(const std::string& caption,
         current = caption;
     }
 
-    boost::tuple<Node*, double> max(0, std::numeric_limits<double>::min());
+    boost::tuple<Node*, double> min(0, std::numeric_limits<double>::max());
 
     if(getCaption() == current || current.empty()) {
         for(unsigned i = 0; i < children.size(); i++) {
-            boost::tuple<Node*, double> tmp = children[i]->getNearestDistance(next, v);
+            boost::tuple<Node*, double> tmp = children[i]->getNearestDistance(next, v, x);
 
-            if(tmp.get<1>() > max.get<1>())
-                max = tmp;
+            if(tmp.get<1>() < min.get<1>())
+                min = tmp;
         }
     }
 
-    return max;
+    return min;
 }
 
 
@@ -143,7 +143,7 @@ Eigen::Vector3d LandmarkNode::draw()
 }
 
 
-boost::tuple<Node*, double> LandmarkNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<Node*, double> LandmarkNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
 {
     return boost::tuple<Node*, double>(this, params.mahalanobis(v));
 }
@@ -166,9 +166,23 @@ Eigen::Vector3d LineNode::draw()
 }
 
 
-boost::tuple<Node*, double> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<Node*, double> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
 {
-    return boost::tuple<Node*, double>();
+    Line measurement = Line::fromTwoPoints(x, v);
+    Point line_point;
+
+    double line_lambda = line.lambda(measurement);
+    if(line_lambda == INFINITY)
+	line_lambda = line.lambda(v);
+
+    if(line_lambda < 0.0)
+	line_point = line.from();
+    else if(line_lambda > 1.0)
+	line_point = line.to();
+    else
+	line_point = line.point(line_lambda);
+        
+    return boost::tuple<Node*, double>(this, (v - line_point).norm());
 }
 
 
@@ -209,9 +223,9 @@ std::vector<boost::tuple<Node*, Eigen::Vector3d> > NodeMap::drawSamples(const st
 }
 
 
-boost::tuple<Node*, double> NodeMap::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v)
+boost::tuple<Node*, double> NodeMap::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
 {
-    return root->getNearestDistance(caption, v);
+    return root->getNearestDistance(caption, v, x);
 }
 
 

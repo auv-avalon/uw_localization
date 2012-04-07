@@ -34,7 +34,8 @@ public:
 
   virtual int getNodeType() const { return NODE_GROUP; }
   
-  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, 
+	const Eigen::Vector3d& v, const Eigen::Vector3d& x);
 
   virtual Eigen::Vector3d draw() {
      throw std::runtime_error("not supported by Node class");
@@ -58,7 +59,8 @@ public:
 
   virtual int getNodeType() const { return NODE_LINE; }
   
-  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, 
+	const Eigen::Vector3d& v, const Eigen::Vector3d& x);
 
   virtual Eigen::Vector3d draw();
   
@@ -78,7 +80,8 @@ public:
 
   virtual int getNodeType() const { return NODE_LANDMARK; }
   
-  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, 
+	const Eigen::Vector3d& v, const Eigen::Vector3d& x);
 
   virtual Eigen::Vector3d draw();
 
@@ -99,7 +102,8 @@ public:
 
   virtual std::vector<boost::tuple<Node*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers);
 
-  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v);
+  virtual boost::tuple<Node*, double> getNearestDistance(const std::string& caption, 
+	const Eigen::Vector3d& v, const Eigen::Vector3d& x);
 
   virtual MixedMap getMap();
 
