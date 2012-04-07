@@ -28,19 +28,16 @@ struct Landmark {
 
 
 struct Linemark {
-    Linemark() : position(0.0, 0.0, 0.0), width(1.0), height(1.0), orientation(0.0) {}
+    Linemark() : from(0.0, 0.0, 0.0), to(1.0, 0.0, 0.0), height(1.0) {}
 
-    /** current position for this line **/
-    base::Vector3d position;
+    /** current start point for this line **/
+    base::Vector3d from;
 
-    /** width / scaling of this line in world **/
-    double width;
+    /** current end point for this line **/
+    base::Vector3d to;
 
     /** height of this line in world **/
     double height;
-
-    /** orientation of this line **/
-    double orientation; 
 };
 
 

@@ -308,26 +308,19 @@ void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 			node["caption"] >> caption;
 
 		root->addChild(new LandmarkNode(mean, cov, caption));
-        } else if(node.GetType() == YAML::CT_MAP && node.FindValue("line")) {
-		Eigen::Vector3d pos;
-		double width;
+        } else if(node.GetType() == YAML::CT_MAP && node.FindValue("line_from")) {
+		Eigen::Vector3d from;
+		Eigen::Vector3d to;
 		double height;
-		double orientation;
 
-		node["line"] >> pos;
-		node["size"][0] >> width;
-		node["size"][1] >> height;
-		node["orientation"] >> orientation;
+		node["line_from"] >> from;
+		node["line_to"] >> to;
+		node["height"] >> height;
 
 		if(node.FindValue("caption"))
 			node["caption"] >> caption;
 
-		Eigen::Affine3d r(Eigen::AngleAxisd(orientation, Eigen::Vector3d::UnitZ()));
-
-	        base::Vector3d p(pos + base::Vector3d(width / 2.0, 0.0, 0.0));
-		base::Vector3d q(pos - base::Vector3d(width / 2.0, 0.0, 0.0));
-
-		Line line = Line::fromTwoPoints(r * p, r * q);
+		Line line = Line::fromTwoPoints(from, to);
 		
 		root->addChild(new LineNode(line, height, caption));
 
@@ -361,19 +354,25 @@ MixedMap NodeMap::getMap()
     map.translation = Eigen::Vector3d(translation.x(), translation.y(), translation.z());
 
     std::vector<Node*> leafs = root->getLeafs();
-    Landmark mark;
+    Landmark landmark;
+    Linemark linemark;
 
     for(unsigned i = 0; i < leafs.size(); i++) {
         switch(leafs[i]->getNodeType()) {
         case NODE_LANDMARK:
-           
-    	    mark.caption = leafs[i]->getCaption();
-	    mark.mean = dynamic_cast<LandmarkNode*>(leafs[i])->mean();
-	    mark.covariance = dynamic_cast<LandmarkNode*>(leafs[i])->covariance();
+    	    landmark.caption = leafs[i]->getCaption();
+	    landmark.mean = dynamic_cast<LandmarkNode*>(leafs[i])->mean();
+	    landmark.covariance = dynamic_cast<LandmarkNode*>(leafs[i])->covariance();
         
-            map.landmarks.push_back(mark);
+            map.landmarks.push_back(landmark);
 
         case NODE_LINE:
+	    linemark.from = dynamic_cast<LineNode*>(leafs[i])->getLine().from();
+	    linemark.to   = dynamic_cast<LineNode*>(leafs[i])->getLine().to();
+	    linemark.height = dynamic_cast<LineNode*>(leafs[i])->getHeight();
+
+	    map.lines.push_back(linemark);
+	     	    
         default:
 	    break;
         }
