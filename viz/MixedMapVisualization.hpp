@@ -13,9 +13,14 @@ class MixedMapVisualization
     , boost::noncopyable
 {
     Q_OBJECT
+    Q_PROPERTY(double height READ getHeight WRITE setHeight)
+
 public:
     MixedMapVisualization();
     ~MixedMapVisualization();
+
+    void setHeight(double height) { this->height = height; }
+    double getHeight() const { return this->height; }
 
 protected:
     virtual osg::ref_ptr<osg::Node> createMainNode();
@@ -27,6 +32,7 @@ private:
     osg::ref_ptr<osg::Geometry> geom;
     osg::ref_ptr<osg::Vec3Array> vertices;
     osg::ref_ptr<osg::Vec4Array> colors;
+    double height;
     bool changed;
 };
 }
