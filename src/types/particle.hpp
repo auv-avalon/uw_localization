@@ -48,9 +48,6 @@ struct ParticleSet {
 
     /** index of particle with maximum weight of the particle set */
     unsigned int max_particle_index;
-
-    /** probability for a plausible state estimation (relating kidnapping problem) */
-    double confidence;
 };
 
 }

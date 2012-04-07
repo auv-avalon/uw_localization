@@ -42,12 +42,15 @@ class Perception {
      * \param map current representation for a given map hypothesis
      * \return updated state and probability of a plausible particle set (can be a constant if not used)
      */
-    virtual double perception(P& state, const Z& sensor, const M& map) = 0;
+    virtual double perception(const P& state, const Z& sensor, const M& map) {
+	throw new std::runtime_error("perception model is required");
+	return 0.0;
+    }
 
-    /**
-     * preprocessing hook for executing code before all perception updates
-     */
-    virtual void preprocessing(const Z& sensor, const M& map) {}
+
+    virtual bool isMaximumRange(const Z& sensor) {
+	return false;
+    }
 };
 
 
@@ -67,12 +70,9 @@ class Dynamic {
      * \returns updated state sample depending on we were in state xt-1 and we move with ut and
      *     measurement plausibility (can be a constant if not used)
      */
-    virtual double dynamic(P& state, const U& motion) = 0;
+    virtual void dynamic(P& state, const U& motion) = 0;
 
-    /**
-     * preprocessing hook for executing code before all perception updates
-     */
-    virtual void preprocessing(const U& sensor) {}
+    virtual const base::Time& getTimestamp(const U& motion) = 0;
 };
 
 
@@ -83,11 +83,13 @@ class Dynamic {
  * already provides importance resampling with a low variance sampler and uses a given estimation 
  * model for processing each particle representation
  */
-template <typename P>
-class ParticleFilter {
-    typedef typename std::vector<P>::iterator StateIterator;
+template <typename P, typename U, typename M>
+class ParticleFilter : Dynamic<P,U> {
+    typedef typename std::vector<P>::iterator ParticleIterator;
   public:
-    ParticleFilter() {}
+    ParticleFilter() 
+    {}
+
     virtual ~ParticleFilter() {}
 
    /**
@@ -114,7 +116,7 @@ class ParticleFilter {
 
 
     /**
-     * get unnormlized weight for this current state particle 
+     * get normlized weight for this current state particle 
      * 
      * \param state of type P
      * \return current weight for this state 
@@ -122,15 +124,21 @@ class ParticleFilter {
     virtual double getWeight(const P& state) const = 0;
 
 
+
     /**
-     * set unnormalized weight for this state particle
+     * set normalized weight for this state particle
      *
      * \param state of type P
      * \param new weight
      */
     virtual void setWeight(P& state, double value) = 0;
- 
-    
+
+    virtual bool belongsToWorld(const P& state, const M& map) { 
+       return true;
+    }
+
+
+   
     
     /**
      * create a position sample from the the given particle set. Assure
@@ -142,21 +150,34 @@ class ParticleFilter {
     virtual base::samples::RigidBodyState& estimate() = 0;
 
 
-
     /**
      * updates the current particle set for an incoming motion action depending
      * on the given estimation model.
      *
      * \param motion representation of a motion call
      */
-    template<typename U>
-    void update(const P& state, const U& motion) {
+    virtual void update(const U& motion) {
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
-        model->preprocessing(motion);
+	base::Position mean = base::Position::Zero();
+	base::Matrix3d variance = base::Matrix3d::Zero();
 
-        updateParticleSet(boost::bind(&Dynamic<P, U>::dynamic, model, _1, motion));
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+	    model->dynamic(*it, motion);
+	    mean += position(*it);	
+	}
+
+	mean_position = mean / particles.size();
+
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+	    base::Vector3d pos_s = position(*it) - mean;
+            variance += pos_s * pos_s.transpose();
+	}
+
+	cov_position = variance / (particles.size() + 1);
+
+	timestamp = model->getTimestamp(motion);
     }
 
 
@@ -168,78 +189,83 @@ class ParticleFilter {
      * \param map current map for this particle
      * \return global propability current particle set is not in kidnapping problem
      */
-    template<typename Z, typename M>
-    void observe(const Z& sensor, const M& map) {
+    template<typename Z>
+    double observe(const Z& sensor, const M& map, const Eigen::Vector3d ratio = Eigen::Vector3d(1.0, 0.0, 0.0), double random_noise = -1.0) {
         // brutal hack and performance could suffer a little, but it works
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
-        model->preprocessing(sensor, map);
+	std::vector<double> quick_weights;
+        Eigen::Vector3d weights;
+	double sum_perception_weight = 0.0;
+	double sum_overall_weight = 0.0;
+        double Neff = 0.0;
+	unsigned i;
 
-        updateParticleSet(boost::bind(&Perception<P, Z, M>::perception, model, _1, sensor, map));
-    }
+	best_particle = 0;
 
+        if(random_noise < 0)
+	     random_noise = 1.0 / particles.size();
 
+	// calculate all perceptions
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+            if(belongsToWorld(*it)) {
+	        quick_weights.push_back(model->perception(*it, sensor, map));
+	        sum_perception_weight += quick_weights.back();
+	    } else {
+                quick_weights.push_back(0.0);
+	    }
+	}
 
-    void updateParticleSet(const boost::function1<double, P&>& update)
-    {
-        unsigned best_particle_index = 0;
-        double sum_weight = 0.0;
-        double confidence = 0.0;
-        double max_weight = 0.0;
+	// normalize perception weights and form mixed weight based on probabilities of perception, random_noise, maximum_range_noise
+	for(ParticleIterator it = particles.begin(), i = 0; it != particles.end(); it++, i++) {
+	    if(model->isMaximumRange(sensor))
+	       weights = Eigen::Vector3d(0.0, 1.0, 0.0);
+	    else
+	       weights = Eigen::Vector3d(quick_weights[i] * sum_perception_weight, 0.0, random_noise);
 
-        particle_set.particles.clear();
+	    double overall_weight = getWeight(*it) * (weights.transpose() * ratio); 	    
+	    sum_overall_weight += overall_weight;
+	    quick_weights[i] = overall_weight;
 
-        base::Position mean = base::Position::Zero();
-        base::Matrix3d variance = base::Matrix3d::Zero();
+ 	    if(overall_weight > quick_weights[best_particle])
+		best_particle = i;
+	}
 
-        unsigned index = 0;
+	// normalize overall weights and form effective sample size
+	for(ParticleIterator it = particles.begin(), i = 0; it != particles.end(); it++, i++) {
+	   double norm_weight = quick_weights[i] / sum_overall_weight;
+	   Neff += norm_weight * norm_weight;
 
-        for(StateIterator it = states.begin(); it != states.end(); it++) {
-            confidence += update(*it);
-            sum_weight += getWeight(*it);
+           setWeight(*it, norm_weight);
+	}
 
-            if(getWeight(*it) > max_weight)
-                best_particle_index = index++;
-            else
-                index++;
-
-            mean += position(*it);
-        }
-
-        mean_position = (mean / states.size());
-
-        particle_set.particles.clear();
-
-        for(StateIterator it = states.begin(); it != states.end(); it++) {
-            Particle p;
-            p.position = position(*it);
-            p.yaw = base::getYaw(orientation(*it));
-            p.norm_weight = getWeight(*it) / sum_weight;
-
-            // calculate covariance for this set
-            base::Vector3d pos_s = position(*it) - mean;
-            variance += pos_s * pos_s.transpose();
-
-            particle_set.particles.push_back(p);
-        }
-
-        cov_position = (variance / (states.size() + 1));
-
-        particle_set.confidence = (confidence / states.size());
-        particle_set.max_particle_index = best_particle_index;
+	return 1.0 / Neff;        
     }
 
 
     /** 
      * returns current status of particle set in a general form
-     * can only accessed if not a resampling is applied before
      *
      * \return filled particle vector
      */
     const ParticleSet& getParticleSet() { 
-        assert(particle_set.particles.size() > 0);
+        assert(particles.size() > 0);
 
-        return particle_set; 
+	ps.particles.clear();
+
+	ps.timestamp = timestamp;
+        ps.max_particle_index = best_particle;
+	
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+	    Particle p;
+	    p.position = position(*it);
+	    p.yaw = base::getYaw(orientation(*it));
+	    p.norm_weight = getWeight(*it);
+
+	    ps.particles.push_back(p);
+	}
+
+        return ps; 
     }
 
     /**
@@ -247,43 +273,44 @@ class ParticleFilter {
      * with an low variance sampler introduced by Thrun, Burgard and Fox 
      */
     void resample() {
-          if(particle_set.particles.size() < 1)
+          if(particles.size() < 1)
               return;
 
-          double m_inv = 1.0 / states.size();
+          double m_inv = 1.0 / particles.size();
           machine_learning::UniformRealRandom random = machine_learning::Random::uniform_real(0.0, m_inv);
 
-          const std::vector<Particle>& p = particle_set.particles;
-          
           std::vector<P> set;
           double r = random();
-          double c = p.front().norm_weight;
+          double c = getWeight(particles.front());
 
-          for(unsigned i = 0, m = 0; m < p.size(); m++) {
+          for(unsigned i = 0, m = 0; m < particles.size(); m++) {
               double u = r + (m * m_inv);
               while(u > c) {
-                  assert(i < p.size());
-                  c += p[++i].norm_weight;
+                  assert(i < particles.size());
+                  c += getWeight(particles[++i]);
               }
 
-              set.push_back(states[i]);
+	      if(i == best_particle)
+		i = set.size() - 1;
 
-              set_weight(set.back()) = 1.0 / p.size();
+              set.push_back(particles[i]);
           }
 
-          // calculate directly means for position and orientation
-          states = set;
-
-          particle_set.particles.clear();
+          particles = set;
       }
 
   protected:
       /** current using particle set of state hypothesis */
-      std::vector<P> states;
-      ParticleSet particle_set;
+      std::vector<P> particles;
+
+      base::Time timestamp;
+
+      unsigned best_particle;
 
       base::Position mean_position;
       base::Matrix3d cov_position;
+
+      ParticleSet ps;
 };
 
 
