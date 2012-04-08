@@ -133,11 +133,12 @@ class ParticleFilter : Dynamic<P,U> {
      */
     virtual void setWeight(P& state, double value) = 0;
 
+    /**
+     * checks if a current state particle is still valid in a map
+     */
     virtual bool belongsToWorld(const P& state, const M& map) { 
        return true;
     }
-
-
    
     
     /**
@@ -190,7 +191,7 @@ class ParticleFilter : Dynamic<P,U> {
      * \return global propability current particle set is not in kidnapping problem
      */
     template<typename Z>
-    double observe(const Z& sensor, const M& map, const Eigen::Vector3d ratio = Eigen::Vector3d(1.0, 0.0, 0.0), double random_noise = -1.0) {
+    double observe(const Z& sensor, const M& map, const Eigen::Vector3d& ratio = Eigen::Vector3d(1.0, 0.0, 0.0), double random_noise = -1.0) {
         // brutal hack and performance could suffer a little, but it works
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
@@ -198,6 +199,7 @@ class ParticleFilter : Dynamic<P,U> {
         Eigen::Vector3d weights;
 	double sum_perception_weight = 0.0;
 	double sum_overall_weight = 0.0;
+        double overall_weight = 0.0;
         double Neff = 0.0;
 	unsigned i;
 
@@ -208,7 +210,7 @@ class ParticleFilter : Dynamic<P,U> {
 
 	// calculate all perceptions
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-            if(belongsToWorld(*it)) {
+            if(belongsToWorld(*it, map)) {
 	        quick_weights.push_back(model->perception(*it, sensor, map));
 	        sum_perception_weight += quick_weights.back();
 	    } else {
@@ -216,27 +218,35 @@ class ParticleFilter : Dynamic<P,U> {
 	    }
 	}
 
+        i = 0;
+
 	// normalize perception weights and form mixed weight based on probabilities of perception, random_noise, maximum_range_noise
-	for(ParticleIterator it = particles.begin(), i = 0; it != particles.end(); it++, i++) {
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
 	    if(model->isMaximumRange(sensor))
 	       weights = Eigen::Vector3d(0.0, 1.0, 0.0);
 	    else
 	       weights = Eigen::Vector3d(quick_weights[i] * sum_perception_weight, 0.0, random_noise);
 
-	    double overall_weight = getWeight(*it) * (weights.transpose() * ratio); 	    
+	    overall_weight = (weights.transpose() * ratio * getWeight(*it)).x();
 	    sum_overall_weight += overall_weight;
 	    quick_weights[i] = overall_weight;
 
  	    if(overall_weight > quick_weights[best_particle])
 		best_particle = i;
+
+            i++;
 	}
 
+        i = 0;
+
 	// normalize overall weights and form effective sample size
-	for(ParticleIterator it = particles.begin(), i = 0; it != particles.end(); it++, i++) {
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
 	   double norm_weight = quick_weights[i] / sum_overall_weight;
 	   Neff += norm_weight * norm_weight;
 
            setWeight(*it, norm_weight);
+
+           i++;
 	}
 
 	return 1.0 / Neff;        
