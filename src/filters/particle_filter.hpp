@@ -47,7 +47,9 @@ class Perception {
 	return 0.0;
     }
 
-
+    /**
+     * check if this perception update is within the maximum range
+     */
     virtual bool isMaximumRange(const Z& sensor) {
 	return false;
     }
@@ -72,10 +74,39 @@ class Dynamic {
      */
     virtual void dynamic(P& state, const U& motion) = 0;
 
+    /**
+     * get current timestamp for this motion command
+     */
     virtual const base::Time& getTimestamp(const U& motion) = 0;
 };
 
 
+/**
+ * Particle Helper class for concret particle filters
+ */
+class Particle {
+ public:
+   /**
+     * get a general position representation from a given abstract pose particles
+     *
+     * \param state of type P
+     * \return a simple vector with three dimension
+     */
+    virtual base::Position position() const = 0;
+
+    /**
+     * get a general orientation representation from a given abstract poste particle
+     * \param state of type P
+     * \return a standard orientation (quaternion)
+     */
+    virtual base::Orientation orientation() const = 0;
+
+     /** part confidences for debugging */
+     base::Vector3d part_confidences;
+
+     /** normalized main_confidence for this particle */
+     double main_confidence;
+};
 
 
 /**
@@ -99,47 +130,13 @@ class ParticleFilter : Dynamic<P,U> {
            const Eigen::Vector3d& pos, const Eigen::Matrix3d& pos_covariance,
            double yaw, double yaw_covariance) = 0; 
 
+
    /**
-     * get a general position representation from a given abstract pose particles
-     *
-     * \param state of type P
-     * \return a simple vector with three dimension
-     */
-    virtual base::Vector3d position(const P& state) const = 0;
-
-    /**
-     * get a general orientation representation from a given abstract poste particle
-     * \param state of type P
-     * \return a standard orientation (quaternion)
-     */
-    virtual base::Orientation orientation(const P& state) const = 0;
-
-
-    /**
-     * get normlized weight for this current state particle 
-     * 
-     * \param state of type P
-     * \return current weight for this state 
-     */
-    virtual double getWeight(const P& state) const = 0;
-
-
-
-    /**
-     * set normalized weight for this state particle
-     *
-     * \param state of type P
-     * \param new weight
-     */
-    virtual void setWeight(P& state, double value) = 0;
-
-    /**
      * checks if a current state particle is still valid in a map
      */
-    virtual bool belongsToWorld(const P& state, const M& map) { 
+    virtual bool isParticleInWorld(const P& state, const M& map) { 
        return true;
     }
-   
     
     /**
      * create a position sample from the the given particle set. Assure
@@ -166,13 +163,13 @@ class ParticleFilter : Dynamic<P,U> {
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
 	    model->dynamic(*it, motion);
-	    mean += position(*it);	
+	    mean += it->position();	
 	}
 
 	mean_position = mean / particles.size();
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-	    base::Vector3d pos_s = position(*it) - mean;
+	    base::Vector3d pos_s = it->position() - mean;
             variance += pos_s * pos_s.transpose();
 	}
 
@@ -196,7 +193,6 @@ class ParticleFilter : Dynamic<P,U> {
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
 	std::vector<double> quick_weights;
-        Eigen::Vector3d weights;
 	double sum_perception_weight = 0.0;
 	double sum_overall_weight = 0.0;
         double overall_weight = 0.0;
@@ -210,7 +206,7 @@ class ParticleFilter : Dynamic<P,U> {
 
 	// calculate all perceptions
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-            if(belongsToWorld(*it, map)) {
+            if(isParticleInWorld(*it, map)) {
 	        quick_weights.push_back(model->perception(*it, sensor, map));
 	        sum_perception_weight += quick_weights.back();
 	    } else {
@@ -223,11 +219,11 @@ class ParticleFilter : Dynamic<P,U> {
 	// normalize perception weights and form mixed weight based on probabilities of perception, random_noise, maximum_range_noise
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
 	    if(model->isMaximumRange(sensor))
-	       weights = Eigen::Vector3d(0.0, 1.0, 0.0);
+	       it->part_confidences = Eigen::Vector3d(0.0, 0.0, 1.0);
 	    else
-	       weights = Eigen::Vector3d(quick_weights[i] * sum_perception_weight, 0.0, random_noise);
+	       it->part_confidences = Eigen::Vector3d(quick_weights[i] / sum_perception_weight, random_noise, 0.0);
 
-	    overall_weight = (weights.transpose() * ratio * getWeight(*it)).x();
+	    overall_weight = (it->part_confidences.transpose() * ratio).x();
 	    sum_overall_weight += overall_weight;
 	    quick_weights[i] = overall_weight;
 
@@ -244,12 +240,16 @@ class ParticleFilter : Dynamic<P,U> {
 	   double norm_weight = quick_weights[i] / sum_overall_weight;
 	   Neff += norm_weight * norm_weight;
 
-           setWeight(*it, norm_weight);
+           it->main_confidence = norm_weight;
 
            i++;
 	}
 
-	return 1.0 / Neff;        
+        effective_sample_size = 1.0 / Neff;
+
+        weights = ratio;
+
+	return effective_sample_size;        
     }
 
 
@@ -258,19 +258,22 @@ class ParticleFilter : Dynamic<P,U> {
      *
      * \return filled particle vector
      */
-    const ParticleSet& getParticleSet() { 
+    const debug::ParticleSet& getParticleSet() { 
         assert(particles.size() > 0);
 
 	ps.particles.clear();
 
 	ps.timestamp = timestamp;
         ps.max_particle_index = best_particle;
+        ps.effective_sample_size = effective_sample_size;
+        ps.weights = weights;
 	
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-	    Particle p;
-	    p.position = position(*it);
-	    p.yaw = base::getYaw(orientation(*it));
-	    p.norm_weight = getWeight(*it);
+            debug::Particle p;
+	    p.position =it->position();
+	    p.yaw = base::getYaw(it->orientation());
+	    p.main_confidence = it->main_confidence;
+            p.part_confidences = it->part_confidences;
 
 	    ps.particles.push_back(p);
 	}
@@ -291,19 +294,21 @@ class ParticleFilter : Dynamic<P,U> {
 
           std::vector<P> set;
           double r = random();
-          double c = getWeight(particles.front());
+          double c = particles.front().main_confidence;
 
           for(unsigned i = 0, m = 0; m < particles.size(); m++) {
               double u = r + (m * m_inv);
               while(u > c) {
-                  assert(i < particles.size());
-                  c += getWeight(particles[++i]);
+                  if(++i >= particles.size())
+                      i = 0;
+
+                  c += particles[i].main_confidence;
               }
 
-	      if(i == best_particle)
-		i = set.size() - 1;
-
               set.push_back(particles[i]);
+
+              if(i == best_particle)
+		  best_particle = set.size() - 1;
           }
 
           particles = set;
@@ -317,10 +322,13 @@ class ParticleFilter : Dynamic<P,U> {
 
       unsigned best_particle;
 
+      base::Vector3d weights;
+      double effective_sample_size;
+
       base::Position mean_position;
       base::Matrix3d cov_position;
 
-      ParticleSet ps;
+      debug::ParticleSet ps;
 };
 
 

@@ -13,42 +13,59 @@
 #include <vector>
 
 namespace uw_localization {
+namespace debug {
 
 /**
  * General representation for particles used by all filters and visualizations
  */
 struct Particle {
-    Particle() : position(0.0, 0.0, 0.0), yaw(0.0), norm_weight(0.0)
+    Particle() : position(0.0, 0.0, 0.0), yaw(0.0), part_confidences(0.0, 0.0, 0.0), 
+      main_confidence(0.0)
     {}
 
     Particle(const Particle& p) :
-        position(p.position), yaw(p.yaw), norm_weight(p.norm_weight)
+        position(p.position), yaw(p.yaw), part_confidences(p.part_confidences), main_confidence(p.main_confidence)
     {}
 
     /** current estimated position */
     base::Position position;
 
-    /** current heading / yaw for this particle */
+   /** current heading / yaw for this particle */
     double yaw;
 
+    /** sub_confidences (perception, random, max_distance) **/
+    base::Vector3d part_confidences;
+ 
     /** current believe for this particle */
-    double norm_weight;
+    double main_confidence;
 };
 
 
 /**
  * General representation for a particle set
  */
-struct ParticleSet { 
+struct ParticleSet {
+    ParticleSet() : timestamp(), weights(0.0, 0.0, 0.0), 
+        effective_sample_size(0.0), max_particle_index(0)
+    {}
+
     /** current timestamp for this particle set */
     base::Time timestamp;
 
+    /** weights for forming main_confidences */
+    base::Vector3d weights;
+
+    /** effective sample size for controlling resampling */
+    double effective_sample_size;
+    
     /** current particle set for this state */ 
     std::vector<Particle> particles;
 
-    /** index of particle with maximum weight of the particle set */
+    /** index of particle with maximum main confidence of the particle set */
     unsigned int max_particle_index;
 };
 
+
+}
 }
 #endif
