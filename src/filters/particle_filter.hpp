@@ -199,8 +199,6 @@ class ParticleFilter : Dynamic<P,U> {
         double Neff = 0.0;
 	unsigned i;
 
-	best_particle = 0;
-
         if(random_noise < 0)
 	     random_noise = 1.0 / particles.size();
 
@@ -226,9 +224,6 @@ class ParticleFilter : Dynamic<P,U> {
 	    overall_weight = (it->part_confidences.transpose() * ratio).x();
 	    sum_overall_weight += overall_weight;
 	    quick_weights[i] = overall_weight;
-
- 	    if(overall_weight > quick_weights[best_particle])
-		best_particle = i;
 
             i++;
 	}
@@ -264,7 +259,6 @@ class ParticleFilter : Dynamic<P,U> {
 	ps.particles.clear();
 
 	ps.timestamp = timestamp;
-        ps.max_particle_index = best_particle;
         ps.effective_sample_size = effective_sample_size;
         ps.weights = weights;
 	
@@ -306,9 +300,6 @@ class ParticleFilter : Dynamic<P,U> {
               }
 
               set.push_back(particles[i]);
-
-              if(i == best_particle)
-		  best_particle = set.size() - 1;
           }
 
           particles = set;
@@ -319,8 +310,6 @@ class ParticleFilter : Dynamic<P,U> {
       std::vector<P> particles;
 
       base::Time timestamp;
-
-      unsigned best_particle;
 
       base::Vector3d weights;
       double effective_sample_size;

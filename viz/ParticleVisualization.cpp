@@ -1,5 +1,6 @@
 #include "ParticleVisualization.hpp"
 #include <osg/Geometry>
+#include <boost/assert.hpp>
 
 #define DATA(attribute) (p->attribute)
 
@@ -38,7 +39,6 @@ ParticleVisualization::ParticleVisualization()
    DATA(color_map).push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
    p->max_particle_height = 2.0;
-   p->show_highlight = true;
    p->show_scaling = true;
    p->show_colors = true;
 }
@@ -60,19 +60,6 @@ void ParticleVisualization::setHeight(double height)
 {
     DATA(max_particle_height) = abs(height);
 }
-
-
-bool ParticleVisualization::isHighlight() const
-{
-    return DATA(show_highlight);
-}
-
-
-void ParticleVisualization::setHighlight(bool highlight)
-{
-    DATA(show_highlight) = highlight;
-}
-
 
 bool ParticleVisualization::isScaling() const
 {
@@ -130,7 +117,14 @@ ParticleVisualization::updateMainNode( osg::Node* node )
 
     const uw_localization::debug::ParticleSet& set = DATA(particleSet);
 
-    double scaling = set.particles[set.max_particle_index].main_confidence;
+    double scaling = 0;
+    for(unsigned i = 0; i < set.particles.size(); i++) {
+        scaling = (scaling < set.particles[i].main_confidence) ? set.particles[i].main_confidence : scaling;
+        std::cout << " conf " << it->main_confidence << std::endl;
+    }
+
+    std::cout << "scaling " << scaling << std::endl;
+
     unsigned index = 0;
 
     for(it = set.particles.begin(); it != set.particles.end(); it++) {
@@ -143,15 +137,15 @@ ParticleVisualization::updateMainNode( osg::Node* node )
         else
             DATA(points)->push_back(vec + osg::Vec3d(0.0, 0.0, DATA(max_particle_height)));
         
-        if(DATA(show_highlight) && index == set.max_particle_index)
-            DATA(colors)->push_back(BLUE);
-        else if(DATA(show_colors)) {
+        if(DATA(show_colors)) {
             DATA(colors)->push_back(GRADIENT(weight));
         } else
             DATA(colors)->push_back(GRADIENT(0.5));
 
         index++;
     }
+
+    std::cout << "DONE" << std::endl;
 
     DATA(draw)->setCount(DATA(points)->size());
     DATA(geom)->setVertexArray(DATA(points));
