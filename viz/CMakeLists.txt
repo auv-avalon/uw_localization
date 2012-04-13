@@ -16,5 +16,12 @@ rock_vizkit_plugin(uw_localization_mixedmap-viz
    MOC MixedMapVisualization.hpp
    HEADERS MixedMapVisualization.hpp)
 
+rock_vizkit_plugin(uw_localization_mapfeature-viz
+   MapFeatureVisualization.cpp
+   DEPS uw_localization
+   MOC MapFeatureVisualization.hpp
+   HEADERS MapFeatureVisualization.hpp)
+
+
 
 
