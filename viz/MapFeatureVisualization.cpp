@@ -7,7 +7,8 @@ namespace vizkit {
 
 MapFeatureVisualization::MapFeatureVisualization() : height(0.5)
 {
-    VizPluginRubyAdapter(MapFeatureVisualization, uw_localization::MixedMap, Map);
+    VizPluginRubyAdapter(MapFeatureVisualization, std::vector<uw_localization::Linemark>, Linemarks);
+    VizPluginRubyAdapter(MapFeatureVisualization, std::vector<uw_localization::Landmark>, Landmarks);
     line_changed = true;
     mark_changed = true;
 }
