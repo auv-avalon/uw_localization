@@ -13,20 +13,11 @@
 #include <vector>
 
 namespace uw_localization {
-namespace debug {
 
 /**
  * General representation for particles used by all filters and visualizations
  */
 struct Particle {
-    Particle() : position(0.0, 0.0, 0.0), yaw(0.0), part_confidences(0.0, 0.0, 0.0), 
-      main_confidence(0.0)
-    {}
-
-    Particle(const Particle& p) :
-        position(p.position), yaw(p.yaw), part_confidences(p.part_confidences), main_confidence(p.main_confidence)
-    {}
-
     /** current estimated position */
     base::Position position;
 
@@ -45,10 +36,6 @@ struct Particle {
  * General representation for a particle set
  */
 struct ParticleSet {
-    ParticleSet() : timestamp(), weights(0.0, 0.0, 0.0), 
-        effective_sample_size(0.0), max_particle_index(0)
-    {}
-
     /** current timestamp for this particle set */
     base::Time timestamp;
 
@@ -66,6 +53,5 @@ struct ParticleSet {
 };
 
 
-}
 }
 #endif

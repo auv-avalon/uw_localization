@@ -84,7 +84,7 @@ class Dynamic {
 /**
  * Particle Helper class for concret particle filters
  */
-class Particle {
+class ParticleBase {
  public:
    /**
      * get a general position representation from a given abstract pose particles
@@ -253,7 +253,7 @@ class ParticleFilter : Dynamic<P,U> {
      *
      * \return filled particle vector
      */
-    const debug::ParticleSet& getParticleSet() { 
+    const ParticleSet& getParticleSet() { 
         assert(particles.size() > 0);
 
 	ps.particles.clear();
@@ -263,7 +263,7 @@ class ParticleFilter : Dynamic<P,U> {
         ps.weights = weights;
 	
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-            debug::Particle p;
+            Particle p;
 	    p.position =it->position();
 	    p.yaw = base::getYaw(it->orientation());
 	    p.main_confidence = it->main_confidence;
@@ -317,7 +317,7 @@ class ParticleFilter : Dynamic<P,U> {
       base::Position mean_position;
       base::Matrix3d cov_position;
 
-      debug::ParticleSet ps;
+      ParticleSet ps;
 };
 
 

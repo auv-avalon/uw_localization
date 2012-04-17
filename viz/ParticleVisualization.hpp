@@ -9,7 +9,7 @@
 namespace vizkit {
 
 class ParticleVisualization 
-    : public vizkit::Vizkit3DPlugin<uw_localization::debug::ParticleSet>
+    : public vizkit::Vizkit3DPlugin<uw_localization::ParticleSet>
     , boost::noncopyable    
 {
     Q_OBJECT
@@ -34,7 +34,7 @@ class ParticleVisualization
     protected:
         virtual osg::ref_ptr<osg::Node> createMainNode ();
         virtual void updateMainNode(osg::Node* node);
-        virtual void updateDataIntern(uw_localization::debug::ParticleSet const& set);
+        virtual void updateDataIntern(uw_localization::ParticleSet const& set);
 
     private:
         struct Data;

@@ -10,7 +10,7 @@
 namespace vizkit {
 
 struct ParticleVisualization::Data {
-    uw_localization::debug::ParticleSet particleSet;
+    uw_localization::ParticleSet particleSet;
     std::vector<osg::Vec4> color_map;
     osg::ref_ptr<osg::Geometry> geom;
     osg::ref_ptr<osg::Vec3Array> points;
@@ -27,7 +27,7 @@ struct ParticleVisualization::Data {
 ParticleVisualization::ParticleVisualization()
     : p (new Data)
 {
-    VizPluginRubyAdapter(ParticleVisualization, uw_localization::debug::ParticleSet, Particles);
+    VizPluginRubyAdapter(ParticleVisualization, uw_localization::ParticleSet, Particles);
 
     for(unsigned i = 0; i < 256; i++) {
         if(i < 128)
@@ -113,9 +113,9 @@ ParticleVisualization::updateMainNode( osg::Node* node )
 {
     DATA(points)->clear();
     DATA(colors)->clear();
-    std::vector<uw_localization::debug::Particle>::const_iterator it;
+    std::vector<uw_localization::Particle>::const_iterator it;
 
-    const uw_localization::debug::ParticleSet& set = DATA(particleSet);
+    const uw_localization::ParticleSet& set = DATA(particleSet);
 
     double scaling = 0;
     for(unsigned i = 0; i < set.particles.size(); i++) {
@@ -154,7 +154,7 @@ ParticleVisualization::updateMainNode( osg::Node* node )
 
 
 void
-ParticleVisualization::updateDataIntern(uw_localization::debug::ParticleSet const& value)
+ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& value)
 {
     DATA(particleSet) = value;
 }
