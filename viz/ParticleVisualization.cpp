@@ -118,12 +118,11 @@ ParticleVisualization::updateMainNode( osg::Node* node )
     const uw_localization::ParticleSet& set = DATA(particleSet);
 
     double scaling = 0;
-    for(unsigned i = 0; i < set.particles.size(); i++) {
-        scaling = (scaling < set.particles[i].main_confidence) ? set.particles[i].main_confidence : scaling;
-        std::cout << " conf " << it->main_confidence << std::endl;
+    for(unsigned i = 0; i < DATA(particleSet).particles.size(); i++) {
+        scaling = (scaling < DATA(particleSet).particles[i].main_confidence) 
+            ? DATA(particleSet).particles[i].main_confidence 
+            : scaling;
     }
-
-    std::cout << "scaling " << scaling << std::endl;
 
     unsigned index = 0;
 
@@ -144,8 +143,6 @@ ParticleVisualization::updateMainNode( osg::Node* node )
 
         index++;
     }
-
-    std::cout << "DONE" << std::endl;
 
     DATA(draw)->setCount(DATA(points)->size());
     DATA(geom)->setVertexArray(DATA(points));

@@ -21,7 +21,7 @@ struct Particle {
     /** current estimated position */
     base::Position position;
 
-   /** current heading / yaw for this particle */
+    /** current heading / yaw for this particle */
     double yaw;
 
     /** sub_confidences (perception, random, max_distance) **/
@@ -47,9 +47,6 @@ struct ParticleSet {
     
     /** current particle set for this state */ 
     std::vector<Particle> particles;
-
-    /** index of particle with maximum main confidence of the particle set */
-    unsigned int max_particle_index;
 };
 
 
