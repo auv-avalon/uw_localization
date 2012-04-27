@@ -18,6 +18,7 @@ class LaserScanVisualization
 {
     Q_OBJECT
     Q_PROPERTY(double height READ getScanHeight WRITE setScanHeight)
+    Q_PROPERTY(double yaw_offset READ getYawOffset WRITE setYawOffset)
     Q_PROPERTY(int buffersize READ getBufferSize WRITE setBufferSize)
     Q_PROPERTY(bool beam READ isBeam WRITE setBeam)
 
@@ -33,6 +34,9 @@ class LaserScanVisualization
 
         int    getBufferSize() const { return scan_buffer_size; }
         void   setBufferSize(int size) { scan_buffer_size = size; }
+
+        double getYawOffset() const { return yawoffset; }
+        void   setYawOffset(double yaw) { yawoffset = yaw; }
 
         bool   isBeam() const { return show_beam; }
         void   setBeam(bool enable) { show_beam = enable; }
@@ -50,6 +54,8 @@ class LaserScanVisualization
         base::samples::RigidBodyState pose;
         size_t scan_buffer_size;
         bool show_beam;
+
+        double yawoffset;
         
         unsigned int latest_sample_index;
         

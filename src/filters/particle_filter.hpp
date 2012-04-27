@@ -127,7 +127,7 @@ class ParticleFilter : Dynamic<P,U> {
     * initialize this filter with new particle samples 
     */
    virtual void initialize(int numbers,
-           const Eigen::Vector3d& pos, const Eigen::Matrix3d& pos_covariance,
+           const Eigen::Vector3d& pos, const Eigen::Vector3d& pos_covariance,
            double yaw, double yaw_covariance) = 0; 
 
 

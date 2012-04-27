@@ -5,7 +5,7 @@ namespace vizkit {
 
 LaserScanVisualization::LaserScanVisualization() 
     : new_laserscan_received(false), scan_buffer_size(128), show_beam(false), 
-      latest_sample_index(0), scan_height(2.0), color(1.0, 0.62, 0.0)
+      yawoffset(0.0), latest_sample_index(0), scan_height(2.0), color(1.0, 0.62, 0.0)
 {
     VizPluginRubyAdapter(LaserScanVisualization, base::samples::LaserScan, LaserScan);
     VizPluginRubyAdapter(LaserScanVisualization, base::samples::RigidBodyState, Pose);
@@ -114,13 +114,15 @@ void LaserScanVisualization::updateDataIntern(const base::samples::LaserScan& sc
     std::vector<Eigen::Vector3d> points;
     scan.convertScanToPointCloud(points, pose);
 
+    Eigen::AngleAxis<double> offset(yawoffset, Eigen::Vector3d::UnitZ());
+
     if(points.size() > 0) {
         new_laserscan_received = true;
     } else
         return;
 
     for(unsigned int i = 0; i < points.size(); i++)
-        buffer.push_back(points[i]);
+        buffer.push_back(offset * points[i]);
 
     while(buffer.size() > scan_buffer_size) {
         buffer.pop_front();
