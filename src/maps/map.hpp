@@ -2,14 +2,13 @@
 #define UW_LOCALIZATION_MAPS_HPP
 
 #include <Eigen/Core>
-#include <Eigen/Geometry>
 
 namespace uw_localization {
 
 class Map {
 public:
   Map();
-  Map(const Eigen::Vector3d& limitations, const Eigen::Translation3d& translation);
+  Map(const Eigen::Vector3d& limitations, const Eigen::Vector3d& translation);
   ~Map();
 
 public:
@@ -22,7 +21,7 @@ public:
 
 protected:
   Eigen::Vector3d limitations;
-  Eigen::Translation3d translation;
+  Eigen::Vector3d translation;
 };
 
 

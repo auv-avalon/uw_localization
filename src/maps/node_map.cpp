@@ -195,7 +195,7 @@ NodeMap::NodeMap(const std::string& map) : Map(), root(0)
 }
 
 
-NodeMap::NodeMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root)
+NodeMap::NodeMap(const Eigen::Vector3d& limits, const Eigen::Vector3d& t, Node* root)
     : Map(limits, t), root(root)
 {
 }
@@ -286,7 +286,7 @@ bool NodeMap::fromYaml(std::istream& stream)
     }
 
     limitations = parse_limit;
-    translation = Eigen::Translation3d(parse_translation);
+    translation = parse_translation;
 
     return true;
 }
@@ -344,13 +344,24 @@ void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 }
 
 
+Environment NodeMap::getEnvironment()
+{
+    Environment env;
+
+    env.right_bottom_corner = translation;
+    env.left_top_corner = limitations + translation;
+
+    return env;
+}
+
+
 
 MixedMap NodeMap::getMap()
 {
     MixedMap map;
 
     map.limitations = getLimitations();
-    map.translation = Eigen::Vector3d(translation.x(), translation.y(), translation.z());
+    map.translation = translation;
 
     std::vector<Node*> leafs = root->getLeafs();
     Landmark landmark;

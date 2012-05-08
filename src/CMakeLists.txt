@@ -10,6 +10,7 @@ set(HPP_FILES
     filters/particle_filter.hpp
     types/particle.hpp
     types/map.hpp
+    types/environment.hpp
     maps/map.hpp
     maps/node_map.hpp
     )

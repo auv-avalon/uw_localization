@@ -11,6 +11,7 @@
 #include "map.hpp"
 #include "../math/geometry.hpp"
 #include "../types/map.hpp"
+#include "../types/environment.hpp"
 
 namespace uw_localization {
 
@@ -97,7 +98,7 @@ private:
 class NodeMap : public Map {
 public:
   NodeMap(const std::string& map);
-  NodeMap(const Eigen::Vector3d& limits, const Eigen::Translation3d& t, Node* root);
+  NodeMap(const Eigen::Vector3d& limits, const Eigen::Vector3d& t, Node* root);
   virtual ~NodeMap();
 
   virtual std::vector<boost::tuple<Node*, Eigen::Vector3d> > drawSamples(const std::string& caption, int numbers) const;
@@ -106,6 +107,7 @@ public:
 	const Eigen::Vector3d& v, const Eigen::Vector3d& x) const;
  
   virtual MixedMap getMap();
+  virtual Environment getEnvironment();
 
   bool toYaml(std::ostream& stream);
   bool fromYaml(std::istream& stream);

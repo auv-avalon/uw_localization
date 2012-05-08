@@ -3,10 +3,10 @@ exec_prefix=@CMAKE_INSTALL_PREFIX@
 libdir=${prefix}/lib
 includedir=${prefix}/include
 
-Name: eras-viz
+Name: uw_localization-viz
 Description: vizKit plugin for the uw_localization library
 Requires: eras @PKGCONFIG_DEPS@
 Version: @PROJECT_VERSION@
-Libs: -L${libdir} -leras-viz
+Libs: -L${libdir} -luw_localization-viz
 Cflags: -I${includedir}
 

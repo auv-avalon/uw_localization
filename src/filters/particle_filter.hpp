@@ -270,6 +270,7 @@ class ParticleFilter : Dynamic<P,U> {
             p.part_confidences = it->part_confidences;
 
 	    ps.particles.push_back(p);
+            ps.generation = generation;
 	}
 
         return ps; 
@@ -289,7 +290,7 @@ class ParticleFilter : Dynamic<P,U> {
           std::vector<P> set;
           double r = random();
           double c = particles.front().main_confidence;
-
+          
           for(unsigned i = 0, m = 0; m < particles.size(); m++) {
               double u = r + (m * m_inv);
               while(u > c) {
@@ -302,6 +303,8 @@ class ParticleFilter : Dynamic<P,U> {
               set.push_back(particles[i]);
           }
 
+          generation++;
+
           particles = set;
       }
 
@@ -310,6 +313,8 @@ class ParticleFilter : Dynamic<P,U> {
       std::vector<P> particles;
 
       base::Time timestamp;
+
+      unsigned int generation;
 
       base::Vector3d weights;
       double effective_sample_size;

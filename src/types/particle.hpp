@@ -44,6 +44,9 @@ struct ParticleSet {
 
     /** effective sample size for controlling resampling */
     double effective_sample_size;
+
+    /** generation **/
+    unsigned int generation;
     
     /** current particle set for this state */ 
     std::vector<Particle> particles;

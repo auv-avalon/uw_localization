@@ -22,6 +22,12 @@ rock_vizkit_plugin(uw_localization_mapfeature-viz
    MOC MapFeatureVisualization.hpp
    HEADERS MapFeatureVisualization.hpp)
 
+rock_vizkit_plugin(uw_localization_monitor-viz
+    MonitorVisualization.cpp
+    DEPS uw_localization
+    MOC MonitorVisualization.hpp
+    HEADERS MonitorVisualization.hpp)
+
 
 
 
