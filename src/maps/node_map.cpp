@@ -351,6 +351,38 @@ Environment NodeMap::getEnvironment()
     env.right_bottom_corner = translation;
     env.left_top_corner = limitations + translation;
 
+    std::vector<Node*> leafs = root->getLeafs();
+    Landmark landmark;
+    Plane plane;
+    double height;
+
+    for(unsigned i = 0; i < leafs.size(); i++) {
+        switch(leafs[i]->getNodeType()) {
+        case NODE_LANDMARK:
+    	    landmark.caption = leafs[i]->getCaption();
+	    landmark.mean = dynamic_cast<LandmarkNode*>(leafs[i])->mean();
+	    landmark.covariance = dynamic_cast<LandmarkNode*>(leafs[i])->covariance();
+        
+            //map.landmarks.push_back(landmark);
+	    break;
+
+        case NODE_LINE:
+            height = dynamic_cast<LineNode*>(leafs[i])->getHeight();
+	    plane.position  = dynamic_cast<LineNode*>(leafs[i])->getLine().from();
+	    plane.span_horizontal = dynamic_cast<LineNode*>(leafs[i])->getLine().to() - plane.position;
+	    plane.span_vertical = base::Vector3d(0.0, 0.0, height); 
+
+            env.planes.push_back(plane);
+
+	    break;
+	     	    
+        default:
+	    break;
+        }
+    }
+
+
+
     return env;
 }
 
