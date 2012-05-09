@@ -47,6 +47,9 @@ struct ParticleSet {
 
     /** generation **/
     unsigned int generation;
+
+    /** best particle **/
+    unsigned int best_particle;
     
     /** current particle set for this state */ 
     std::vector<Particle> particles;

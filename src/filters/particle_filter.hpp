@@ -261,13 +261,20 @@ class ParticleFilter : Dynamic<P,U> {
 	ps.timestamp = timestamp;
         ps.effective_sample_size = effective_sample_size;
         ps.weights = weights;
+
+        ps.best_particle = 0;
+        unsigned i = 0;
 	
-	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++, i++) {
             Particle p;
 	    p.position =it->position();
 	    p.yaw = base::getYaw(it->orientation());
 	    p.main_confidence = it->main_confidence;
             p.part_confidences = it->part_confidences;
+
+            if( !std::isnan(it->main_confidence) 
+                    && particles[ps.best_particle].main_confidence < it->main_confidence)
+                ps.best_particle = i;
 
 	    ps.particles.push_back(p);
             ps.generation = generation;
