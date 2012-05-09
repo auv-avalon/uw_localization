@@ -7,8 +7,8 @@ namespace uw_localization {
 
 struct Plane {
     base::Vector3d position;
-    base::Vector3d span_dim1;
-    base::Vector3d span_dim2;
+    base::Vector3d span_horizontal;
+    base::Vector3d span_vertical;
 };
 
 
