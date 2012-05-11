@@ -11,6 +11,7 @@ set(HPP_FILES
     types/particle.hpp
     types/map.hpp
     types/environment.hpp
+    types/info.hpp
     maps/map.hpp
     maps/node_map.hpp
     )
