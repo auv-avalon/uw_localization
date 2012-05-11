@@ -14,10 +14,38 @@ void MonitorVisualization::updateDataIntern(const uw_localization::Environment& 
 }
 
 
-void MonitorVisualization::updateDataIntern(const uw_localization::ParticleSet& particles)
+void MonitorVisualization::updateDataIntern(const uw_localization::ParticleSet& p)
 {
-    data_particles = particles;
-    particle_update = true;
+    while(particle_group->getNumChildren() < p.particles.size()) {
+        osg::ref_ptr<ParticleGeode> geode = new ParticleGeode;
+        particle_group->addChild(geode.get());
+    }
+
+    best_particle = p.best_particle;
+    max_weight = p.particles[best_particle].main_confidence;
+
+    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) 
+        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->updateParticle(p.particles[i]);
+}
+
+
+void MonitorVisualization::updateDataIntern(const uw_localization::ParticleInfo& info) 
+{
+    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) {
+        ParticleGeode* p = dynamic_cast<ParticleGeode*>(particle_group->getChild(i));
+        switch(info.type) {
+            case 0:
+                p->updateSonar(info.infos[i]);
+                
+                if(i == best_particle)
+                    p->showSonar(true);
+
+                break;
+            default:
+                break;
+        }
+
+    }
 }
 
 
@@ -41,10 +69,10 @@ osg::ref_ptr<osg::Node> MonitorVisualization::createMainNode()
 
     border_geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     border_geode->addDrawable(border_geom.get());
-
-    root->addChild(border_geode);
-    root->addChild(plane_group);
-    root->addChild(particle_group);
+    
+    root->addChild(border_geode.get());
+    root->addChild(plane_group.get());
+    root->addChild(particle_group.get());
 
     return root;
 }
@@ -55,39 +83,23 @@ void MonitorVisualization::updateMainNode(osg::Node* node)
     if(property_dynamic_map || !map_created) 
         renderEnvironment(data_env);
 
-    if(particle_update)
-        renderParticles(data_particles);
+    if(map_created && particle_group->getNumChildren() > 0)
+        renderParticles();
 }
 
-void MonitorVisualization::renderParticles(const uw_localization::ParticleSet& set)
+void MonitorVisualization::renderParticles()
 {
-    double size = 0.1;
-    double max_weight = set.particles[set.best_particle].main_confidence;
-    double from = data_env.right_bottom_corner.z();
-    double height = data_env.left_top_corner.z() - data_env.right_bottom_corner.z();
+    double max_z = data_env.right_bottom_corner.z();
+    double min_z = data_env.left_top_corner.z();
 
-    if(particle_group->getNumChildren() == 0) {
-        for(unsigned i = 0; i < set.particles.size(); i++) {
-            osg::ref_ptr<ParticleGeode> geode = new ParticleGeode;
-            particle_group->addChild(geode);
+    if(property_box)
+        ParticleGeode::setViz(ParticleGeode::BOX, min_z, max_z, 0.1, max_weight);
+    else
+        ParticleGeode::setViz(ParticleGeode::LINE, min_z, max_z, 0.1, max_weight);
 
-            if(property_box)
-                geode->update_as_box(set.particles.at(i), size, max_weight);
-            else 
-                geode->update_as_line(set.particles.at(i), from, height, size, max_weight);
-        }
-    } else {
-        for(unsigned i = 0; i < set.particles.size(); i++) { 
-            ParticleGeode* p = dynamic_cast<ParticleGeode*>(particle_group->getChild(i));
-
-            if(property_box)
-                p->update_as_box(set.particles.at(i), size, max_weight);
-            else 
-                p->update_as_line(set.particles.at(i), from, height, size, max_weight);
-        }
+    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) {
+        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->render();
     }
-
-    particle_update = false;
 }
 
 

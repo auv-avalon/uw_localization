@@ -4,20 +4,31 @@ namespace vizkit {
 
 std::vector<osg::Vec4> ParticleGeode::color_map;
 
-ParticleGeode:: ParticleGeode() : Geode()
+ParticleGeode::ParticleGeode() : Geode()
 {
     color = new osg::Vec4Array;
     vertices = new osg::Vec3Array;
     geom = new osg::Geometry;
 
+    sonar_color = new osg::Vec4Array;
+    sonar_vertices = new osg::Vec3Array;
+    sonar_geom = new osg::Geometry;
+    sonar_draw = new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4);
+
+    sonar_show = false;
+
     geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 24));
-    geom->setVertexArray(vertices.get());
-    geom->setColorArray(color.get());
     geom->setColorBinding(osg::Geometry::BIND_OVERALL);
     geom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
+    sonar_geom->addPrimitiveSet(sonar_draw);
+    sonar_geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+    sonar_geom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
     this->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
     this->addDrawable(geom.get());
+    
+    changed = true;
 }
 
 osg::Vec4& ParticleGeode::gradient(double weight) 
@@ -41,8 +52,27 @@ ParticleGeode::~ParticleGeode()
 {
 }
 
- 
-void ParticleGeode::update_as_box(const uw_localization::Particle& particle, double size, double scale)
+void ParticleGeode::render()
+{
+    if(!changed)
+        return;
+
+    switch(type) {
+        case BOX:
+            renderAsBox(particle, size, scale);
+            break;
+        case LINE:
+            renderAsLine(particle, max_z, min_z, size, scale);
+            break;
+    }
+
+    renderSonar();
+
+    changed = false;
+}
+
+
+void ParticleGeode::renderAsBox(const uw_localization::Particle& particle, double size, double scale)
 {
     vertices->clear();
     color->clear();
@@ -93,13 +123,13 @@ void ParticleGeode::update_as_box(const uw_localization::Particle& particle, dou
 }
 
 
-void ParticleGeode::update_as_line(const uw_localization::Particle& particle, double from, double max_height, double size, double scale)
+void ParticleGeode::renderAsLine(const uw_localization::Particle& particle, double from, double to, double size, double scale)
 {
     vertices->clear();
     color->clear();
 
     base::Vector3d pos = particle.position;
-    double height = max_height * (particle.main_confidence / scale);
+    double height = (to - from) * (particle.main_confidence / scale);
     float offset = size / 2.0f;
 
     // top
@@ -145,5 +175,67 @@ void ParticleGeode::update_as_line(const uw_localization::Particle& particle, do
 }
 
 
+
+void ParticleGeode::renderSonar()
+{
+    sonar_color->clear();
+    sonar_vertices->clear();
+
+    if(!sonar_show) {
+        this->removeDrawable(sonar_geom.get());
+        return;
+    }
+
+    if(this->getNumDrawables() < 2)
+        this->addDrawable(sonar_geom.get());
+
+    osg::Vec3 pos(particle.position.x(), particle.position.y(), particle.position.z());
+    osg::Vec3 des(sonar.real_point.x(), sonar.real_point.y(), 0.0f);
+
+    sonar_vertices->push_back(pos);
+    sonar_vertices->push_back(pos);
+    sonar_vertices->push_back(des + osg::Vec3(0.0f, 0.0f, min_z));
+    sonar_vertices->push_back(des + osg::Vec3(0.0f, 0.0f, max_z));
+
+    sonar_color->push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 0.7f));
+    sonar_geom->setVertexArray(sonar_vertices.get());
+    sonar_geom->setColorArray(sonar_color.get());
+}
+
+void ParticleGeode::updateParticle(const uw_localization::Particle& p)
+{
+    particle = p;
+    changed = true;
+}
+
+
+void ParticleGeode::updateSonar(const uw_localization::PointInfo& info) 
+{
+    sonar = info;
+    sonar_show = false;
+    changed = true;
+}
+
+void ParticleGeode::showSonar(bool show)
+{
+    sonar_show = show;
+    changed = true;
+}
+
+
+void ParticleGeode::setViz(VizType type_, double min_z_, double max_z_, double size_, double scale_)
+{
+    type = type_;
+    min_z = min_z_;
+    max_z = max_z_;
+    size = size_;
+    scale = scale_;
+}
+
+ParticleGeode::VizType ParticleGeode::type = LINE;
+double ParticleGeode::min_z = 0.0;
+double ParticleGeode::max_z = 1.0;
+double ParticleGeode::size  = 0.1;
+double ParticleGeode::scale = 1.0;
 
 }
