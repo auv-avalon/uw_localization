@@ -23,9 +23,6 @@ struct Particle {
 
     /** current heading / yaw for this particle */
     double yaw;
-
-    /** sub_confidences (perception, random, max_distance) **/
-    base::Vector3d part_confidences;
  
     /** current believe for this particle */
     double main_confidence;
@@ -41,9 +38,6 @@ struct ParticleSet {
 
     /** weights for forming main_confidences */
     base::Vector3d weights;
-
-    /** effective sample size for controlling resampling */
-    double effective_sample_size;
 
     /** generation **/
     unsigned int generation;

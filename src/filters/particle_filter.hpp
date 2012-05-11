@@ -42,16 +42,9 @@ class Perception {
      * \param map current representation for a given map hypothesis
      * \return updated state and probability of a plausible particle set (can be a constant if not used)
      */
-    virtual double perception(const P& state, const Z& sensor, const M& map) {
+    virtual double observe(const Z& sensor, const M& map) {
 	throw new std::runtime_error("perception model is required");
 	return 0.0;
-    }
-
-    /**
-     * check if this perception update is within the maximum range
-     */
-    virtual bool isMaximumRange(const Z& sensor) {
-	return false;
     }
 };
 
@@ -101,9 +94,6 @@ class ParticleBase {
      */
     virtual base::Orientation orientation() const = 0;
 
-     /** part confidences for debugging */
-     base::Vector3d part_confidences;
-
      /** normalized main_confidence for this particle */
      double main_confidence;
 };
@@ -116,12 +106,13 @@ class ParticleBase {
  */
 template <typename P, typename U, typename M>
 class ParticleFilter : Dynamic<P,U> {
-    typedef typename std::vector<P>::iterator ParticleIterator;
   public:
     ParticleFilter() 
     {}
 
     virtual ~ParticleFilter() {}
+
+   typedef typename std::vector<P>::iterator ParticleIterator;
 
    /**
     * initialize this filter with new particle samples 
@@ -130,14 +121,6 @@ class ParticleFilter : Dynamic<P,U> {
            const Eigen::Vector3d& pos, const Eigen::Vector3d& pos_covariance,
            double yaw, double yaw_covariance) = 0; 
 
-
-   /**
-     * checks if a current state particle is still valid in a map
-     */
-    virtual bool isParticleInWorld(const P& state, const M& map) { 
-       return true;
-    }
-    
     /**
      * create a position sample from the the given particle set. Assure
      * you are getting only a valid position after a measurement update
@@ -146,7 +129,6 @@ class ParticleFilter : Dynamic<P,U> {
      * Implementation can override this method for choosing  average value
      */
     virtual base::samples::RigidBodyState& estimate() = 0;
-
 
     /**
      * updates the current particle set for an incoming motion action depending
@@ -178,76 +160,6 @@ class ParticleFilter : Dynamic<P,U> {
 	timestamp = model->getTimestamp(motion);
     }
 
-
-    /**
-     * updates the current particle set for an incoming sensor sample depending on the 
-     * given estimation model
-     *
-     * \param sensor measurement sample
-     * \param map current map for this particle
-     * \return global propability current particle set is not in kidnapping problem
-     */
-    template<typename Z>
-    double observe(const Z& sensor, const M& map, const Eigen::Vector3d& ratio = Eigen::Vector3d(1.0, 0.0, 0.0), double random_noise = -1.0) {
-        // brutal hack and performance could suffer a little, but it works
-        Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
-
-	std::vector<double> quick_weights;
-	double sum_perception_weight = 0.0;
-	double sum_overall_weight = 0.0;
-        double overall_weight = 0.0;
-        double Neff = 0.0;
-	unsigned i;
-
-        if(random_noise < 0)
-	     random_noise = 1.0 / particles.size();
-
-	// calculate all perceptions
-	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-            if(isParticleInWorld(*it, map)) {
-	        quick_weights.push_back(model->perception(*it, sensor, map));
-	        sum_perception_weight += quick_weights.back();
-	    } else {
-                quick_weights.push_back(0.0);
-	    }
-	}
-
-        i = 0;
-
-	// normalize perception weights and form mixed weight based on probabilities of perception, random_noise, maximum_range_noise
-	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-	    if(model->isMaximumRange(sensor))
-	       it->part_confidences = Eigen::Vector3d(0.0, 0.0, 1.0);
-	    else
-	       it->part_confidences = Eigen::Vector3d(quick_weights[i] / sum_perception_weight, random_noise, 0.0);
-
-	    overall_weight = (it->part_confidences.transpose() * ratio).x();
-	    sum_overall_weight += overall_weight;
-	    quick_weights[i] = overall_weight;
-
-            i++;
-	}
-
-        i = 0;
-
-	// normalize overall weights and form effective sample size
-	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-	   double norm_weight = quick_weights[i] / sum_overall_weight;
-	   Neff += norm_weight * norm_weight;
-
-           it->main_confidence = norm_weight;
-
-           i++;
-	}
-
-        effective_sample_size = 1.0 / Neff;
-
-        weights = ratio;
-
-	return effective_sample_size;        
-    }
-
-
     /** 
      * returns current status of particle set in a general form
      *
@@ -259,7 +171,6 @@ class ParticleFilter : Dynamic<P,U> {
 	ps.particles.clear();
 
 	ps.timestamp = timestamp;
-        ps.effective_sample_size = effective_sample_size;
         ps.weights = weights;
 
         ps.best_particle = 0;
@@ -270,7 +181,6 @@ class ParticleFilter : Dynamic<P,U> {
 	    p.position =it->position();
 	    p.yaw = base::getYaw(it->orientation());
 	    p.main_confidence = it->main_confidence;
-            p.part_confidences = it->part_confidences;
 
             if( !std::isnan(it->main_confidence) 
                     && particles[ps.best_particle].main_confidence < it->main_confidence)

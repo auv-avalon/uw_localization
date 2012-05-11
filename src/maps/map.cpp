@@ -34,10 +34,7 @@ Eigen::Vector3d Map::getLimitations() const
 
 bool Map::belongsToWorld(const Eigen::Vector3d& p) const
 {
-    Eigen::Vector3d null(0.0, 0.0, 0.0);
-    
     Eigen::Vector3d ref = translation;
-
     Eigen::Vector3d l = translation + limitations;
 
     return (p.x() >= ref.x() && p.x() <= l.x()) 
