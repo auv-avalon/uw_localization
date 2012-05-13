@@ -42,7 +42,7 @@ class Perception {
      * \param map current representation for a given map hypothesis
      * \return updated state and probability of a plausible particle set (can be a constant if not used)
      */
-    virtual double observe(const Z& sensor, const M& map) {
+    virtual double perception(const P& p, const Z& sensor, const M& map) {
 	throw new std::runtime_error("perception model is required");
 	return 0.0;
     }
@@ -160,6 +160,49 @@ class ParticleFilter : Dynamic<P,U> {
 	timestamp = model->getTimestamp(motion);
     }
 
+    template<typename Z>
+    double observe(const Z& z, const M& m, double ratio = 1.0)
+    {
+        Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
+
+        std::vector<double> perception_weights;
+        double sum_perception_weight = 0.0;
+        double sum_main_confidence = 0.0;
+        double Neff = 0.0;
+        unsigned i;
+
+        // calculate all perceptions
+        for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+            perception_weights.push_back(model->perception(*it, z, m));
+            sum_perception_weight += perception_weights.back();
+        }
+
+        if(sum_perception_weight <= 0.0) 
+            return 0.0;
+
+        i = 0;
+
+        // normalize perception weights and form mixed weight based on probabilities of perception, random_noise, maximum_range_noise
+        for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+            double uniform = 1.0 / particles.size();
+            double w = 1.0 - ratio;
+
+            it->main_confidence *= ((ratio * perception_weights[i++] / sum_perception_weight) 
+                + w * uniform);
+
+            sum_main_confidence += it->main_confidence;
+        }
+
+        // normalize overall confidence
+        for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+            it->main_confidence = it->main_confidence / sum_main_confidence;
+
+            Neff += it->main_confidence * it->main_confidence;
+        }
+
+        return (1.0 / Neff) / particles.size();
+    }
+
     /** 
      * returns current status of particle set in a general form
      *
@@ -234,7 +277,6 @@ class ParticleFilter : Dynamic<P,U> {
       unsigned int generation;
 
       base::Vector3d weights;
-      double effective_sample_size;
 
       base::Position mean_position;
       base::Matrix3d cov_position;
