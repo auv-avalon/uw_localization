@@ -15,15 +15,25 @@ ParticleGeode::ParticleGeode() : Geode()
     sonar_geom = new osg::Geometry;
     sonar_draw = new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4);
 
-    sonar_show = false;
+    desire_color = new osg::Vec4Array;
+    desire_vertices = new osg::Vec3Array;
+    desire_geom = new osg::Geometry;
+    desire_draw = new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 8);
+
+    real_point_show = false;
+    desire_point_show = false;
 
     geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 24));
     geom->setColorBinding(osg::Geometry::BIND_OVERALL);
     geom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
-    sonar_geom->addPrimitiveSet(sonar_draw);
+    sonar_geom->addPrimitiveSet(sonar_draw.get());
     sonar_geom->setColorBinding(osg::Geometry::BIND_OVERALL);
     sonar_geom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+    desire_geom->addPrimitiveSet(desire_draw.get());
+    desire_geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+    desire_geom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
     this->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
     this->addDrawable(geom.get());
@@ -38,10 +48,13 @@ osg::Vec4& ParticleGeode::gradient(double weight)
 
     if(color_map.size() == 0) {
         for(unsigned i = 0; i < 256; i++) {
+            /*
             if(i < 128)
                 color_map.push_back(osg::Vec4(1.0f, i / 127.0f, 0.0f, 0.7f));
             else
                 color_map.push_back(osg::Vec4(1.0f - ((i - 128) / 127.0f), 1.0f, 0.0f, 0.7f));
+            */
+            color_map.push_back(osg::Vec4(1.0f, i / 255.0f, 0.0f, 0.7f));
         }
     }
 
@@ -66,7 +79,8 @@ void ParticleGeode::render()
             break;
     }
 
-    renderSonar();
+    renderRealPoint();
+    renderDesirePoint();
 
     changed = false;
 }
@@ -174,19 +188,48 @@ void ParticleGeode::renderAsLine(const uw_localization::Particle& particle, doub
     geom->setColorArray(color.get());
 }
 
+void ParticleGeode::renderDesirePoint()
+{
+    desire_color->clear();
+    desire_vertices->clear();
 
+    if(!desire_point_show) {
+        this->removeDrawable(desire_geom.get());
+        return;
+    }
 
-void ParticleGeode::renderSonar()
+    if(!this->containsDrawable(desire_geom.get()))
+        this->addDrawable(desire_geom.get());
+
+    osg::Vec3 pos(particle.position.x(), particle.position.y(), particle.position.z());
+    osg::Vec3 des(sonar.desire_point.x(), sonar.desire_point.y(), 0.0f);
+
+    desire_vertices->push_back(des + osg::Vec3(-0.1f, 0.0f, min_z));
+    desire_vertices->push_back(des + osg::Vec3(0.1f, 0.0f, min_z));
+    desire_vertices->push_back(des + osg::Vec3(0.1f, 0.0f, max_z));
+    desire_vertices->push_back(des + osg::Vec3(-0.1f, 0.0f, max_z));
+
+    desire_vertices->push_back(des + osg::Vec3(0.0f, -0.1f, min_z));
+    desire_vertices->push_back(des + osg::Vec3(0.0f, 0.1f, min_z));
+    desire_vertices->push_back(des + osg::Vec3(0.0f, 0.1f, max_z));
+    desire_vertices->push_back(des + osg::Vec3(0.0f, -0.1f, max_z));
+
+    desire_color->push_back(osg::Vec4(0.0f, 1.0f, 0.0f, 0.7f));
+    desire_geom->setVertexArray(desire_vertices.get());
+    desire_geom->setColorArray(desire_color.get());
+}
+
+void ParticleGeode::renderRealPoint()
 {
     sonar_color->clear();
     sonar_vertices->clear();
 
-    if(!sonar_show) {
+    if(!real_point_show) {
         this->removeDrawable(sonar_geom.get());
         return;
     }
 
-    if(this->getNumDrawables() < 2)
+    if(!this->containsDrawable(sonar_geom.get()))
         this->addDrawable(sonar_geom.get());
 
     osg::Vec3 pos(particle.position.x(), particle.position.y(), particle.position.z());
@@ -212,14 +255,26 @@ void ParticleGeode::updateParticle(const uw_localization::Particle& p)
 void ParticleGeode::updateSonar(const uw_localization::PointInfo& info) 
 {
     sonar = info;
-    sonar_show = false;
+    real_point_show = false;
+    desire_point_show = false;
     changed = true;
 }
 
-void ParticleGeode::showSonar(bool show)
+void ParticleGeode::showRealPoint(bool show)
 {
-    sonar_show = show;
-    changed = true;
+    if(sonar.status.empty()) {
+        real_point_show = show;
+        changed = true;
+    }
+}
+
+
+void ParticleGeode::showDesirePoint(bool show)
+{
+    if(sonar.status.empty()) {
+        desire_point_show = show;
+        changed = true;
+    }
 }
 
 

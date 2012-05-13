@@ -22,13 +22,15 @@ class ParticleGeode : public osg::Geode
      void renderAsBox(const uw_localization::Particle& particle, double size, double scale = 1.0);
      void renderAsLine(const uw_localization::Particle& particle, double from, double height, double size, double scale = 1.0);
 
-     void renderSonar();
+     void renderRealPoint();
+     void renderDesirePoint();
 
      void render();
 
      void updateParticle(const uw_localization::Particle& particle);
      void updateSonar(const uw_localization::PointInfo& info);
-     void showSonar(bool show);
+     void showRealPoint(bool show);
+     void showDesirePoint(bool show);
 
      static osg::Vec4& gradient(double weight);
      static void setViz(VizType type, double min_z, double max_z, double size, double scale);
@@ -44,11 +46,17 @@ class ParticleGeode : public osg::Geode
      osg::ref_ptr<osg::Vec3Array> sonar_vertices;
      osg::ref_ptr<osg::DrawArrays> sonar_draw;
 
+     osg::ref_ptr<osg::Geometry> desire_geom;
+     osg::ref_ptr<osg::Vec4Array> desire_color;
+     osg::ref_ptr<osg::Vec3Array> desire_vertices;
+     osg::ref_ptr<osg::DrawArrays> desire_draw;
+
      static std::vector<osg::Vec4> color_map;
 
      uw_localization::PointInfo sonar;
      uw_localization::Particle particle;
-     bool sonar_show;
+     bool desire_point_show;
+     bool real_point_show;
      bool changed;
      
      static VizType type;

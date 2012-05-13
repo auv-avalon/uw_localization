@@ -11,6 +11,7 @@ MonitorVisualization::~MonitorVisualization()
 void MonitorVisualization::updateDataIntern(const uw_localization::Environment& env)
 {
     data_env = env;
+    map_changed = true;
 }
 
 
@@ -37,8 +38,10 @@ void MonitorVisualization::updateDataIntern(const uw_localization::ParticleInfo&
             case 0:
                 p->updateSonar(info.infos[i]);
                 
-                if(i == best_particle)
-                    p->showSonar(true);
+                if(i == best_particle) {
+                    p->showDesirePoint(property_desire_point);
+                    p->showRealPoint(property_real_point);
+                }
 
                 break;
             default:
@@ -80,7 +83,7 @@ osg::ref_ptr<osg::Node> MonitorVisualization::createMainNode()
 
 void MonitorVisualization::updateMainNode(osg::Node* node)
 {
-    if(property_dynamic_map || !map_created) 
+    if(map_changed) 
         renderEnvironment(data_env);
 
     if(map_created && particle_group->getNumChildren() > 0)
@@ -147,50 +150,55 @@ void MonitorVisualization::renderEnvironment(const uw_localization::Environment&
     // set border color to white
     border_colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.5));
 
-    // draw grid lines
-    double centre_x = (L.x() + R.x()) * 0.5;
-    double centre_y = (L.y() + R.y()) * 0.5;
+    if(property_gridlines) {
+        // draw grid lines
+        double centre_x = (L.x() + R.x()) * 0.5;
+        double centre_y = (L.y() + R.y()) * 0.5;
 
-    double width  = (L.y() - R.y());
-    double height = (L.x() - R.x());
+        double width  = (L.y() - R.y());
+        double height = (L.x() - R.x());
 
-    double dx = 0.0;
-    double dy = 0.0;
+        double dx = 0.0;
+        double dy = 0.0;
 
-    unsigned grid_vertices = 0;
+        unsigned grid_vertices = 0;
 
-    while( dy <= width * 0.5 ) {
-        border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y + dy, R.z()));
-        border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y + dy, R.z()));
-        border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y - dy, R.z()));
-        border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y - dy, R.z()));
+        while( dy <= width * 0.5 ) {
+            border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y + dy, R.z()));
+            border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y + dy, R.z()));
+            border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y - dy, R.z()));
+            border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y - dy, R.z()));
 
-        dy += 1.0;
-        grid_vertices += 4;
+            dy += 1.0;
+            grid_vertices += 4;
+        }
+
+        while( dx <= height * 0.5 ) {
+            border_points->push_back(osg::Vec3d(centre_x + dx, centre_y - width / 2.0, R.z()));
+            border_points->push_back(osg::Vec3d(centre_x + dx, centre_y + width / 2.0, R.z()));
+
+            border_points->push_back(osg::Vec3d(centre_x - dx, centre_y - width / 2.0, R.z()));
+            border_points->push_back(osg::Vec3d(centre_x - dx, centre_y + width / 2.0, R.z()));
+
+            dx += 1.0;
+            grid_vertices += 4;
+        }
+
+        grid->setCount(grid_vertices);
     }
 
-    while( dx <= height * 0.5 ) {
-        border_points->push_back(osg::Vec3d(centre_x + dx, centre_y - width / 2.0, R.z()));
-        border_points->push_back(osg::Vec3d(centre_x + dx, centre_y + width / 2.0, R.z()));
-        
-        border_points->push_back(osg::Vec3d(centre_x - dx, centre_y - width / 2.0, R.z()));
-        border_points->push_back(osg::Vec3d(centre_x - dx, centre_y + width / 2.0, R.z()));
-        
-        dx += 1.0;
-        grid_vertices += 4;
-    }
-
-    grid->setCount(grid_vertices);
-
+    /*
     plane_group->removeChildren(0, plane_group->getNumChildren());
     for(unsigned i = 0; i < env.planes.size(); i++) {
         plane_group->addChild(createPlaneNode(env.planes[i]));
     }
+    */
 
     border_geom->setColorArray(border_colors.get());
     border_geom->setVertexArray(border_points.get());
 
     map_created = true;
+    map_changed = false;
 }
 
 

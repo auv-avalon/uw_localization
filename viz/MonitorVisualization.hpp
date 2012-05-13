@@ -20,8 +20,10 @@ class MonitorVisualization
 {
     Q_OBJECT
     Q_PROPERTY(bool dynamic_map READ getDynamicMap WRITE setDynamicMap)
+    Q_PROPERTY(bool gridlines READ getGridlines WRITE setGridlines)
     Q_PROPERTY(bool box READ getBox WRITE setBox)
-    Q_PROPERTY(bool sonar READ getSonar WRITE setSonar)
+    Q_PROPERTY(bool sonar_desire_point READ getDesirePoint WRITE setDesirePoint)
+    Q_PROPERTY(bool sonar_real_point READ getRealPoint WRITE setRealPoint)
 
  public:
      MonitorVisualization() {
@@ -29,22 +31,29 @@ class MonitorVisualization
         VizPluginRubyAdapter(MonitorVisualization, uw_localization::ParticleSet,  ParticleSet);
         VizPluginRubyAdapter(MonitorVisualization, uw_localization::ParticleInfo, ParticleInfo);
         map_created = false;
+        map_changed = false;
         particle_update = false;
         sonar_update = false;
-        property_sonar = false;
         property_dynamic_map = false;
         property_box = false;
+        property_real_point = true;
+        property_desire_point = true;
+        property_gridlines = false;
      }
 
      ~MonitorVisualization();
 
      bool getDynamicMap() const { return property_dynamic_map; }
      bool getBox() const { return property_box; }
-     bool getSonar() const { return property_sonar; }
+     bool getRealPoint() const { return property_real_point; }
+     bool getDesirePoint() const { return property_desire_point; }
+     bool getGridlines() const { return property_gridlines; }
 
-     void setSonar(bool p) { property_sonar = p; }
+     void setGridlines(bool p) { property_gridlines = p; }
      void setBox(bool p) { property_box = p; }
      void setDynamicMap(bool p) { property_dynamic_map = p; }
+     void setRealPoint(bool p) { property_real_point = p; }
+     void setDesirePoint(bool p) { property_desire_point = p; }
 
  protected:
      virtual osg::ref_ptr<osg::Node> createMainNode();
@@ -66,6 +75,7 @@ class MonitorVisualization
      osg::ref_ptr<osg::DrawArrays> grid;
 
      bool map_created;
+     bool map_changed;
      bool particle_update;
      bool sonar_update;
 
@@ -74,7 +84,9 @@ class MonitorVisualization
 
      bool property_dynamic_map;
      bool property_box;
-     bool property_sonar;
+     bool property_real_point;
+     bool property_desire_point;
+     bool property_gridlines;
 
      double max_weight;
      unsigned int best_particle;
