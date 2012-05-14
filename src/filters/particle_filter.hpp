@@ -140,15 +140,24 @@ class ParticleFilter : Dynamic<P,U> {
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
+        unsigned best_particle = 0;
+        unsigned i = 0;
 	base::Position mean = base::Position::Zero();
 	base::Matrix3d variance = base::Matrix3d::Zero();
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
 	    model->dynamic(*it, motion);
-	    mean += it->position();	
+	    mean += it->position();
+
+            if(it->main_confidence > particles[best_particle].main_confidence) {
+                best_particle = i;
+            }
+
+            i++;
 	}
 
 	mean_position = mean / particles.size();
+        best_position = particles[best_particle].position();
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
 	    base::Vector3d pos_s = it->position() - mean;
@@ -278,6 +287,7 @@ class ParticleFilter : Dynamic<P,U> {
 
       base::Vector3d weights;
 
+      base::Position best_position;
       base::Position mean_position;
       base::Matrix3d cov_position;
 
