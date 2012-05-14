@@ -38,7 +38,7 @@ class MonitorVisualization
         property_box = false;
         property_real_point = true;
         property_desire_point = true;
-        property_gridlines = false;
+        property_gridlines = true;
      }
 
      ~MonitorVisualization();
@@ -66,7 +66,7 @@ class MonitorVisualization
      void renderParticles();
      void renderStatus();
 
-     virtual osg::ref_ptr<osg::Geode> createPlaneNode(const uw_localization::Plane& plane);
+     void updatePlaneNode(osg::Geode* geode, const uw_localization::Plane& plane);
 
  private:
      osg::ref_ptr<osg::Vec3Array> border_points;

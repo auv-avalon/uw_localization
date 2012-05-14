@@ -83,7 +83,7 @@ osg::ref_ptr<osg::Node> MonitorVisualization::createMainNode()
 
 void MonitorVisualization::updateMainNode(osg::Node* node)
 {
-    if(map_changed) 
+    if(!map_created || (property_dynamic_map && map_changed))
         renderEnvironment(data_env);
 
     if(map_created && particle_group->getNumChildren() > 0)
@@ -187,12 +187,23 @@ void MonitorVisualization::renderEnvironment(const uw_localization::Environment&
         grid->setCount(grid_vertices);
     }
 
-    /*
-    plane_group->removeChildren(0, plane_group->getNumChildren());
-    for(unsigned i = 0; i < env.planes.size(); i++) {
-        plane_group->addChild(createPlaneNode(env.planes[i]));
+    while(env.planes.size() > plane_group->getNumChildren()) {
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+
+        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 5)); 
+
+        geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+        geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+        geode->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+        geode->addDrawable(geom.get());
+
+        plane_group->addChild(geode);
     }
-    */
+
+    for(unsigned i = 0; i < plane_group->getNumChildren(); i++) {
+        updatePlaneNode(dynamic_cast<osg::Geode*>(plane_group->getChild(i)), env.planes[i]);
+    }
 
     border_geom->setColorArray(border_colors.get());
     border_geom->setVertexArray(border_points.get());
@@ -204,10 +215,9 @@ void MonitorVisualization::renderEnvironment(const uw_localization::Environment&
 
 
 
-osg::ref_ptr<osg::Geode> MonitorVisualization::createPlaneNode(const uw_localization::Plane& plane)
+void MonitorVisualization::updatePlaneNode(osg::Geode* geode, const uw_localization::Plane& plane)
 {
-    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-    osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+    osg::Geometry* geom = dynamic_cast<osg::Geometry*>(geode->getDrawable(0));
     osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array; 
     osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
 
@@ -220,19 +230,10 @@ osg::ref_ptr<osg::Geode> MonitorVisualization::createPlaneNode(const uw_localiza
     vertices->push_back(pos + sh + sv);
     vertices->push_back(pos + sv);
 
-    while(colors->size() < vertices->size())
-        colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.5));
+    colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.3));
 
-    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 5)); 
     geom->setVertexArray(vertices.get());
     geom->setColorArray(colors.get());
-
-    geom->setColorBinding(osg::Geometry::BIND_OVERALL);
-    geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-    geode->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
-    geode->addDrawable(geom.get());
-
-    return geode;
 }
 
 
