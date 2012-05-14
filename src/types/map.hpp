@@ -41,20 +41,6 @@ struct Linemark {
 };
 
 
-struct MixedMap {
-    /** current world limitations **/
-    base::Vector3d limitations;
-
-    /** translation for limitations to reference frame **/
-    base::Vector3d translation;
-
-    /** landmarks for this map **/
-    std::vector<uw_localization::Landmark> landmarks;
-
-    /** wall lines in this map **/
-    std::vector<uw_localization::Linemark> lines;
-};
-
 
 }
 

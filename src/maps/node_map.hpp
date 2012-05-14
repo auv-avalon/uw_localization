@@ -106,7 +106,6 @@ public:
   virtual boost::tuple<Node*, double, Eigen::Vector3d> getNearestDistance(const std::string& caption, 
 	const Eigen::Vector3d& v, const Eigen::Vector3d& x) const;
  
-  virtual MixedMap getMap();
   virtual Environment getEnvironment();
 
   bool toYaml(std::ostream& stream);

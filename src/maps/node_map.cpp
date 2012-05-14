@@ -381,48 +381,7 @@ Environment NodeMap::getEnvironment()
         }
     }
 
-
-
     return env;
-}
-
-
-
-MixedMap NodeMap::getMap()
-{
-    MixedMap map;
-
-    map.limitations = getLimitations();
-    map.translation = translation;
-
-    std::vector<Node*> leafs = root->getLeafs();
-    Landmark landmark;
-    Linemark linemark;
-
-    for(unsigned i = 0; i < leafs.size(); i++) {
-        switch(leafs[i]->getNodeType()) {
-        case NODE_LANDMARK:
-    	    landmark.caption = leafs[i]->getCaption();
-	    landmark.mean = dynamic_cast<LandmarkNode*>(leafs[i])->mean();
-	    landmark.covariance = dynamic_cast<LandmarkNode*>(leafs[i])->covariance();
-        
-            map.landmarks.push_back(landmark);
-	    break;
-
-        case NODE_LINE:
-	    linemark.from = dynamic_cast<LineNode*>(leafs[i])->getLine().from();
-	    linemark.to   = dynamic_cast<LineNode*>(leafs[i])->getLine().to();
-	    linemark.height = dynamic_cast<LineNode*>(leafs[i])->getHeight();
-
-	    map.lines.push_back(linemark);
-	    break;
-	     	    
-        default:
-	    break;
-        }
-    }
-
-    return map;
 }
 
 

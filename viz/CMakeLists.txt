@@ -10,12 +10,6 @@ rock_vizkit_plugin(uw_localization_laserscan-viz
    MOC LaserScanVisualization.hpp
    HEADERS LaserScanVisualization.hpp)
 
-rock_vizkit_plugin(uw_localization_mixedmap-viz
-   MixedMapVisualization.cpp
-   DEPS uw_localization
-   MOC MixedMapVisualization.hpp
-   HEADERS MixedMapVisualization.hpp)
-
 rock_vizkit_plugin(uw_localization_mapfeature-viz
    MapFeatureVisualization.cpp
    DEPS uw_localization
