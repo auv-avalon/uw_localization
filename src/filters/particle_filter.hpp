@@ -160,7 +160,7 @@ class ParticleFilter : Dynamic<P,U> {
         best_position = particles[best_particle].position();
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-	    base::Vector3d pos_s = it->position() - mean;
+	    base::Vector3d pos_s = it->position() - mean_position;
             variance += pos_s * pos_s.transpose();
 	}
 
