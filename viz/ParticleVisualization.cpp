@@ -1,159 +1,79 @@
 #include "ParticleVisualization.hpp"
+#include "ParticleGeode.hpp"
 #include <osg/Geometry>
 #include <boost/assert.hpp>
 
-#define DATA(attribute) (p->attribute)
-
-#define BLUE p->color_map.at(256)
-#define GRADIENT(weight) p->color_map.at(floor(weight * 255))
-
 namespace vizkit {
 
-struct ParticleVisualization::Data {
-    uw_localization::ParticleSet particleSet;
-    std::vector<osg::Vec4> color_map;
-    osg::ref_ptr<osg::Geometry> geom;
-    osg::ref_ptr<osg::Vec3Array> points;
-    osg::ref_ptr<osg::Vec4Array> colors;
-    osg::ref_ptr<osg::DrawArrays> draw;
-
-    double max_particle_height;
-    bool show_highlight;
-    bool show_scaling;
-    bool show_colors;
-};
-
-
 ParticleVisualization::ParticleVisualization()
-    : p (new Data)
 {
     VizPluginRubyAdapter(ParticleVisualization, uw_localization::ParticleSet, Particles);
 
-    for(unsigned i = 0; i < 256; i++) {
-        if(i < 128)
-            DATA(color_map).push_back(osg::Vec4(1.0f, i / 127.0f, 0.0f, 1.0f));
-        else
-            DATA(color_map).push_back(osg::Vec4(1.0f - ((i - 128) / 127.0f), 1.0f, 0.0f, 1.0f));
-    }
+    property_box = false;
+    updated = false;
+    max_weight = 1.0;
 
-   DATA(color_map).push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f));
-
-   p->max_particle_height = 2.0;
-   p->show_scaling = true;
-   p->show_colors = true;
+    property_min_z = 0.0;
+    property_max_z = 1.0;
 }
 
 ParticleVisualization::~ParticleVisualization()
-{
-    delete p;
-}
-
-
-
-double ParticleVisualization::getHeight() const
-{
-    return DATA(max_particle_height);
-}
-
-
-void ParticleVisualization::setHeight(double height)
-{
-    DATA(max_particle_height) = abs(height);
-}
-
-bool ParticleVisualization::isScaling() const
-{
-    return DATA(show_scaling);
-}
-
-
-void ParticleVisualization::setScaling(bool s)
-{
-    DATA(show_scaling) = s;
-}
-
-
-bool ParticleVisualization::isColor() const
-{
-    return DATA(show_colors);
-}
-
-
-void ParticleVisualization::setColor(bool colors)
-{
-    DATA(show_colors) = colors;
-}
-
-
+{}
 
 osg::ref_ptr<osg::Node>
 ParticleVisualization::createMainNode()
 {
-    osg::ref_ptr<osg::Geode> geode = new osg::Geode();
+    osg::ref_ptr<osg::Group> root = new osg::Group;
+    particle_group = new osg::Group;
 
-    DATA(geom) = new osg::Geometry;
-    DATA(points) = new osg::Vec3Array;
-    DATA(colors) = new osg::Vec4Array;
-    DATA(draw) = new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, DATA(points)->size());
-    DATA(geom)->addPrimitiveSet(DATA(draw).get());
-    
-    DATA(geom)->setVertexArray(DATA(points));
-    DATA(geom)->setColorArray(DATA(colors));
-    DATA(geom)->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE);
-    DATA(geom)->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    root->addChild(particle_group.get());
 
-    geode->addDrawable(DATA(geom).get());
-
-    return geode;
+    return root;
 }
 
 
 void
 ParticleVisualization::updateMainNode( osg::Node* node )
 {
-    DATA(points)->clear();
-    DATA(colors)->clear();
-    std::vector<uw_localization::Particle>::const_iterator it;
+   if(updated)
+        renderParticles();
 
-    const uw_localization::ParticleSet& set = DATA(particleSet);
+   updated = false;
+}
 
-    double scaling = 0;
-    for(unsigned i = 0; i < DATA(particleSet).particles.size(); i++) {
-        scaling = (scaling < DATA(particleSet).particles[i].main_confidence) 
-            ? DATA(particleSet).particles[i].main_confidence 
-            : scaling;
+
+void ParticleVisualization::renderParticles()
+{
+    /*
+    double max_z = data_env.right_bottom_corner.z();
+    double min_z = data_env.left_top_corner.z();
+    */
+
+    if(property_box)
+        ParticleGeode::setViz(ParticleGeode::BOX, property_max_z, property_min_z, 0.1, max_weight);
+    else
+        ParticleGeode::setViz(ParticleGeode::LINE, property_max_z, property_min_z, 0.1, max_weight);
+
+    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) {
+        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->render();
     }
-
-    unsigned index = 0;
-
-    for(it = set.particles.begin(); it != set.particles.end(); it++) {
-        double weight = it->main_confidence / scaling;
-        osg::Vec3d vec(it->position(0), it->position(1), 0.0);
-        DATA(points)->push_back(vec);
-
-        if(DATA(show_scaling))
-            DATA(points)->push_back(vec + osg::Vec3d(0.0, 0.0, weight * DATA(max_particle_height)));
-        else
-            DATA(points)->push_back(vec + osg::Vec3d(0.0, 0.0, DATA(max_particle_height)));
-        
-        if(DATA(show_colors)) {
-            DATA(colors)->push_back(GRADIENT(weight));
-        } else
-            DATA(colors)->push_back(GRADIENT(0.5));
-
-        index++;
-    }
-
-    DATA(draw)->setCount(DATA(points)->size());
-    DATA(geom)->setVertexArray(DATA(points));
-    DATA(geom)->setColorArray(DATA(colors));
 }
 
 
 void
-ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& value)
+ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& p)
 {
-    DATA(particleSet) = value;
+    while(particle_group->getNumChildren() < p.particles.size()) {
+        osg::ref_ptr<ParticleGeode> geode = new ParticleGeode;
+        particle_group->addChild(geode.get());
+    }
+
+    max_weight = p.particles[p.best_particle].main_confidence;
+
+    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) 
+        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->updateParticle(p.particles[i]);
+
+    updated = true;
 }
  
 VizkitQtPlugin(ParticleVisualization)

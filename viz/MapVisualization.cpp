@@ -1,64 +1,26 @@
-#include "MonitorVisualization.hpp"
-#include "ParticleGeode.hpp"
+#include "MapVisualization.hpp"
+#include <uw_localization/maps/node_map.hpp>
 
 namespace vizkit {
 
-MonitorVisualization::~MonitorVisualization()
+MapVisualization::~MapVisualization()
 {
 }
 
 
-void MonitorVisualization::updateDataIntern(const uw_localization::Environment& env)
+void MapVisualization::updateDataIntern(const uw_localization::Environment& env)
 {
     data_env = env;
-    map_changed = true;
+    updated = true;
 }
 
 
-void MonitorVisualization::updateDataIntern(const uw_localization::ParticleSet& p)
-{
-    while(particle_group->getNumChildren() < p.particles.size()) {
-        osg::ref_ptr<ParticleGeode> geode = new ParticleGeode;
-        particle_group->addChild(geode.get());
-    }
-
-    best_particle = p.best_particle;
-    max_weight = p.particles[best_particle].main_confidence;
-
-    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) 
-        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->updateParticle(p.particles[i]);
-}
-
-
-void MonitorVisualization::updateDataIntern(const uw_localization::ParticleInfo& info) 
-{
-    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) {
-        ParticleGeode* p = dynamic_cast<ParticleGeode*>(particle_group->getChild(i));
-        switch(info.type) {
-            case 0:
-                p->updateSonar(info.infos[i]);
-                
-                if(i == best_particle) {
-                    p->showDesirePoint(property_desire_point);
-                    p->showRealPoint(property_real_point);
-                }
-
-                break;
-            default:
-                break;
-        }
-
-    }
-}
-
-
-osg::ref_ptr<osg::Node> MonitorVisualization::createMainNode()
+osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
 {
     osg::ref_ptr<osg::Group> root = new osg::Group;
-    plane_group = new osg::Group;
-    particle_group = new osg::Group;
-
     osg::ref_ptr<osg::Geode> border_geode(new osg::Geode);
+    plane_group = new osg::Group;
+
     grid = new osg::DrawArrays(osg::PrimitiveSet::LINES, 18, 0);
     border_points = new osg::Vec3Array;
     border_colors = new osg::Vec4Array;
@@ -75,44 +37,30 @@ osg::ref_ptr<osg::Node> MonitorVisualization::createMainNode()
     
     root->addChild(border_geode.get());
     root->addChild(plane_group.get());
-    root->addChild(particle_group.get());
 
     return root;
 }
 
 
-void MonitorVisualization::updateMainNode(osg::Node* node)
+void MapVisualization::updateMainNode(osg::Node* node)
 {
-    if(!map_created || (property_dynamic_map && map_changed))
+    if(updated || property_updated)
         renderEnvironment(data_env);
-
-   if(map_created && particle_group->getNumChildren() > 0)
-        renderParticles();
 }
 
-void MonitorVisualization::renderParticles()
+void MapVisualization::setMap(const QString& p) 
 {
-    double max_z = data_env.right_bottom_corner.z();
-    double min_z = data_env.left_top_corner.z();
+    uw_localization::NodeMap m(p.toAscii().data());
 
-    if(property_box)
-        ParticleGeode::setViz(ParticleGeode::BOX, min_z, max_z, 0.1, max_weight);
-    else
-        ParticleGeode::setViz(ParticleGeode::LINE, min_z, max_z, 0.1, max_weight);
+    std::cout << "Map: " << p.toAscii().data() << std::endl;
 
-    for(unsigned i = 0; i < particle_group->getNumChildren(); i++) {
-        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->render();
-    }
+    data_env = m.getEnvironment();
+
+    property_updated = true;
 }
 
 
-void MonitorVisualization::renderStatus()
-{
-}
-
-
-
-void MonitorVisualization::renderEnvironment(const uw_localization::Environment& env)
+void MapVisualization::renderEnvironment(const uw_localization::Environment& env)
 {
     // render borders
     border_points->clear();
@@ -150,42 +98,40 @@ void MonitorVisualization::renderEnvironment(const uw_localization::Environment&
     // set border color to white
     border_colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.5));
 
-    if(property_gridlines) {
-        // draw grid lines
-        double centre_x = (L.x() + R.x()) * 0.5;
-        double centre_y = (L.y() + R.y()) * 0.5;
+    // draw grid lines
+    double centre_x = (L.x() + R.x()) * 0.5;
+    double centre_y = (L.y() + R.y()) * 0.5;
 
-        double width  = (L.y() - R.y());
-        double height = (L.x() - R.x());
+    double width  = (L.y() - R.y());
+    double height = (L.x() - R.x());
 
-        double dx = 0.0;
-        double dy = 0.0;
+    double dx = 0.0;
+    double dy = 0.0;
 
-        unsigned grid_vertices = 0;
+    unsigned grid_vertices = 0;
 
-        while( dy <= width * 0.5 ) {
-            border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y + dy, R.z()));
-            border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y + dy, R.z()));
-            border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y - dy, R.z()));
-            border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y - dy, R.z()));
+    while( dy <= width * 0.5 ) {
+        border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y + dy, R.z()));
+        border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y + dy, R.z()));
+        border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y - dy, R.z()));
+        border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y - dy, R.z()));
 
-            dy += 1.0;
-            grid_vertices += 4;
-        }
-
-        while( dx <= height * 0.5 ) {
-            border_points->push_back(osg::Vec3d(centre_x + dx, centre_y - width / 2.0, R.z()));
-            border_points->push_back(osg::Vec3d(centre_x + dx, centre_y + width / 2.0, R.z()));
-
-            border_points->push_back(osg::Vec3d(centre_x - dx, centre_y - width / 2.0, R.z()));
-            border_points->push_back(osg::Vec3d(centre_x - dx, centre_y + width / 2.0, R.z()));
-
-            dx += 1.0;
-            grid_vertices += 4;
-        }
-
-        grid->setCount(grid_vertices);
+        dy += 1.0;
+        grid_vertices += 4;
     }
+
+    while( dx <= height * 0.5 ) {
+        border_points->push_back(osg::Vec3d(centre_x + dx, centre_y - width / 2.0, R.z()));
+        border_points->push_back(osg::Vec3d(centre_x + dx, centre_y + width / 2.0, R.z()));
+
+        border_points->push_back(osg::Vec3d(centre_x - dx, centre_y - width / 2.0, R.z()));
+        border_points->push_back(osg::Vec3d(centre_x - dx, centre_y + width / 2.0, R.z()));
+
+        dx += 1.0;
+        grid_vertices += 4;
+    }
+
+    grid->setCount(grid_vertices);
 
     while(env.planes.size() > plane_group->getNumChildren()) {
         osg::ref_ptr<osg::Geode> geode = new osg::Geode;
@@ -208,14 +154,14 @@ void MonitorVisualization::renderEnvironment(const uw_localization::Environment&
     border_geom->setColorArray(border_colors.get());
     border_geom->setVertexArray(border_points.get());
 
-    map_created = true;
-    map_changed = false;
+    updated = false;
+    property_updated = false;
 }
 
 
 
 
-void MonitorVisualization::updatePlaneNode(osg::Geode* geode, const uw_localization::Plane& plane)
+void MapVisualization::updatePlaneNode(osg::Geode* geode, const uw_localization::Plane& plane)
 {
     osg::Geometry* geom = dynamic_cast<osg::Geometry*>(geode->getDrawable(0));
     osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array; 
@@ -237,6 +183,6 @@ void MonitorVisualization::updatePlaneNode(osg::Geode* geode, const uw_localizat
 }
 
 
-VizkitQtPlugin(MonitorVisualization)
+VizkitQtPlugin(MapVisualization)
 }
 
