@@ -48,12 +48,6 @@ osg::Vec4& ParticleGeode::gradient(double weight)
 
     if(color_map.size() == 0) {
         for(unsigned i = 0; i < 256; i++) {
-            /*
-            if(i < 128)
-                color_map.push_back(osg::Vec4(1.0f, i / 127.0f, 0.0f, 0.7f));
-            else
-                color_map.push_back(osg::Vec4(1.0f - ((i - 128) / 127.0f), 1.0f, 0.0f, 0.7f));
-            */
             color_map.push_back(osg::Vec4(1.0f, i / 255.0f, 0.0f, 0.7f));
         }
     }

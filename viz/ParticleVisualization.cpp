@@ -1,5 +1,6 @@
 #include "ParticleVisualization.hpp"
 #include "ParticleGeode.hpp"
+#include <algorithm>
 #include <osg/Geometry>
 #include <boost/assert.hpp>
 
@@ -44,11 +45,6 @@ ParticleVisualization::updateMainNode( osg::Node* node )
 
 void ParticleVisualization::renderParticles()
 {
-    /*
-    double max_z = data_env.right_bottom_corner.z();
-    double min_z = data_env.left_top_corner.z();
-    */
-
     if(property_box)
         ParticleGeode::setViz(ParticleGeode::BOX, property_max_z, property_min_z, 0.1, max_weight);
     else
@@ -68,7 +64,12 @@ ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& p)
         particle_group->addChild(geode.get());
     }
 
-    max_weight = p.particles[p.best_particle].main_confidence;
+    max_weight = 0.0;
+
+    for(unsigned j = 0; j < p.particles.size(); j++)
+        max_weight = p.particles[j].main_confidence > max_weight 
+            ? p.particles[j].main_confidence 
+            : max_weight;
 
     for(unsigned i = 0; i < particle_group->getNumChildren(); i++) 
         dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->updateParticle(p.particles[i]);
