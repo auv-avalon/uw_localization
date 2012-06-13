@@ -37,7 +37,7 @@ struct ParticleSet {
     base::Time timestamp;
 
     /** effective number size */
-    double neff;
+    double effective_sample_size;
    
     /** current particle set for this state */ 
     std::vector<Particle> particles;
