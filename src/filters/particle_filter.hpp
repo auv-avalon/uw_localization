@@ -8,12 +8,11 @@
 #define UW_LOCALIZATION__PARTICLEFILTER_H_
 
 #include <vector>
+#include <list>
 #include <assert.h>
 #include <machine_learning/RandomNumbers.hpp>
 #include <base/samples/rigid_body_state.h>
 #include <uw_localization/types/particle.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 
 namespace uw_localization {
 
@@ -74,30 +73,6 @@ class Dynamic {
 };
 
 
-/**
- * Particle Helper class for concret particle filters
- */
-class ParticleBase {
- public:
-   /**
-     * get a general position representation from a given abstract pose particles
-     *
-     * \param state of type P
-     * \return a simple vector with three dimension
-     */
-    virtual base::Position position() const = 0;
-
-    /**
-     * get a general orientation representation from a given abstract poste particle
-     * \param state of type P
-     * \return a standard orientation (quaternion)
-     */
-    virtual base::Orientation orientation() const = 0;
-
-     /** normalized main_confidence for this particle */
-     double main_confidence;
-};
-
 
 /**
  * Abstract class for a particle filter based on the theory of Thrun, Burgard and Fox
@@ -112,7 +87,7 @@ class ParticleFilter : Dynamic<P,U> {
 
     virtual ~ParticleFilter() {}
 
-   typedef typename std::vector<P>::iterator ParticleIterator;
+   typedef typename std::list<P>::iterator ParticleIterator;
 
    /**
     * initialize this filter with new particle samples 
@@ -121,14 +96,52 @@ class ParticleFilter : Dynamic<P,U> {
            const Eigen::Vector3d& pos, const Eigen::Vector3d& pos_covariance,
            double yaw, double yaw_covariance) = 0; 
 
-    /**
-     * create a position sample from the the given particle set. Assure
-     * you are getting only a valid position after a measurement update
-     * (after dynamics the mean is outdated again)
+   /**
+     * get a general position representation from a given abstract pose particles
      *
-     * Implementation can override this method for choosing  average value
+     * \param state of type P
+     * \return a simple vector with three dimension
      */
-    virtual base::samples::RigidBodyState& estimate() = 0;
+    virtual base::Position position(const P& X) const = 0;
+
+    /**
+     * get a general orientation representation from a given abstract poste particle
+     * \param state of type P
+     * \return a standard orientation (quaternion)
+     */
+    virtual base::samples::RigidBodyState orientation(const P& X) const = 0;
+
+    /**
+     *
+     */
+    virtual double confidence(const P& X) const = 0;
+
+
+    virtual void setConfidence(P& X, double weight) = 0;
+
+    /**
+     * returns the state vector for the best particle as RigidBodyState
+     */
+    virtual base::samples::RigidBodyState& estimate() {
+        base::Matrix3d variance = base::Matrix3d::Zero();
+
+        ParticleIterator best = particles.begin();
+
+        for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+            base::Vector3d pos_s = position(*it) - mean_position;
+            variance += pos_s * pos_s.transpose();
+
+            if( confidence(*best) < confidence(*it) )
+                best = it;
+        }
+
+        state = orientation(*best);
+
+        state.position = position(*best);
+        state.cov_position = variance / (particles.size() + 1);
+
+        return state;
+    }
 
     /**
      * updates the current particle set for an incoming motion action depending
@@ -140,32 +153,14 @@ class ParticleFilter : Dynamic<P,U> {
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
-        unsigned best_particle = 0;
-        unsigned i = 0;
 	base::Position mean = base::Position::Zero();
-	base::Matrix3d variance = base::Matrix3d::Zero();
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
 	    model->dynamic(*it, motion);
-	    mean += it->position();
-
-            if(it->main_confidence > particles[best_particle].main_confidence) {
-                best_particle = i;
-            }
-
-            i++;
+	    mean += position(*it);
 	}
 
 	mean_position = mean / particles.size();
-        best_position = particles[best_particle].position();
-
-	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-	    base::Vector3d pos_s = it->position() - mean_position;
-            variance += pos_s * pos_s.transpose();
-	}
-
-	cov_position = variance / (particles.size() + 1);
-
 	timestamp = model->getTimestamp(motion);
     }
 
@@ -191,22 +186,25 @@ class ParticleFilter : Dynamic<P,U> {
 
         i = 0;
 
-        // normalize perception weights and form mixed weight based on probabilities of perception, random_noise, maximum_range_noise
+        // normalize perception weights and form mixed weight based on current weight.
         for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
             double uniform = 1.0 / particles.size();
             double w = 1.0 - ratio;
-
-            it->main_confidence *= ((ratio * perception_weights[i++] / sum_perception_weight) 
+            double main_confidence = confidence(*it) * ((ratio * perception_weights[i++] / sum_perception_weight) 
                 + w * uniform);
 
-            sum_main_confidence += it->main_confidence;
+            setConfidence(*it, main_confidence);
+
+            sum_main_confidence += main_confidence;
         }
 
         // normalize overall confidence
         for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-            it->main_confidence = it->main_confidence / sum_main_confidence;
+            double weight = confidence(*it) / sum_main_confidence;
+            
+            setConfidence(*it, weight);
 
-            Neff += it->main_confidence * it->main_confidence;
+            Neff += weight * weight;
         }
 
         return (1.0 / Neff) / particles.size();
@@ -223,23 +221,14 @@ class ParticleFilter : Dynamic<P,U> {
 	ps.particles.clear();
 
 	ps.timestamp = timestamp;
-        ps.weights = weights;
 
-        ps.best_particle = 0;
-        unsigned i = 0;
-	
-	for(ParticleIterator it = particles.begin(); it != particles.end(); it++, i++) {
+	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
             Particle p;
-	    p.position =it->position();
-	    p.yaw = base::getYaw(it->orientation());
-	    p.main_confidence = it->main_confidence;
-
-            if( !std::isnan(it->main_confidence) 
-                    && particles[ps.best_particle].main_confidence < it->main_confidence)
-                ps.best_particle = i;
+	    p.position = position(*it);
+	    p.yaw = base::getYaw(orientation(*it).orientation);
+	    p.main_confidence = confidence(*it);
 
 	    ps.particles.push_back(p);
-            ps.generation = generation;
 	}
 
         return ps; 
@@ -253,23 +242,41 @@ class ParticleFilter : Dynamic<P,U> {
           if(particles.size() < 1)
               return;
 
+          base::Position mean = base::Position::Zero();
+          double overall_confidence_sum = 0.0;
+
           double m_inv = 1.0 / particles.size();
           machine_learning::UniformRealRandom random = machine_learning::Random::uniform_real(0.0, m_inv);
 
-          std::vector<P> set;
+          std::list<P> set;
           double r = random();
-          double c = particles.front().main_confidence;
+          double c = confidence(particles.front());
+
+          ParticleIterator it = particles.begin();
           
           for(unsigned i = 0, m = 0; m < particles.size(); m++) {
               double u = r + (m * m_inv);
               while(u > c) {
-                  if(++i >= particles.size())
-                      i = 0;
+                  it++;
 
-                  c += particles[i].main_confidence;
+                  if(++i >= particles.size()) {
+                      it = particles.begin();
+                      i = 0;
+                  }
+
+                  c += confidence(*it);
               }
 
-              set.push_back(particles[i]);
+              set.push_back(*it);
+              mean += position(*it);
+              overall_confidence_sum += confidence(*it);
+          }
+
+          mean_position = mean / particles.size();
+
+          for(ParticleIterator j = particles.begin(); j != particles.end(); j++) {
+              double weight = confidence(*j) / overall_confidence_sum;
+              setConfidence(*j, weight);
           }
 
           generation++;
@@ -278,20 +285,16 @@ class ParticleFilter : Dynamic<P,U> {
       }
 
   protected:
-      /** current using particle set of state hypothesis */
-      std::vector<P> particles;
+      std::list<P> particles;
 
       base::Time timestamp;
 
       unsigned int generation;
 
-      base::Vector3d weights;
-
-      base::Position best_position;
       base::Position mean_position;
-      base::Matrix3d cov_position;
 
       ParticleSet ps;
+      base::samples::RigidBodyState state;
 };
 
 
