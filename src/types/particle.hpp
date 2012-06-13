@@ -36,15 +36,9 @@ struct ParticleSet {
     /** current timestamp for this particle set */
     base::Time timestamp;
 
-    /** weights for forming main_confidences */
-    base::Vector3d weights;
-
-    /** generation **/
-    unsigned int generation;
-
-    /** best particle **/
-    unsigned int best_particle;
-    
+    /** effective number size */
+    double neff;
+   
     /** current particle set for this state */ 
     std::vector<Particle> particles;
 };
