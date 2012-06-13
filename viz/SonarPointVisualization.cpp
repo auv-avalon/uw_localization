@@ -39,7 +39,7 @@ void SonarPointVisualization::updateMainNode(osg::Node* node)
         sonar_color->clear();
         sonar_vertices->clear();
 
-        osg::Vec3 pos(pose.position.x(), pose.position.y(), pose.position.z());
+        osg::Vec3 pos(point.location.x(), point.location.y(), point.location.z());
         osg::Vec3 des(point.desire_point.x(), point.desire_point.y(), 0.0f);
         osg::Vec3 son(point.real_point.x(), point.real_point.y(), 0.0f);
 
@@ -73,16 +73,12 @@ void SonarPointVisualization::updateMainNode(osg::Node* node)
 
 void SonarPointVisualization::updateDataIntern(const uw_localization::PointInfo& point)
 {
-    this->point = point;
-    updated = true;
+    if(point.status == uw_localization::OKAY) {
+        this->point = point;
+        updated = true;
+    }
 }
 
-
-void SonarPointVisualization::updateDataIntern(const base::samples::RigidBodyState& pose)
-{
-    this->pose = pose;
-    updated = true;
-}
 
 VizkitQtPlugin(SonarPointVisualization)
 }

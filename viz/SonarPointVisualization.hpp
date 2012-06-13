@@ -12,7 +12,6 @@ namespace vizkit {
 
 class SonarPointVisualization
     : public vizkit::Vizkit3DPlugin<uw_localization::PointInfo>,
-      public vizkit::VizPluginAddType<base::samples::RigidBodyState>,
       boost::noncopyable
 {
    Q_OBJECT
@@ -22,7 +21,6 @@ class SonarPointVisualization
 public:
    SonarPointVisualization() {
        VizPluginRubyAdapter(SonarPointVisualization, uw_localization::PointInfo, PointInfo);
-       VizPluginRubyAdapter(SonarPointVisualization, base::samples::RigidBodyState, RigidBodyState);
 
        property_min_z = -1.0;
        property_max_z = 0.0;
@@ -38,7 +36,6 @@ protected:
    virtual osg::ref_ptr<osg::Node> createMainNode();
    virtual void updateMainNode(osg::Node* node);
    virtual void updateDataIntern(const uw_localization::PointInfo& point);
-   virtual void updateDataIntern(const base::samples::RigidBodyState& Pose);
 
 private:
    double property_min_z;
@@ -46,7 +43,6 @@ private:
    bool updated;
 
    uw_localization::PointInfo point;
-   base::samples::RigidBodyState pose;
 
    osg::ref_ptr<osg::Geometry> sonar_geom;
    osg::ref_ptr<osg::Vec4Array> sonar_color;
