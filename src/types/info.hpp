@@ -3,6 +3,10 @@
 
 namespace uw_localization {
 
+enum PointStatus {
+    OUT_OF_RANGE, NOT_IN_WORLD, OKAY
+};
+
 struct PointInfo {
     /** timestamp for debug information **/
     base::Time time;
@@ -13,8 +17,11 @@ struct PointInfo {
     /** real point measured */
     base::Vector3d real_point;
 
-    /** status message */
-    std::string status;
+    /** particle location */
+    base::Vector3d location;
+
+    /** current point status */
+    PointStatus status;
 
     /** confidence for this measurement */
     double confidence;
@@ -22,7 +29,6 @@ struct PointInfo {
     /** measurement distance */
     double distance;
 };
-
 
 struct ParticleInfo {
     /** ParticleInfo type for a specific sensor */
