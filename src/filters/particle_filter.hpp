@@ -74,6 +74,12 @@ class Dynamic {
 
 
 
+template<typename P>
+bool compare_particles(const P& x, const P& y) {
+    return x.main_confidence > y.main_confidence;
+}
+
+
 /**
  * Abstract class for a particle filter based on the theory of Thrun, Burgard and Fox
  * already provides importance resampling with a low variance sampler and uses a given estimation 
@@ -90,11 +96,45 @@ class ParticleFilter : Dynamic<P,U> {
    typedef typename std::list<P>::iterator ParticleIterator;
 
    /**
-    * initialize this filter with new particle samples 
+    * reduce the particle set to ratio percent of the best particles
+    *
+    * \param ratio (0.0 <= ratio <= 1.0) how many particles are saved after reducing
+    * \return how many number of particles are removed
     */
-   virtual void initialize(int numbers,
-           const Eigen::Vector3d& pos, const Eigen::Vector3d& pos_covariance,
-           double yaw, double yaw_covariance) = 0; 
+   virtual size_t reduceParticles(double ratio = 0.0) {
+       size_t removing = floor(particles.size() * (1.0 - ratio));
+
+       particles.sort(compare_particles<P>);
+
+       for(size_t i = 0; i < removing && particles.size() > 0; i++) {
+           particles.pop_back();
+       }
+
+       return removing;
+   }
+
+   /**
+    * normalize the weights for all particles
+    */
+   virtual void normalizeParticles() {
+       double sum = 0.0;
+       double neff = 0.0;
+       base::Position mean_pos = base::Position::Zero();
+       
+       for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+           mean_pos += position(*it);
+           sum += confidence(*it);
+       }
+
+       for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+           setConfidence(*it, confidence(*it) / sum);
+           neff += confidence(*it) * confidence(*it);
+       }
+
+       mean_position = mean_pos / particles.size();
+       effective_sample_size = (1.0 / neff) / particles.size();
+   }
+
 
    /**
      * get a general position representation from a given abstract pose particles
@@ -207,7 +247,9 @@ class ParticleFilter : Dynamic<P,U> {
             Neff += weight * weight;
         }
 
-        return (1.0 / Neff) / particles.size();
+        effective_sample_size = (1.0 / Neff) / particles.size();
+
+        return effective_sample_size;
     }
 
     /** 
@@ -274,21 +316,27 @@ class ParticleFilter : Dynamic<P,U> {
 
           mean_position = mean / particles.size();
 
+          double neff = 0.0;
+
           for(ParticleIterator j = particles.begin(); j != particles.end(); j++) {
               double weight = confidence(*j) / overall_confidence_sum;
               setConfidence(*j, weight);
+
+              neff += weight * weight;
           }
 
           generation++;
+          effective_sample_size = (1.0 / neff) / particles.size();
 
           particles = set;
       }
-
+  
   protected:
       std::list<P> particles;
 
       base::Time timestamp;
 
+      double effective_sample_size;
       unsigned int generation;
 
       base::Position mean_position;
