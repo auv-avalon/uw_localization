@@ -77,7 +77,7 @@ boost::tuple<Node*, double, Eigen::Vector3d> Node::getNearestDistance(const std:
         for(unsigned i = 0; i < children.size(); i++) {
             boost::tuple<Node*, double, Eigen::Vector3d> tmp = children[i]->getNearestDistance(next, v, x);
 
-            if(tmp.get<1>() < min.get<1>())
+            if(tmp.get<1>() > 0 && tmp.get<1>() < min.get<1>())
                 min = tmp;
         }
     }
@@ -181,8 +181,15 @@ boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const 
 	line_point = line.to();
     else
 	line_point = line.point(line_lambda);
-        
-    return boost::tuple<Node*, double, Eigen::Vector3d>(this, (v - line_point).norm(), line_point);
+
+    double distance = (v - line_point).norm();
+
+    double direction = measurement.lambda(line);
+
+    if(direction <= 0.0 || direction == INFINITY)
+        distance = -distance;
+
+    return boost::tuple<Node*, double, Eigen::Vector3d>(this, distance, line_point);
 }
 
 
