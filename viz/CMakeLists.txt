@@ -15,11 +15,11 @@ rock_library(uw_localization_viz
     HEADERS ParticleGeode.hpp
     DEPS_PKGCONFIG vizkit)
 
-rock_vizkit_plugin(uw_localization_monitor-viz
-    MonitorVisualization.cpp
-    DEPS uw_localization uw_localization_viz
-    MOC MonitorVisualization.hpp
-    HEADERS MonitorVisualization.hpp ParticleGeode.hpp)
+#rock_vizkit_plugin(uw_localization_monitor-viz
+#    MonitorVisualization.cpp
+#    DEPS uw_localization uw_localization_viz
+#    MOC MonitorVisualization.hpp
+#    HEADERS MonitorVisualization.hpp ParticleGeode.hpp)
 
 rock_vizkit_plugin(uw_localization_particle-viz
     ParticleVisualization.cpp
