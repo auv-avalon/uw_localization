@@ -230,7 +230,7 @@ class ParticleFilter : Dynamic<P,U> {
         for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
             double uniform = 1.0 / particles.size();
             double w = 1.0 - ratio;
-            double main_confidence = confidence(*it) * ((ratio * perception_weights[i++] / sum_perception_weight) 
+            double main_confidence = confidence(*it) * ((ratio * (perception_weights[i++] / sum_perception_weight)) 
                 + w * uniform);
 
             setConfidence(*it, main_confidence);
@@ -311,10 +311,11 @@ class ParticleFilter : Dynamic<P,U> {
               }
 
               set.push_back(*it);
-              mean += position(*it);
-              overall_confidence_sum += confidence(*it);
+//              mean += position(*it);
+//              overall_confidence_sum += confidence(*it);
           }
 
+          /*
           mean_position = mean / particles.size();
 
           double neff = 0.0;
@@ -325,9 +326,12 @@ class ParticleFilter : Dynamic<P,U> {
 
               neff += weight * weight;
           }
+          */
+
+          normalizeParticles();
 
           generation++;
-          effective_sample_size = (1.0 / neff) / particles.size();
+          //effective_sample_size = (1.0 / neff) / particles.size();
 
           particles = set;
       }
