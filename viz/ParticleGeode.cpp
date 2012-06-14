@@ -256,19 +256,15 @@ void ParticleGeode::updateSonar(const uw_localization::PointInfo& info)
 
 void ParticleGeode::showRealPoint(bool show)
 {
-    if(sonar.status.empty()) {
-        real_point_show = show;
-        changed = true;
-    }
+    real_point_show = show;
+    changed = true;
 }
 
 
 void ParticleGeode::showDesirePoint(bool show)
 {
-    if(sonar.status.empty()) {
-        desire_point_show = show;
-        changed = true;
-    }
+    desire_point_show = show;
+    changed = true;
 }
 
 
