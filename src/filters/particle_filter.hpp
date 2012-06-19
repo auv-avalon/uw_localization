@@ -285,9 +285,6 @@ class ParticleFilter : Dynamic<P,U> {
           if(particles.size() < 1)
               return;
 
-          base::Position mean = base::Position::Zero();
-          double overall_confidence_sum = 0.0;
-
           double m_inv = 1.0 / particles.size();
           machine_learning::UniformRealRandom random = machine_learning::Random::uniform_real(0.0, m_inv);
 
@@ -311,22 +308,7 @@ class ParticleFilter : Dynamic<P,U> {
               }
 
               set.push_back(*it);
-//              mean += position(*it);
-//              overall_confidence_sum += confidence(*it);
           }
-
-          /*
-          mean_position = mean / particles.size();
-
-          double neff = 0.0;
-
-          for(ParticleIterator j = particles.begin(); j != particles.end(); j++) {
-              double weight = confidence(*j) / overall_confidence_sum;
-              setConfidence(*j, weight);
-
-              neff += weight * weight;
-          }
-          */
 
           normalizeParticles();
 

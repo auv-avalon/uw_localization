@@ -38,6 +38,8 @@ osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
     root->addChild(border_geode.get());
     root->addChild(plane_group.get());
 
+    setDirty();
+
     return root;
 }
 
