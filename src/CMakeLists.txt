@@ -3,6 +3,7 @@ set(CPP_FILES
     filters/particle_filter.cpp
     maps/map.cpp
     maps/node_map.cpp
+    model/uw_motion_model.cpp
     )
 
 set(HPP_FILES
@@ -14,6 +15,7 @@ set(HPP_FILES
     types/info.hpp
     maps/map.hpp
     maps/node_map.hpp
+    model/uw_motion_model.hpp
     )
 
 rock_library(uw_localization

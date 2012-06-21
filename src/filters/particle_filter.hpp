@@ -85,8 +85,8 @@ bool compare_particles(const P& x, const P& y) {
  * already provides importance resampling with a low variance sampler and uses a given estimation 
  * model for processing each particle representation
  */
-template <typename P, typename U, typename M>
-class ParticleFilter : Dynamic<P,U> {
+template <typename P, typename M>
+class ParticleFilter {
   public:
     ParticleFilter() 
     {}
@@ -189,7 +189,8 @@ class ParticleFilter : Dynamic<P,U> {
      *
      * \param motion representation of a motion call
      */
-    virtual void update(const U& motion) {
+    template<typename U>
+    void update(const U& motion) {
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
