@@ -145,6 +145,15 @@ class ParticleFilter {
     virtual base::Position position(const P& X) const = 0;
 
     /**
+     * get a general velocity representation from a given abstract pose particles
+     *
+     * \param state of type P
+     * \return a simple vector with three dimension
+     */
+    virtual base::Vector3d velocity(const P& X) const = 0;
+
+
+    /**
      * get a general orientation representation from a given abstract poste particle
      * \param state of type P
      * \return a standard orientation (quaternion)
@@ -269,6 +278,7 @@ class ParticleFilter {
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
             Particle p;
 	    p.position = position(*it);
+            p.velocity = velocity(*it);
 	    p.yaw = base::getYaw(orientation(*it).orientation);
 	    p.main_confidence = confidence(*it);
 

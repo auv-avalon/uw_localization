@@ -21,6 +21,9 @@ struct Particle {
     /** current estimated position */
     base::Position position;
 
+    /** current estimated velocity */
+    base::Vector3d velocity;
+
     /** current heading / yaw for this particle */
     double yaw;
  
