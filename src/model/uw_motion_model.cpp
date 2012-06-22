@@ -41,6 +41,10 @@ const Vector12d& UwMotionModel::runga_kutta(const Vector12d& x_t, double t, cons
 {
     static Vector12d x_t1;
 
+    std::cout << "D: " << (HydroDamping(x_t.block<6,1>(0,0)) * Vector6d::Constant(1.0)).transpose()  << std::endl;
+    std::cout << "F: " << f_t.transpose() << std::endl;
+
+
     Vector12d f1 = DERIV(x_t, f_t) * t;
     Vector12d f2 = DERIV(x_t + 0.5 * f1, f_t) * t;
     Vector12d f3 = DERIV(x_t + 0.5 * f2, f_t) * t;
@@ -100,10 +104,10 @@ const Matrix6d& UwMotionModel::HydroDamping(const Vector6d& velocity) const
     double v_y = velocity(1);
     double v_z = velocity(2);
 
-    Vector4d X, Y, Z;
-    X << v_x * v_x * v_x, v_x * v_x, v_x, 1;
-    Y << v_y * v_y * v_y, v_y * v_y, v_y, 1;
-    Z << v_z * v_z * v_z, v_z * v_z, v_z, 1;
+    Vector2d X, Y, Z;
+    X << v_x * fabs(v_x), v_x;
+    Y << v_y * fabs(v_y), v_y;
+    Z << v_z * fabs(v_z), v_z;
 
     D(0,0) = parameter.DampingX.transpose() * X;
     D(1,1) = parameter.DampingY.transpose() * Y;

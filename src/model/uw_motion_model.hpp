@@ -11,12 +11,12 @@
 namespace uw_localization {
 
 typedef Eigen::Matrix<double, 3, 1, Eigen::DontAlign> Vector3d;
-typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vector4d;
+typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Vector2d;
 typedef Eigen::Matrix<double, 6, 1, Eigen::DontAlign> Vector6d;
 typedef Eigen::Matrix<double, 3, 3, Eigen::DontAlign> Matrix3d;
 typedef Eigen::Matrix<double, 6, 6, Eigen::DontAlign> Matrix6d;
 typedef Eigen::Matrix<double, 12, 1, Eigen::DontAlign> Vector12d;
-typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Theta4d;
+typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Theta2d;
 
 
 const double kWaterDensity = 998.2;
@@ -32,9 +32,9 @@ struct UwVehicleParameter {
     Matrix6d TCM;
     double ThrusterVoltage;
 
-    Theta4d DampingX;
-    Theta4d DampingY;
-    Theta4d DampingZ;
+    Theta2d DampingX;
+    Theta2d DampingY;
+    Theta2d DampingZ;
 
     bool floating;
 };
