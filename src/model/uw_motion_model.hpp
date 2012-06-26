@@ -10,13 +10,14 @@
 
 namespace uw_localization {
 
-typedef Eigen::Matrix<double, 3, 1, Eigen::DontAlign> Vector3d;
 typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Vector2d;
+typedef Eigen::Matrix<double, 3, 1, Eigen::DontAlign> Vector3d;
 typedef Eigen::Matrix<double, 6, 1, Eigen::DontAlign> Vector6d;
 typedef Eigen::Matrix<double, 3, 3, Eigen::DontAlign> Matrix3d;
 typedef Eigen::Matrix<double, 6, 6, Eigen::DontAlign> Matrix6d;
 typedef Eigen::Matrix<double, 12, 1, Eigen::DontAlign> Vector12d;
 typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Theta2d;
+typedef Eigen::Matrix<double, 6, 3, Eigen::DontAlign> MatrixTCM;
 
 
 const double kWaterDensity = 998.2;
@@ -26,10 +27,10 @@ struct UwVehicleParameter {
     double Length;
     double Radius;
     double Mass;
-    Matrix3d InertiaTensor;
+//    Matrix3d InertiaTensor;
 
     Vector6d ThrusterCoefficient;
-    Matrix6d TCM;
+    MatrixTCM TCM;
     double ThrusterVoltage;
 
     Theta2d DampingX;
@@ -45,25 +46,25 @@ class UwMotionModel {
     UwMotionModel(const UwVehicleParameter& params);
     ~UwMotionModel() {}
 
-     // x_t: u v w p q r x y z rot(x) rot(y) rot(z)
-    const Vector12d& transition(const Vector12d& x_t, double t, const base::actuators::Status& status);
+     // x_t: u v w x y z
+    const Vector6d& transition(const Vector6d& x_t, double t, const base::actuators::Status& status);
     /*
     void  updateOrientation(const base::samples::RigidBodyState& orientation);
     */
 
  protected:
-    virtual const Vector6d& GravityBuoyancy(const Vector3d& euler) const;
-    virtual const Matrix6d& HydroDamping(const Vector6d& velocity) const;
+    virtual const Vector3d& GravityBuoyancy(const Vector3d& euler) const;
+    virtual const Vector3d& HydroDamping(const Vector3d& velocity) const;
 
-    const Vector12d& DERIV(const Vector12d& Xt, const Vector6d& Ft);
+    const Vector6d& DERIV(const Vector6d& Xt, const Vector3d& Ft, const Vector3d& euler);
 
-    const Vector12d& runga_kutta(const Vector12d& Xt, double t, const Vector6d& Ft);
+    const Vector6d& runga_kutta(const Vector6d& Xt, double t, const Vector3d& Ft);
 
 
  private:
      UwVehicleParameter parameter;
 
-     Matrix6d MassMatrix;
+     Matrix3d MassMatrix;
 };
 
 }
