@@ -120,7 +120,7 @@ const Vector6d& UwMotionModel::DERIV(const Vector6d& Xt, const Vector3d& Ft, con
     Vector3d acceleration = MassMatrix.inverse() * (Ft - damping - gravbuoy);
 
     Xdott.block<3, 1>(0, 0) = acceleration;
-    Xdott.block<3, 1>(6, 0) = velocity;
+    Xdott.block<3, 1>(3, 0) = velocity;
 
     return Xdott;    
 }
