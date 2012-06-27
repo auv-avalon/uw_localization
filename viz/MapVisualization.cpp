@@ -46,7 +46,7 @@ osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
 
 void MapVisualization::updateMainNode(osg::Node* node)
 {
-    if(updated || property_updated)
+    if(updated)
         renderEnvironment(data_env);
 }
 
@@ -58,8 +58,17 @@ void MapVisualization::setMap(const QString& p)
 
     data_env = m.getEnvironment();
 
-    property_updated = true;
+    updated = true;
 }
+
+
+void MapVisualization::setGridResolution(const int& grid_resolution)
+{
+    resolution = grid_resolution;
+
+    updated = true;
+}
+
 
 
 void MapVisualization::renderEnvironment(const uw_localization::Environment& env)
@@ -118,7 +127,7 @@ void MapVisualization::renderEnvironment(const uw_localization::Environment& env
         border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y - dy, R.z()));
         border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y - dy, R.z()));
 
-        dy += 1.0;
+        dy += resolution;
         grid_vertices += 4;
     }
 
@@ -129,7 +138,7 @@ void MapVisualization::renderEnvironment(const uw_localization::Environment& env
         border_points->push_back(osg::Vec3d(centre_x - dx, centre_y - width / 2.0, R.z()));
         border_points->push_back(osg::Vec3d(centre_x - dx, centre_y + width / 2.0, R.z()));
 
-        dx += 1.0;
+        dx += resolution;
         grid_vertices += 4;
     }
 
@@ -157,7 +166,6 @@ void MapVisualization::renderEnvironment(const uw_localization::Environment& env
     border_geom->setVertexArray(border_points.get());
 
     updated = false;
-    property_updated = false;
 }
 
 

@@ -17,17 +17,19 @@ class MapVisualization
 {
     Q_OBJECT
     Q_PROPERTY(QString map WRITE setMap)
+    Q_PROPERTY(int grid_resolution WRITE setGridResolution)
 
  public:
      MapVisualization() {
         VizPluginRubyAdapter(MapVisualization, uw_localization::Environment,  Map);
         updated = false;
-        property_updated = false;
+        resolution = 1.0;
      }
 
      ~MapVisualization();
 
      void setMap(const QString& p);
+     void setGridResolution(const int& resolution);
 
  protected:
      virtual osg::ref_ptr<osg::Node> createMainNode();
@@ -45,7 +47,7 @@ class MapVisualization
      osg::ref_ptr<osg::DrawArrays> grid;
 
      bool updated;
-     bool property_updated;
+     int resolution;
 
      uw_localization::Environment data_env;
 };
