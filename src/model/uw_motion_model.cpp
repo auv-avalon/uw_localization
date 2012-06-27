@@ -11,7 +11,7 @@ UwMotionModel::UwMotionModel(const UwVehicleParameter& params)
     
     double common = M_PI * kWaterDensity * (parameter.Radius * parameter.Radius) * parameter.Length;
    
-    InertiaMass(0,0) = 0.1;
+    InertiaMass(0,0) = 0.1 * params.Mass;
     InertiaMass(1,1) = common;
     InertiaMass(2,2) = common;
 //    TensorMass.block<3, 3>(0, 0) = params.Mass * Matrix3d::Identity();
