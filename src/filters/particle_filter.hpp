@@ -88,7 +88,7 @@ bool compare_particles(const P& x, const P& y) {
 template <typename P, typename M>
 class ParticleFilter {
   public:
-    ParticleFilter() 
+    ParticleFilter() : generation(0), first_perception_received(true)
     {}
 
     virtual ~ParticleFilter() {}
@@ -200,6 +200,9 @@ class ParticleFilter {
      */
     template<typename U>
     void update(const U& motion) {
+        if(!first_perception_received)
+            return;
+
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
 
@@ -336,6 +339,7 @@ class ParticleFilter {
 
       double effective_sample_size;
       unsigned int generation;
+      bool first_perception_received;
 
       base::Position mean_position;
 
