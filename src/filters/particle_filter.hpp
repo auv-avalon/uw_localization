@@ -276,7 +276,6 @@ class ParticleFilter {
 	ps.particles.clear();
 
 	ps.timestamp = timestamp;
-        ps.effective_sample_size = effective_sample_size; 
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
             Particle p;
