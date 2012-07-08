@@ -128,8 +128,8 @@ std::vector<Node*> Node::getLeafs(const std::string& caption)
 // ----------------------------------------------------------------------------
 
 
-LandmarkNode::LandmarkNode(const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const std::string& caption)
-    : Node(caption), params(mean, cov), drawer(machine_learning::Random::multi_gaussian<3>(mean, cov))
+LandmarkNode::LandmarkNode(const Eigen::Vector3d& point, const std::string& caption)
+    : Node(caption), _point(point)
 {}
 
 
@@ -139,13 +139,13 @@ LandmarkNode::~LandmarkNode()
 
 Eigen::Vector3d LandmarkNode::draw()
 {
-    return drawer();
+    return _point;
 }
 
 
 boost::tuple<Node*, double, Eigen::Vector3d> LandmarkNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
 {
-    return boost::tuple<Node*, double, Eigen::Vector3d>(this, params.mahalanobis(v), params.mean);
+    return boost::tuple<Node*, double, Eigen::Vector3d>(this, (v - _point).norm(), _point);
 }
 
 // ----------------------------------------------------------------------------
@@ -220,7 +220,7 @@ std::vector<boost::tuple<Node*, Eigen::Vector3d> > NodeMap::drawSamples(const st
     std::vector<Node*> nodes = root->getLeafs(caption);
     UniformIntRandom rand = Random::uniform_int(0, nodes.size() - 1);
 
-    for(unsigned i = 0; i < numbers; i++) {
+    for(unsigned i = 0; i < static_cast<unsigned>(numbers); i++) {
         Node* node = nodes[rand()];
         list.push_back(boost::tuple<Node*, Eigen::Vector3d>(node, node->draw()));
     }
@@ -303,17 +303,15 @@ bool NodeMap::fromYaml(std::istream& stream)
 void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 {
         std::string caption = "";
-	if(node.GetType() == YAML::CT_MAP && node.FindValue("mean")) {
-		Eigen::Vector3d mean;
-		Eigen::Matrix3d cov;
+	if(node.GetType() == YAML::CT_MAP && node.FindValue("point")) {
+		Eigen::Vector3d point;
 
-		node["mean"] >> mean;
-		node["cov"] >> cov;
+		node["point"] >> point;
 
 		if(node.FindValue("caption"))
 			node["caption"] >> caption;
 
-		root->addChild(new LandmarkNode(mean, cov, caption));
+		root->addChild(new LandmarkNode(point, caption));
         } else if(node.GetType() == YAML::CT_MAP && node.FindValue("line_from")) {
 		Eigen::Vector3d from;
 		Eigen::Vector3d to;
@@ -367,10 +365,9 @@ Environment NodeMap::getEnvironment()
         switch(leafs[i]->getNodeType()) {
         case NODE_LANDMARK:
     	    landmark.caption = leafs[i]->getCaption();
-	    landmark.mean = dynamic_cast<LandmarkNode*>(leafs[i])->mean();
-	    landmark.covariance = dynamic_cast<LandmarkNode*>(leafs[i])->covariance();
-        
-            //map.landmarks.push_back(landmark);
+	    landmark.point = dynamic_cast<LandmarkNode*>(leafs[i])->point();
+
+            env.landmarks.push_back(landmark);
 	    break;
 
         case NODE_LINE:

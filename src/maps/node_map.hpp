@@ -76,22 +76,19 @@ private:
 
 class LandmarkNode : public Node {
 public:
-  LandmarkNode(const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const std::string& caption = "");
+  LandmarkNode(const Eigen::Vector3d& point, const std::string& caption = "");
   virtual ~LandmarkNode();
 
   virtual int getNodeType() const { return NODE_LANDMARK; }
   
-  virtual boost::tuple<Node*, double, Eigen::Vector3d> getNearestDistance(const std::string& caption, 
-	const Eigen::Vector3d& v, const Eigen::Vector3d& x);
+  virtual boost::tuple<Node*, double, Eigen::Vector3d> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x);
 
   virtual Eigen::Vector3d draw();
 
-  const Eigen::Vector3d& mean() const { return params.mean; }
-  const Eigen::Matrix3d& covariance() const { return params.covariance; }
+  const Eigen::Vector3d& point() const { return _point; }
 
 private:
-  machine_learning::GaussParam<3> params;
-  machine_learning::MultiNormalRandom<3> drawer;
+  Eigen::Vector3d _point;
 };
 
 

@@ -12,11 +12,17 @@ struct Plane {
 };
 
 
+struct Landmark {
+    std::string caption;
+    base::Vector3d point;
+};
+
 struct Environment {
     base::Vector3d left_top_corner;
     base::Vector3d right_bottom_corner;
 
     std::vector<Plane> planes;
+    std::vector<Landmark> landmarks;
 };
 
 }
