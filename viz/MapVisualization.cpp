@@ -19,6 +19,7 @@ osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
 {
     osg::ref_ptr<osg::Group> root = new osg::Group;
     osg::ref_ptr<osg::Geode> border_geode(new osg::Geode);
+    osg::ref_ptr<osg::Geode> landmark_geode(new osg::Geode);
     plane_group = new osg::Group;
 
     grid = new osg::DrawArrays(osg::PrimitiveSet::LINES, 18, 0);
@@ -34,9 +35,22 @@ osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
 
     border_geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     border_geode->addDrawable(border_geom.get());
+ 
+    landmark_points = new osg::Vec3Array;
+    landmark_colors = new osg::Vec4Array;
+    landmark_colors->push_back(osg::Vec4(1,1,0,1));
+
+    landmark_geom = new osg::Geometry;
+    landmark_geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, 0));
+    landmark_geom->setColorArray(landmark_colors.get());
+    landmark_geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+    landmark_geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    landmark_geode->addDrawable(landmark_geom.get());
     
     root->addChild(border_geode.get());
     root->addChild(plane_group.get());
+    root->addChild(landmark_geode.get());
 
     setDirty();
 
@@ -165,6 +179,29 @@ void MapVisualization::renderEnvironment(const uw_localization::Environment& env
     border_geom->setColorArray(border_colors.get());
     border_geom->setVertexArray(border_points.get());
 
+    landmark_points->clear();
+
+    std::vector<uw_localization::Landmark>::const_iterator it;
+    for(it = env.landmarks.begin(); it != env.landmarks.end(); it++) {
+        const int segments = 10;
+        for(int i = 0; i < segments; i++) {
+            double theta = (double) i / segments * M_PI;
+            double x = 0.2 * cos(theta);
+            double y = 0.2 * sin(theta);
+
+            osg::Vec3d s(it->point.x() - x, it->point.y() - y, it->point.z());
+            osg::Vec3d p(it->point.x() + x, it->point.y() + y, it->point.z());
+
+            landmark_points->push_back(s);
+            landmark_points->push_back(p);
+
+            std::cout << "draw landmark" << std::endl;
+        }
+    }
+
+    dynamic_cast<osg::DrawArrays*>(landmark_geom->getPrimitiveSet(0))->setCount(landmark_points->size());
+    landmark_geom->setVertexArray(landmark_points.get());
+    
     updated = false;
 }
 

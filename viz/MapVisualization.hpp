@@ -46,6 +46,11 @@ class MapVisualization
      osg::ref_ptr<osg::Geometry>  border_geom;
      osg::ref_ptr<osg::DrawArrays> grid;
 
+     osg::ref_ptr<osg::Group> landmark_group;
+     osg::ref_ptr<osg::Vec3Array> landmark_points;
+     osg::ref_ptr<osg::Vec4Array> landmark_colors;
+     osg::ref_ptr<osg::Geometry>  landmark_geom;
+
      bool updated;
      int resolution;
 
