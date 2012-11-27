@@ -303,7 +303,7 @@ bool NodeMap::fromYaml(std::istream& stream)
 void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 {
         std::string caption = "";
-	if(node.GetType() == YAML::CT_MAP && node.FindValue("point")) {
+	if(node.Type() == YAML::NodeType::Map && node.FindValue("point")) {
 		Eigen::Vector3d point;
 
 		node["point"] >> point;
@@ -312,7 +312,7 @@ void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 			node["caption"] >> caption;
 
 		root->addChild(new LandmarkNode(point, caption));
-        } else if(node.GetType() == YAML::CT_MAP && node.FindValue("line_from")) {
+        } else if(node.Type() == YAML::NodeType::Map && node.FindValue("line_from")) {
 		Eigen::Vector3d from;
 		Eigen::Vector3d to;
 		double height;
@@ -328,7 +328,7 @@ void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 		
 		root->addChild(new LineNode(line, height, caption));
 
-	} else if(node.GetType() == YAML::CT_MAP) {
+	} else if(node.Type() == YAML::NodeType::Map) {
 		for(YAML::Iterator it = node.begin(); it != node.end(); ++it) {
 			std::string groupname;
 			it.first() >> groupname;
@@ -338,7 +338,7 @@ void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
                         root->addChild(group);
 			parseYamlNode(it.second(), group);
 		}
-	} else if(node.GetType() == YAML::CT_SEQUENCE) {
+	} else if(node.Type() == YAML::NodeType::Sequence) {
 		for(YAML::Iterator it = node.begin(); it != node.end(); ++it) {
 			parseYamlNode(*it, root);
 		}
