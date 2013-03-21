@@ -51,7 +51,8 @@ class UwMotionModel {
     /*
     void  updateOrientation(const base::samples::RigidBodyState& orientation);
     */
-
+    void setThrusterVoltage(double voltage);
+    
  protected:
     virtual const Vector3d& GravityBuoyancy(const Vector3d& euler) const;
     virtual const Vector3d& HydroDamping(const Vector3d& velocity) const;

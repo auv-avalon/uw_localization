@@ -125,4 +125,8 @@ const Vector6d& UwMotionModel::DERIV(const Vector6d& Xt, const Vector3d& Ft, con
     return Xdott;    
 }
 
+void UwMotionModel::setThrusterVoltage(double voltage){
+  parameter.ThrusterVoltage = voltage;
+}
+
 }
