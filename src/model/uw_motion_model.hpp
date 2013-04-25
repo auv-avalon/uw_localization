@@ -30,6 +30,8 @@ struct UwVehicleParameter {
 //    Matrix3d InertiaTensor;
 
     Vector6d ThrusterCoefficient;
+    Vector6d LinearThrusterCoefficient;
+    Vector6d SquareThrusterCoefficient;
     MatrixTCM TCM;
     double ThrusterVoltage;
 

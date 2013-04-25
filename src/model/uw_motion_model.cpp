@@ -30,8 +30,12 @@ const Vector6d& UwMotionModel::transition(const Vector6d& x_t, double t, const b
     for(unsigned i = 0; i < status.states.size(); i++) {
         Volt(i) = status.states[i].pwm * parameter.ThrusterVoltage;
     }
-
-    Vector6d Ctrl = parameter.ThrusterCoefficient.cwiseProduct((Volt * Volt.abs()).matrix());
+    
+    Vector6d tCoefficient = parameter.ThrusterCoefficient 
+			      + parameter.LinearThrusterCoefficient.cwiseProduct(Volt.matrix()) 
+			      + parameter.SquareThrusterCoefficient.cwiseProduct((Volt * Volt.abs()).matrix());
+    
+    Vector6d Ctrl = tCoefficient.cwiseProduct((Volt * Volt.abs()).matrix());
     Vector3d Ft = parameter.TCM.transpose() * Ctrl;
 
     return runga_kutta(x_t, t, Ft);
