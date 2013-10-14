@@ -1,6 +1,11 @@
 #ifndef UW_LOCALIZATION_SAMPLES_INFO_HPP
 #define UW_LOCALIZATION_SAMPLES_INFO_HPP
 
+#include <base/Eigen.hpp>
+#include <base/Time.hpp>
+#include <vector>
+
+
 namespace uw_localization {
 
 enum PointStatus {

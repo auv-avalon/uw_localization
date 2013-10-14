@@ -1,9 +1,11 @@
 #ifndef UW_LOCALIZATION_TYPES_ENVIRONMENT_HPP
 #define UW_LOCALIZATION_TYPES_ENVIRONMENT_HPP
 
+#include <base/Eigen.hpp>
+#include <vector>
+
 namespace uw_localization {
 
-#include <base/eigen.h>
 
 struct Plane {
     base::Vector3d position;
