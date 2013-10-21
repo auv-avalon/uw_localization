@@ -7,7 +7,7 @@ rock_vizkit_plugin(uw_localization_laserscan-viz
 rock_library(uw_localization_viz
     SOURCES ParticleGeode.cpp
     HEADERS ParticleGeode.hpp
-    DEPS_PKGCONFIG vizkit)
+    DEPS_PKGCONFIG vizkit3d)
 
 rock_vizkit_plugin(uw_localization_particle-viz
     ParticleVisualization.cpp
