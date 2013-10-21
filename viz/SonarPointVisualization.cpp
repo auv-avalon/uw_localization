@@ -1,6 +1,6 @@
 #include "SonarPointVisualization.hpp"
 
-namespace vizkit {
+namespace vizkit3d {
 
 osg::ref_ptr<osg::Node> SonarPointVisualization::createMainNode()
 {

@@ -1,7 +1,7 @@
 #include "LaserScanVisualization.hpp"
 #include <algorithm>
 
-namespace vizkit {
+namespace vizkit3d {
 
 LaserScanVisualization::LaserScanVisualization() 
     : new_laserscan_received(false), scan_buffer_size(128), show_beam(false), 

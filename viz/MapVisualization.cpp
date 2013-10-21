@@ -1,7 +1,7 @@
 #include "MapVisualization.hpp"
 #include <uw_localization/maps/node_map.hpp>
 
-namespace vizkit {
+namespace vizkit3d {
 
 MapVisualization::~MapVisualization()
 {

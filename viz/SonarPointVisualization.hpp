@@ -2,16 +2,16 @@
 #define UW_LOCALIZATION_SONARPOINTVISUALIZATION_HPP
 
 #include <boost/noncopyable.hpp>
-#include <vizkit/Vizkit3DPlugin.hpp>
+#include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <base/samples/rigid_body_state.h>
 #include <uw_localization/types/info.hpp>
 
-namespace vizkit {
+namespace vizkit3d {
 
 class SonarPointVisualization
-    : public vizkit::Vizkit3DPlugin<uw_localization::PointInfo>,
+    : public vizkit3d::Vizkit3DPlugin<uw_localization::PointInfo>,
       boost::noncopyable
 {
    Q_OBJECT

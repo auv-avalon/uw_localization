@@ -6,7 +6,7 @@
 #include <uw_localization/types/particle.hpp>
 #include <uw_localization/types/info.hpp>
 
-namespace vizkit {
+namespace vizkit3d {
 
 
 class ParticleGeode : public osg::Geode

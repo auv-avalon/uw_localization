@@ -2,15 +2,15 @@
 #define eras__ParticleVisualization_H
 
 #include <boost/noncopyable.hpp>
-#include <vizkit/Vizkit3DPlugin.hpp>
+#include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <osg/Geode>
 #include <osg/Group>
 #include <uw_localization/types/particle.hpp>
 
-namespace vizkit {
+namespace vizkit3d {
 
 class ParticleVisualization 
-    : public vizkit::Vizkit3DPlugin<uw_localization::ParticleSet>
+    : public vizkit3d::Vizkit3DPlugin<uw_localization::ParticleSet>
     , boost::noncopyable    
 {
     Q_OBJECT

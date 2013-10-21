@@ -1,6 +1,6 @@
 #include "ParticleGeode.hpp"
 
-namespace vizkit {
+namespace vizkit3d {
 
 std::vector<osg::Vec4> ParticleGeode::color_map;
 

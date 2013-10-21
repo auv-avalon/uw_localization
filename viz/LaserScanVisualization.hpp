@@ -2,18 +2,18 @@
 #define LASERSCAN_VISUALIZATION_H_
 
 #include <boost/noncopyable.hpp>
-#include <vizkit/Vizkit3DPlugin.hpp>
+#include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <base/samples/pointcloud.h>
 #include <base/samples/laser_scan.h>
 #include <base/samples/rigid_body_state.h>
 
-namespace vizkit {
+namespace vizkit3d {
 
 class LaserScanVisualization
-    : public vizkit::Vizkit3DPlugin<base::samples::LaserScan>,
-      public vizkit::VizPluginAddType<base::samples::RigidBodyState>,
+    : public vizkit3d::Vizkit3DPlugin<base::samples::LaserScan>,
+      public vizkit3d::VizPluginAddType<base::samples::RigidBodyState>,
       boost::noncopyable
 {
     Q_OBJECT

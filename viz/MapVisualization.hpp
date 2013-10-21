@@ -2,17 +2,17 @@
 #define UW_PARTICLE_LOCALIZATION_MAPVIZ_HPP
 
 #include <boost/noncopyable.hpp>
-#include <vizkit/Vizkit3DPlugin.hpp>
+#include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Group>
 #include <uw_localization/types/environment.hpp>
 #include <QString>
 
-namespace vizkit {
+namespace vizkit3d {
 
 class MapVisualization
-    : public vizkit::Vizkit3DPlugin<uw_localization::Environment>,
+    : public vizkit3d::Vizkit3DPlugin<uw_localization::Environment>,
     boost::noncopyable
 {
     Q_OBJECT

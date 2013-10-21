@@ -4,7 +4,7 @@
 #include <osg/Geometry>
 #include <boost/assert.hpp>
 
-namespace vizkit {
+namespace vizkit3d {
 
 ParticleVisualization::ParticleVisualization()
 {
