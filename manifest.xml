@@ -9,8 +9,8 @@
   
   <depend package="base/types" />
   <depend package="avalon/machine_learning" />
-  <depend package="gui/vizkit"/>
-  <depend package="gui/vizkit3d"/>
+  <depend package="gui/vizkit" optional="1" />
+  <depend package="gui/vizkit3d" optional="1" />
   <depend package="external/yaml-cpp" />
   <tags>needs_opt</tags>
 </package>
