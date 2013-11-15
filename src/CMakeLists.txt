@@ -4,6 +4,7 @@ set(CPP_FILES
     maps/map.cpp
     maps/node_map.cpp
     model/uw_motion_model.cpp
+    test/graph_test.cpp
     )
 
 set(HPP_FILES
@@ -25,4 +26,11 @@ rock_library(uw_localization
     DEPS_PKGCONFIG machine_learning 
     DEPS_PKGCONFIG base-types 
     DEPS_PKGCONFIG eigen3)
+    
+rock_executable(graph_test
+    SOURCES test/graph_test.cpp
+    DEPS_PKGCONFIG uw_localization
+    DEPS_PKGCONFIG libunicap
+    DEPS_PKGCONFIG opencv base-lib
+)    
 

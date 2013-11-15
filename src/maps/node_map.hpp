@@ -18,6 +18,7 @@ namespace uw_localization {
 const int NODE_GROUP = 0;
 const int NODE_LANDMARK = 1;
 const int NODE_LINE = 2;
+const int NODE_BOX = 3;
 
 class LandmarkNode;
 
@@ -91,6 +92,38 @@ private:
   Eigen::Vector3d _point;
 };
 
+class BoxNode : public Node {
+public:  
+  BoxNode(const Eigen::Vector3d position, const Eigen::Vector3d span, const std::string& caption = "");
+  virtual ~BoxNode();
+  
+  virtual int getNodeType() const {return NODE_BOX; }
+  
+  /**
+   * @param caption: label of the nodes
+   * @param v: direction of view (0, vertical opening angle, yaw)
+   * @param x: position of view
+   */
+  virtual boost::tuple<Node*, double, Eigen::Vector3d> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x);
+  
+  virtual Eigen::Vector3d draw();
+  
+private:
+  Eigen::Vector3d position;
+  Eigen::Vector3d span;
+  double radius;
+  
+  Eigen::Vector3d right_upper_corner;
+  Eigen::Vector3d right_under_corner;
+  Eigen::Vector3d left_upper_corner;
+  Eigen::Vector3d left_under_corner;
+  
+  Line upper_line;
+  Line under_line;
+  Line left_line;
+  Line right_line;
+    
+};
 
 class NodeMap : public Map {
 public:

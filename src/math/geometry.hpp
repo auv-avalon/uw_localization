@@ -13,10 +13,11 @@ struct Line {
  public:
     static Line fromTwoPoints(const Point& p, const Point& q);
     static Line fromPointDirection(const Point& p, const Direction& q);
-
+    
+    Line();
     Line(const Line& line);
 
-    inline Direction direction() const;
+    inline Direction direction() const {return q - p; }
     inline Point from() const { return p; }
     inline Point to() const { return q; }
 
@@ -24,9 +25,23 @@ struct Line {
 
     Point intersection(const Line& line) const;
     Point intersection(const Point& point) const;
-
+    
+    /**
+     * Calculates the intersection point between two lines
+     */
+    Point intersectionPoint(const Line& line) const;
+    
+    
+    /**
+     * Return the lambda factor of the intersection point between the line and the upright of the point
+     */
     double lambda(const Point& point) const;
     double lambda(const Line& line) const;
+    
+    /**
+     * Calculates the distance between a line and a point
+     */
+    double distance(const Point& pt) const;
 
  private:
     Line(const Point& p, const Point& q);

@@ -19,6 +19,12 @@ struct Landmark {
     base::Vector3d point;
 };
 
+
+struct Box{
+    base::Vector3d position; //Center of the box
+    base::Vector3d span; //length of the object in x,y,z  
+};  
+
 struct Environment {
     base::Vector3d left_top_corner;
     base::Vector3d right_bottom_corner;

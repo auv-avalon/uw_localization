@@ -165,7 +165,7 @@ Eigen::Vector3d LineNode::draw()
     return Eigen::Vector3d();
 }
 
-
+/*
 boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
 {
     Line measurement = Line::fromTwoPoints(x, v);
@@ -190,6 +190,124 @@ boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const 
         distance = -distance;
 
     return boost::tuple<Node*, double, Eigen::Vector3d>(this, distance, line_point);
+}*/
+
+
+boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x){
+  
+  //Maximum line length for a line from x to wall, which intersects with wall
+  double max_linelength = (line.from() - x).norm() + line.direction().norm();
+  double yaw = std::atan2( v[1] - x[1], v[0] - x[0]);
+  Line scan = Line::fromTwoPoints(x, x + Eigen::Vector3d(max_linelength * std::cos(yaw), max_linelength * std::sin(yaw),0.0) );
+    
+  Eigen::Vector3d intersection = line.intersectionPoint(scan);
+  
+  
+  //std::cout << "Wall: " << line.from().transpose() << " - " << line.to().transpose() << std::endl;
+  //std::cout << "Wall scan: " << scan.from().transpose() << " - " <<  scan.to().transpose() << std::endl;
+  //std::cout << "Intersection: " << intersection.transpose() << std::endl; 
+  
+  double distance = (x - intersection).norm();
+  
+  if(isnan(distance)){
+    return boost::tuple<Node*, double, Eigen::Vector3d>( this, INFINITY, intersection);
+  }else{
+    return boost::tuple<Node*, double, Eigen::Vector3d>( this, distance, intersection);
+  }
+} 
+
+
+//-----------------------------------------------------------------------------
+
+BoxNode::BoxNode(const Eigen::Vector3d position, const Eigen::Vector3d span, const std::string& caption)
+    : Node(caption), position(position), span(span)
+{
+  radius = std::sqrt( std::pow( 0.5*span[0], 2.0) + std::pow( 0.5* span[1], 2.0));
+  right_upper_corner = Eigen::Vector3d( position[0] + (0.5 * span[0]), position[1] + (0.5 * span[1]), 0.0);
+  right_under_corner = Eigen::Vector3d( position[0] + (0.5 * span[0]), position[1] - (0.5 * span[1]) , 0.0);
+  left_upper_corner = Eigen::Vector3d( position[0] - (0.5 * span[0]), position[1] + (0.5 * span[1]), 0.0);
+  left_under_corner = Eigen::Vector3d( position[0] - (0.5 * span[0]), position[1] - (0.5 * span[1]) , 0.0);
+  
+  left_line = Line::fromTwoPoints(left_upper_corner, left_under_corner);
+  right_line = Line::fromTwoPoints(right_upper_corner, right_under_corner);
+  upper_line = Line::fromTwoPoints(right_upper_corner, left_upper_corner);
+  under_line = Line::fromTwoPoints(right_under_corner, left_under_corner);
+}
+
+BoxNode::~BoxNode()
+{}
+
+boost::tuple<Node*, double, Eigen::Vector3d> BoxNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x){
+  //return boost::tuple<Node*, double, Eigen::Vector3d>(this, 42, x);
+  //Distance between object and particle, in the xy-plane
+  double distanceX2Point = sqrt( pow(x[0] - position[0], 2.0) + pow(x[1] - position[1], 2.0));
+  double verticalScanWidth = tan(v[1]) * distanceX2Point;  
+  
+  //Check, if the object is in scanning depth.
+  if( position[2] + (0.5 * span[2]) < x[2] - verticalScanWidth || position[2] - (0.5 * span[2]) > x[2] + verticalScanWidth){
+    std::cout << "Out of scanning depth" << std::endl;
+    return boost::tuple<Node*, double, Eigen::Vector3d>(this, INFINITY, x);
+  }
+   
+  //Create a line in the direction of the scan. Length is choosen as the distance between the particle and the objekt plus the radius of the object, to make sure, the line crosses the objekt
+  Line scan = Line::fromPointDirection(x, Eigen::Vector3d( (distanceX2Point + radius) * cos(v[2]), (distanceX2Point + radius) * sin(v[2]), 0.0) );   
+  
+/*
+    std::cout << "Box: " << position.transpose() << std::endl;
+    std::cout << "Radius: " << radius << " lamda: " << scan.distance(position) << std::endl;
+    std::cout << "Scan from " << scan.from().transpose() << " to " << scan.to().transpose() << std::endl; */
+  
+  //Check, if the object is out ouf the scan. If outside, ignore the box
+  if( scan.distance(position) > radius){
+    //std::cout << "Out of direction" << std::endl;
+    return boost::tuple<Node*, double, Eigen::Vector3d>(this, INFINITY, x);
+  }
+    
+  //if scan crosses the object, calculte intersections with object lines    
+  double distance;
+
+  Line width_line;
+  Line height_line;
+  
+  if(x[0] < position[0])
+    height_line = left_line;
+  else
+    height_line = right_line;  
+  
+  if(x[1] < position[1])
+    width_line = under_line;
+  else
+    width_line = upper_line;
+  
+  Point intersection;  
+  intersection = scan.intersectionPoint(width_line);
+  //std::cout << "intersection " << intersection.transpose() << " with (" << width_line.from().transpose() << " , " << width_line.to().transpose() << " )" <<std::endl; 
+  
+  distance = std::sqrt( std::pow( x[0] - intersection[0], 2.0) + std::pow( x[1] - intersection[1], 2.0));
+  
+  Point temp_intersection = scan.intersectionPoint(height_line);
+  
+  double temp_distance = std::sqrt( std::pow( x[0] - temp_intersection[0], 2.0) + std::pow( x[1] - temp_intersection[1], 2.0));
+  //std::cout << "intersection " << temp_intersection.transpose() << " with (" << height_line.from().transpose() << " , " << height_line.to().transpose() << " )" <<std::endl;
+  
+  if(temp_distance < distance || isnan(distance)){
+    distance = temp_distance;
+    intersection = temp_intersection;
+  }
+  
+  if(isnan(distance))
+    distance = INFINITY;
+  else{
+    std::cout << "Scan from (" << scan.from().transpose() << " ) to (" << scan.to().transpose() << " )" << std::endl;
+    std::cout << "Intersection point: " << intersection.transpose() << " distance: " << distance << std::endl;
+  }
+  
+  return boost::tuple<Node*, double, Eigen::Vector3d>(this, distance , intersection);
+}
+
+Eigen::Vector3d BoxNode::draw()
+{
+    return position;
 }
 
 
@@ -328,7 +446,19 @@ void NodeMap::parseYamlNode(const YAML::Node& node, Node* root)
 		
 		root->addChild(new LineNode(line, height, caption));
 
-	} else if(node.Type() == YAML::NodeType::Map) {
+	} else if(node.Type() == YAML::NodeType::Map && node.FindValue("position") && node.FindValue("span")) {
+		Eigen::Vector3d pos;
+		Eigen::Vector3d span;
+		
+		node["position"] >> pos;
+		node["span"] >> span;
+		
+		if(node.FindValue("caption"))
+		  node["caption"] >> caption;
+		
+		root->addChild(new BoxNode(pos, span, caption));	  
+	  
+	}else if(node.Type() == YAML::NodeType::Map) {
 		for(YAML::Iterator it = node.begin(); it != node.end(); ++it) {
 			std::string groupname;
 			it.first() >> groupname;

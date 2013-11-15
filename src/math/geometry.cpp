@@ -21,11 +21,8 @@ Line::Line(const Line& line)
     : p(line.p), q(line.q)
 {}
 
-
-Direction Line::direction() const 
-{
-    return q - p;
-}
+Line::Line()
+{}
 
 
 Point Line::point(double lambda) const
@@ -48,6 +45,52 @@ Point Line::intersection(const Point& pt) const
     return point( lambda(pt) );
 }
 
+Point Line::intersectionPoint(const Line& line) const{
+  
+  //Intersection point
+  Point intersection;
+  
+  //compensation for lack of floating point precission
+  double epsilon = 0.01;
+  
+  //Lineintersection-Algorithm from http://en.wikipedia.org/wiki/Line-line_intersection
+  //transform points into A1x + B1y = C1 form
+  double A1 = q[1] - p[1];
+  double B1 = p[0] - q[0];
+  double C1 = A1 * p[0] + B1 * p[1];
+
+  double A2 = line.to()[1] - line.from()[1];
+  double B2 = line.from()[0] - line.to()[0];
+  double C2 = A2 * line.from()[0] + B2 * line.from()[1];
+  
+  double determinant = A1 * B2 - A2 * B1;
+
+  if (determinant == 0) {
+  //lines are parallel
+    return base::Vector3d::Constant(NAN);
+  } else {
+    //calculate the intersection point
+	intersection[0] = (B2 * C1 - B1 * C2) / determinant;
+	intersection[1] = (A1 * C2 - A2 * C1) / determinant;
+	intersection[2] = 0.0;
+  }
+
+  //make sure the intersection point is on both lines
+  if ((intersection[0] - fmin(p[0], q[0]) > -epsilon
+	&& fmax(p[0], q[0]) - intersection[0] > -epsilon
+	&& intersection[1] - fmin(p[1], q[1]) > -epsilon
+	&& fmax(p[1], q[1]) - intersection[1] > -epsilon
+	&& intersection[0] - fmin(line.from()[0], line.to()[0]) > -epsilon
+	&& fmax(line.from()[0], line.to()[0]) - intersection[0] > -epsilon
+	&& intersection[1] - fmin(line.from()[1], line.to()[1]) > -epsilon
+	&& fmax(line.from()[1], line.to()[1]) - intersection[1] > -epsilon)){
+	return intersection;
+  }
+
+  return base::Vector3d::Constant(NAN);
+}   
+ 
+
 
 double Line::lambda(const Point& pt) const
 {
@@ -56,6 +99,12 @@ double Line::lambda(const Point& pt) const
     return (r.transpose() * (pt - p)) * (r.transpose() * r).inverse();
 }
 
+double Line::distance(const Point& pt) const
+{
+  Point p2pt = p-pt;
+  double alpha = std::acos( (p2pt.dot(direction()) ) / (p2pt.norm() * direction().norm()) );
+  return sin(alpha) * p2pt.norm();
+}
 
 double Line::lambda(const Line& line) const
 {
