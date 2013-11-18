@@ -27,10 +27,10 @@ rock_library(uw_localization
     DEPS_PKGCONFIG base-types 
     DEPS_PKGCONFIG eigen3)
     
-rock_executable(graph_test
-    SOURCES test/graph_test.cpp
-    DEPS_PKGCONFIG uw_localization
-    DEPS_PKGCONFIG libunicap
-    DEPS_PKGCONFIG opencv base-lib
-)    
+#rock_executable(graph_test
+#    SOURCES test/graph_test.cpp
+#    DEPS_PKGCONFIG uw_localization
+#    DEPS_PKGCONFIG libunicap
+#    DEPS_PKGCONFIG opencv base-lib
+#)    
 
