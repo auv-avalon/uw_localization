@@ -50,6 +50,8 @@ struct Line {
     base::Vector3d q;  // end point 
 };
 
+Eigen::Quaternion<double> eulerToQuaternion(Eigen::Vector3d euler);
+
 } // namespace uw_localization
 
 #endif

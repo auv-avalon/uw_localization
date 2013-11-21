@@ -123,5 +123,17 @@ double Line::lambda(const Line& line) const
     return (A.inverse() * b).x();
 }
 
+Eigen::Quaternion<double> eulerToQuaternion(Eigen::Vector3d euler){
+  
+  Eigen::Quaternion<double> quad(1,0,0,0);
+
+  quad.w() = ( cos(euler(0)/2)*cos(euler(1)/2)*cos(euler(2)/2) ) + ( sin(euler(0)/2)*sin(euler(1)/2)*sin(euler(2)/2) );
+  quad.x() = ( sin(euler(0)/2)*cos(euler(1)/2)*cos(euler(2)/2) ) - ( cos(euler(0)/2)*sin(euler(1)/2)*sin(euler(2)/2) );
+  quad.y() = ( cos(euler(0)/2)*sin(euler(1)/2)*cos(euler(2)/2) ) + ( sin(euler(0)/2)*cos(euler(1)/2)*sin(euler(2)/2) );
+  quad.z() = ( cos(euler(0)/2)*cos(euler(1)/2)*sin(euler(2)/2) ) - ( sin(euler(0)/2)*sin(euler(1)/2)*cos(euler(2)/2) );		
+
+  return quad;  
+}
+
 
 } // namespace uw_localization;
