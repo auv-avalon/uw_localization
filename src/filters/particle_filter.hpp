@@ -188,6 +188,7 @@ class ParticleFilter {
 
         state.position = position(*best);
         state.cov_position = variance / (particles.size() + 1);
+	state.velocity = state.orientation * velocity(*best);
 
         return state;
     }
