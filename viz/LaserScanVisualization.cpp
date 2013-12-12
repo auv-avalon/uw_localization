@@ -36,7 +36,7 @@ osg::ref_ptr<osg::Node> LaserScanVisualization::createMainNode()
     scan_geom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     scan_geom->setVertexArray(scan_points);
     scan_geom->setColorArray(scan_color_array);
-    scan_geom->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE);
+    scan_geom->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE_SET);
     scan_geom->addPrimitiveSet(scan_draw_arrays.get());
 
     // setup beam lines for laserscans
