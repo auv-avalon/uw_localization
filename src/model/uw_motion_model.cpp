@@ -23,12 +23,12 @@ UwMotionModel::UwMotionModel(const UwVehicleParameter& params)
     MassMatrix = TensorMass + InertiaMass;
 }
 
-const Vector6d& UwMotionModel::transition(const Vector6d& x_t, double t, const base::actuators::Status& status)
+const Vector6d& UwMotionModel::transition(const Vector6d& x_t, double t, const base::samples::Joints& status)
 {
     Eigen::Array<double, 6, 1> Volt;
 
-    for(unsigned i = 0; i < status.states.size(); i++) {
-        Volt(i) = status.states[i].pwm * parameter.ThrusterVoltage;
+    for(unsigned i = 0; i < status.size(); i++) {
+        Volt(i) = status[i].raw * parameter.ThrusterVoltage;
     }
     
     Vector6d tCoefficient = parameter.ThrusterCoefficient 

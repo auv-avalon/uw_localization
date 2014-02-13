@@ -200,8 +200,6 @@ class ParticleFilter {
      */
     template<typename U>
     void update(const U& motion) {
-        if(!first_perception_received)
-            return;
 
         // brutal hack and performance could suffer a little, but it works
         Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);

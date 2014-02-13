@@ -5,8 +5,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/SVD>
 #include <base/samples/rigid_body_state.h>
-#include <base/actuators/commands.h>
-#include <base/actuators/status.h>
+#include <base/samples/Joints.hpp>
 
 namespace uw_localization {
 
@@ -49,7 +48,7 @@ class UwMotionModel {
     ~UwMotionModel() {}
 
      // x_t: u v w x y z
-    const Vector6d& transition(const Vector6d& x_t, double t, const base::actuators::Status& status);
+    const Vector6d& transition(const Vector6d& x_t, double t, const base::samples::Joints& status);
     /*
     void  updateOrientation(const base::samples::RigidBodyState& orientation);
     */
