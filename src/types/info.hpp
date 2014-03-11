@@ -33,6 +33,9 @@ struct PointInfo {
 
     /** measurement distance */
     double distance;
+    
+    /**desired distance */
+    double desire_distance;
 };
 
 struct ParticleInfo {
