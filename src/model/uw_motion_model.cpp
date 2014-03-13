@@ -27,7 +27,7 @@ const Vector6d& UwMotionModel::transition(const Vector6d& x_t, double t, const b
 {
     Eigen::Array<double, 6, 1> Volt;
 
-    for(unsigned i = 0; i < status.size(); i++) {
+    for(unsigned i = 0; i < status.size() && i < 6; i++) {
         Volt(i) = status[i].raw * parameter.ThrusterVoltage;
     }
     
