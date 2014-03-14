@@ -2,7 +2,7 @@
 #define UW_PARTICLE_LOCALIZATION_MONITORVIZ_HPP
 
 #include <boost/noncopyable.hpp>
-#include <vizkit/Vizkit3DPlugin.hpp>
+#include <vizkit3d/Vizkit3DPlugin.hpp>
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Group>
@@ -10,12 +10,12 @@
 #include <uw_localization/types/particle.hpp>
 #include <uw_localization/types/info.hpp>
 
-namespace vizkit {
+namespace vizkit3d {
 
 class MonitorVisualization
-    : public vizkit::Vizkit3DPlugin<uw_localization::Environment>,
-      public vizkit::VizPluginAddType<uw_localization::ParticleSet>,
-      public vizkit::VizPluginAddType<uw_localization::ParticleInfo>,
+    : public vizkit3d::Vizkit3DPlugin<uw_localization::Environment>,
+      public vizkit3d::VizPluginAddType<uw_localization::ParticleSet>,
+      public vizkit3d::VizPluginAddType<uw_localization::ParticleInfo>,
     boost::noncopyable
 {
     Q_OBJECT
@@ -27,9 +27,9 @@ class MonitorVisualization
 
  public:
      MonitorVisualization() {
-        VizPluginRubyAdapter(MonitorVisualization, uw_localization::Environment,  Environment);
-        VizPluginRubyAdapter(MonitorVisualization, uw_localization::ParticleSet,  ParticleSet);
-        VizPluginRubyAdapter(MonitorVisualization, uw_localization::ParticleInfo, ParticleInfo);
+        //VizPluginRubyAdapter(MonitorVisualization, uw_localization::Environment,  Environment);
+        //VizPluginRubyAdapter(MonitorVisualization, uw_localization::ParticleSet,  ParticleSet);
+        //VizPluginRubyAdapter(MonitorVisualization, uw_localization::ParticleInfo, ParticleInfo);
         map_created = false;
         map_changed = false;
         particle_update = false;
@@ -54,6 +54,19 @@ class MonitorVisualization
      void setDynamicMap(bool p) { property_dynamic_map = p; }
      void setRealPoint(bool p) { property_real_point = p; }
      void setDesirePoint(bool p) { property_desire_point = p; }
+     
+      Q_INVOKABLE void updateEnv( const uw_localization::Environment& sample )
+        {
+	  return updateData(sample); }
+	  
+      Q_INVOKABLE void updateParticleSet( const uw_localization::ParticleSet& sample )
+        {
+	  return updateData(sample); } 
+	  
+      Q_INVOKABLE void updateInfo( const uw_localization::ParticleInfo& sample )
+        {
+	  return updateData(sample); } 
+     
 
  protected:
      virtual osg::ref_ptr<osg::Node> createMainNode();

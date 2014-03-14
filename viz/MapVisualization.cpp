@@ -230,6 +230,6 @@ void MapVisualization::updatePlaneNode(osg::Geode* geode, const uw_localization:
 }
 
 
-VizkitQtPlugin(MapVisualization)
+//VizkitQtPlugin(MapVisualization)
 }
 

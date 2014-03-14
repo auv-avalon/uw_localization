@@ -30,6 +30,11 @@ class MapVisualization
 
      void setMap(const QString& p);
      void setGridResolution(const int& resolution);
+     
+      Q_INVOKABLE void updateEnv( const uw_localization::Environment& sample )
+        {
+	  return updateData(sample); }     
+     
 
  protected:
      virtual osg::ref_ptr<osg::Node> createMainNode();

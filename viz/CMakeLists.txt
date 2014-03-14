@@ -1,32 +1,11 @@
-rock_vizkit_plugin(uw_localization_laserscan-viz
-   LaserScanVisualization.cpp
+rock_export_includedir(${PROJECT_SOURCE_DIR}/viz vizkit)
+
+rock_vizkit_plugin(uw_localization-viz
+   MOC ParticleGeode.cpp PluginLoader.cpp LaserScanVisualization.cpp ParticleVisualization.cpp ParticleSetVisualization.cpp SonarPointVisualization.cpp MapVisualization.cpp MonitorVisualization.cpp
    DEPS uw_localization
-   MOC LaserScanVisualization.hpp
-   HEADERS LaserScanVisualization.hpp)
-
-rock_library(uw_localization_viz
-    SOURCES ParticleGeode.cpp
-    HEADERS ParticleGeode.hpp
-    DEPS_PKGCONFIG vizkit3d)
-
-rock_vizkit_plugin(uw_localization_particle-viz
-    ParticleVisualization.cpp
-    DEPS uw_localization uw_localization_viz
-    MOC ParticleVisualization.hpp
-    HEADERS ParticleVisualization.hpp ParticleGeode.hpp)
-
-rock_vizkit_plugin(uw_localization_sonarpoint-viz
-    SonarPointVisualization.cpp
-    DEPS uw_localization uw_localization_viz
-    MOC SonarPointVisualization.hpp
-    HEADERS SonarPointVisualization.hpp ParticleGeode.hpp)
-
-rock_vizkit_plugin(uw_localization_map-viz
-   MapVisualization.cpp
-   DEPS uw_localization
-   MOC MapVisualization.hpp
-   HEADERS MapVisualization.hpp)
-
-
+   DEPS_PKGCONFIG vizkit3d
+   HEADERS ParticleGeode.hpp LaserScanVisualization.hpp ParticleVisualization.hpp ParticleSetVisualization.hpp SonarPointVisualization.hpp MapVisualization.hpp MonitorVisualization.hpp
+   )
+   
 
 

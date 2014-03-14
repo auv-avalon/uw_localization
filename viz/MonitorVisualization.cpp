@@ -1,7 +1,7 @@
 #include "MonitorVisualization.hpp"
 #include "ParticleGeode.hpp"
 
-namespace vizkit {
+namespace vizkit3d {
 
 MonitorVisualization::~MonitorVisualization()
 {
@@ -18,22 +18,30 @@ void MonitorVisualization::updateDataIntern(const uw_localization::Environment& 
 void MonitorVisualization::updateDataIntern(const uw_localization::ParticleSet& p)
 {
     while(particle_group->getNumChildren() < p.particles.size()) {
-        osg::ref_ptr<ParticleGeode> geode = new ParticleGeode;
+        osg::ref_ptr<vizkit3d::ParticleGeode> geode = new vizkit3d::ParticleGeode;
         particle_group->addChild(geode.get());
     }
 
-    best_particle = p.best_particle;
+   int i = 0;
+    for(std::vector<uw_localization::Particle>::const_iterator it = p.particles.begin(); it != p.particles.end(); it++){
+      
+      if(it->main_confidence < p.particles[i].main_confidence)
+	best_particle = i;
+      
+      i++;
+    }    
+
     max_weight = p.particles[best_particle].main_confidence;
 
     for(unsigned i = 0; i < particle_group->getNumChildren(); i++) 
-        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->updateParticle(p.particles[i]);
+        dynamic_cast<vizkit3d::ParticleGeode*>(particle_group->getChild(i))->updateParticle(p.particles[i]);
 }
 
 
 void MonitorVisualization::updateDataIntern(const uw_localization::ParticleInfo& info) 
 {
     for(unsigned i = 0; i < particle_group->getNumChildren(); i++) {
-        ParticleGeode* p = dynamic_cast<ParticleGeode*>(particle_group->getChild(i));
+        vizkit3d::ParticleGeode* p = dynamic_cast<vizkit3d::ParticleGeode*>(particle_group->getChild(i));
         switch(info.type) {
             case 0:
                 p->updateSonar(info.infos[i]);
@@ -96,12 +104,12 @@ void MonitorVisualization::renderParticles()
     double min_z = data_env.left_top_corner.z();
 
     if(property_box)
-        ParticleGeode::setViz(ParticleGeode::BOX, min_z, max_z, 0.1, max_weight);
+        vizkit3d::ParticleGeode::setViz(vizkit3d::ParticleGeode::BOX, min_z, max_z, 0.1, max_weight);
     else
-        ParticleGeode::setViz(ParticleGeode::LINE, min_z, max_z, 0.1, max_weight);
+        vizkit3d::ParticleGeode::setViz(vizkit3d::ParticleGeode::LINE, min_z, max_z, 0.1, max_weight);
 
     for(unsigned i = 0; i < particle_group->getNumChildren(); i++) {
-        dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->render();
+        dynamic_cast<vizkit3d::ParticleGeode*>(particle_group->getChild(i))->render();
     }
 }
 
@@ -237,6 +245,6 @@ void MonitorVisualization::updatePlaneNode(osg::Geode* geode, const uw_localizat
 }
 
 
-VizkitQtPlugin(MonitorVisualization)
+//VizkitQtPlugin(MonitorVisualization)
 }
 

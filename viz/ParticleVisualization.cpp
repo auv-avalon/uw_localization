@@ -33,9 +33,9 @@ ParticleVisualization::createMainNode()
 }
 
 
-void
-ParticleVisualization::updateMainNode( osg::Node* node )
-{
+void ParticleVisualization::updateMainNode( osg::Node* node )
+{  
+   std::cout << "UpdateMainNode" << std::endl;
    if(updated)
         renderParticles();
 
@@ -55,10 +55,17 @@ void ParticleVisualization::renderParticles()
     }
 }
 
-
-void
-ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& p)
+void ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& p)
 {
+  particles = p;
+  updated = true;
+}
+
+
+/*
+void ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& p)
+{    
+    std::cout << "UpdateDataIntern" << std::endl;
     while(particle_group->getNumChildren() < p.particles.size()) {
         osg::ref_ptr<ParticleGeode> geode = new ParticleGeode;
         particle_group->addChild(geode.get());
@@ -75,7 +82,8 @@ ParticleVisualization::updateDataIntern(uw_localization::ParticleSet const& p)
         dynamic_cast<ParticleGeode*>(particle_group->getChild(i))->updateParticle(p.particles[i]);
 
     updated = true;
-}
+    std::cout << "UpdateDataInternEnd" << std::endl;
+}*/
  
-VizkitQtPlugin(ParticleVisualization)
+//VizkitQtPlugin(ParticleVisualization)
 } // namespace vizkit

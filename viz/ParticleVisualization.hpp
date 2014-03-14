@@ -21,7 +21,11 @@ class ParticleVisualization
     public:
         ParticleVisualization();
         ~ParticleVisualization();
-
+	 
+	Q_INVOKABLE void updateParticleSet( const uw_localization::ParticleSet& sample )
+        { 
+	  return updateData(sample); }
+	
         bool getBox() const { return property_box; }
         void setBox(bool p) { property_box = p; }
 
@@ -43,6 +47,8 @@ class ParticleVisualization
         bool property_box;
         bool updated;
         double max_weight;
+	
+	uw_localization::ParticleSet particles;
        
         osg::ref_ptr<osg::Group> particle_group;
 };

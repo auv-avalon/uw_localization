@@ -114,5 +114,5 @@ void SonarPointVisualization::updateDataIntern(const uw_localization::PointInfo&
 }
 
 
-VizkitQtPlugin(SonarPointVisualization)
+//VizkitQtPlugin(SonarPointVisualization)
 }

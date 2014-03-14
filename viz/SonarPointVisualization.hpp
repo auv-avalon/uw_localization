@@ -35,6 +35,11 @@ public:
    void   setMaxZ(double p) { property_max_z = p; }
    void   setHistory(int p) { property_history = p; }
    int    getHistory() const { return property_history; }
+   
+      Q_INVOKABLE void updateInfo( const uw_localization::ParticleInfo& sample )
+        {
+	  return updateData(sample); }    
+   
 
 protected:
    virtual osg::ref_ptr<osg::Node> createMainNode();

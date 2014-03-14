@@ -137,5 +137,5 @@ void LaserScanVisualization::updateDataIntern(const base::samples::RigidBodyStat
 }
 
 
-VizkitQtPlugin(LaserScanVisualization)
+//VizkitQtPlugin(LaserScanVisualization)
 } // namespace vizkit
