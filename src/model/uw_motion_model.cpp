@@ -2,10 +2,12 @@
 
 namespace uw_localization {
 
+UwMotionModel::UwMotionModel(){
+}
 
-UwMotionModel::UwMotionModel(const UwVehicleParameter& params) 
-    : parameter(params) 
+void UwMotionModel::init(const UwVehicleParameter& params) 
 {
+    parameter = params;
     Matrix3d TensorMass = params.Mass * Matrix3d::Identity();
     Matrix3d InertiaMass = Matrix3d::Zero();
     

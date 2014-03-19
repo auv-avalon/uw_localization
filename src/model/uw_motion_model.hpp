@@ -44,9 +44,10 @@ struct UwVehicleParameter {
 
 class UwMotionModel {
  public:
-    UwMotionModel(const UwVehicleParameter& params);
+    UwMotionModel();
     ~UwMotionModel() {}
-
+    
+    void init(const UwVehicleParameter& params);
      // x_t: u v w x y z
     const Vector6d& transition(const Vector6d& x_t, double t, const base::samples::Joints& status);
     /*
