@@ -13,4 +13,4 @@ Vizkit::UiLoader.register_3d_plugin_for('MonitorVisualization', 'uw_localization
 Vizkit::UiLoader.register_3d_plugin_for('MonitorVisualization', 'uw_localization/ParticleInfo', :updateInfo)
 
 Vizkit::UiLoader.register_3d_plugin('SonarPointVisualization', 'uw_localization', 'SonarPointVisualization')
-Vizkit::UiLoader.register_3d_plugin_for('SonarPointVisualization', 'uw_localization/ParticleInfo', :updateInfo)
+Vizkit::UiLoader.register_3d_plugin_for('SonarPointVisualization', 'uw_localization/PointInfo', :updateInfo)

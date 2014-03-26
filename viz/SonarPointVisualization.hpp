@@ -36,7 +36,7 @@ public:
    void   setHistory(int p) { property_history = p; }
    int    getHistory() const { return property_history; }
    
-      Q_INVOKABLE void updateInfo( const uw_localization::ParticleInfo& sample )
+      Q_INVOKABLE void updateInfo( const uw_localization::PointInfo& sample )
         {
 	  return updateData(sample); }    
    
