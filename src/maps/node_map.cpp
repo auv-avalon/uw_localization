@@ -165,7 +165,7 @@ Eigen::Vector3d LineNode::draw()
     return Eigen::Vector3d();
 }
 
-/*
+
 boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
 {
     Line measurement = Line::fromTwoPoints(x, v);
@@ -190,9 +190,9 @@ boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const 
         distance = -distance;
 
     return boost::tuple<Node*, double, Eigen::Vector3d>(this, distance, line_point);
-}*/
+}
 
-
+/*
 boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x){
   
   //Maximum line length for a line from x to wall, which intersects with wall
@@ -215,7 +215,7 @@ boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const 
     return boost::tuple<Node*, double, Eigen::Vector3d>( this, distance, intersection);
   }
 } 
-
+*/
 
 //-----------------------------------------------------------------------------
 

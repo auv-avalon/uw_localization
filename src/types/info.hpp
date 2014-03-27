@@ -22,6 +22,9 @@ struct PointInfo {
     /** real point measured */
     base::Vector3d real_point;
 
+    /** scan-angle of the measurement*/
+    double angle;
+    
     /** particle location */
     base::Vector3d location;
 
