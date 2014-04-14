@@ -126,9 +126,20 @@ class ParticleFilter {
            sum += confidence(*it);
        }
 
-       for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
-           setConfidence(*it, confidence(*it) / sum);
-           neff += confidence(*it) * confidence(*it);
+       if(sum == 0.0 && particles.size() != 0){
+         sum = particles.size();
+         
+          for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+            setConfidence(*it, 0.0);
+            neff += confidence(*it) * confidence(*it);
+          }
+       }
+       else{              
+       
+          for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+              setConfidence(*it, confidence(*it) / sum);
+              neff += confidence(*it) * confidence(*it);
+          }
        }
 
        mean_position = mean_pos / particles.size();
@@ -241,6 +252,7 @@ class ParticleFilter {
         for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
             double uniform = 1.0 / particles.size();
             double w = 1.0 - ratio;
+                   
             double main_confidence = confidence(*it) * ((ratio * (perception_weights[i++] / sum_perception_weight)) 
                 + w * uniform);
 
@@ -251,14 +263,22 @@ class ParticleFilter {
 
         // normalize overall confidence
         for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-            double weight = confidence(*it) / sum_main_confidence;
+            double weight;
+            
+            if(sum_main_confidence == 0.0)
+              weight = 0.0;
+            else              
+              weight = confidence(*it) / sum_main_confidence;
             
             setConfidence(*it, weight);
 
             Neff += weight * weight;
         }
-
-        effective_sample_size = (1.0 / Neff) / particles.size();
+        
+        if(Neff == 0.0)
+          effective_sample_size = 1.0;
+        else
+          effective_sample_size = (1.0 / Neff) / particles.size();
 
         return effective_sample_size;
     }
