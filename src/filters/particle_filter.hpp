@@ -202,6 +202,33 @@ class ParticleFilter {
 
         return state;
     }
+    
+    /**
+     * return the state for the weighted avegrage particle as RBS
+     */
+    virtual base::samples::RigidBodyState& estimate_middle() {
+        base::Matrix3d variance = base::Matrix3d::Zero();
+
+        ParticleIterator best = particles.begin();
+        base::Vector3d best_pos(0.0, 0.0, 0.0);
+        double sum_conf = 0.0;
+
+        for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+            base::Vector3d pos_s = position(*it) - mean_position;
+            variance += pos_s * pos_s.transpose();
+            
+            sum_conf += confidence(*it);
+            best_pos += confidence(*it) * position(*it);
+        }
+
+        state = orientation(*best);
+
+        state.position = best_pos / sum_conf;
+        state.cov_position = variance / (particles.size() + 1);
+
+        return state;
+    }    
+    
 
     /**
      * updates the current particle set for an incoming motion action depending
@@ -282,6 +309,46 @@ class ParticleFilter {
 
         return effective_sample_size;
     }
+
+    template<typename Z>
+    double observe_markov(const Z& z, const M& m, double ratio = 1.0)
+    {
+        Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
+
+        double Neff = 0.0;
+        double weight;
+        double sum = 0.0;
+        unsigned i;
+
+        // calculate all perceptions
+        for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+            double conf = model->perception(*it, z, m);
+            setConfidence(*it, conf);
+            sum += conf;
+        }
+        
+        // normalize overall confidence
+        for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+            
+            if(sum == 0.0)
+              weight = 1 / particles.size();
+            else              
+              weight = confidence(*it) / sum;
+            
+            setConfidence(*it, weight);
+
+            Neff += weight * weight;
+        }
+        
+        if(Neff == 0.0)
+          effective_sample_size = 1.0;
+        else
+          effective_sample_size = (1.0 / Neff) / particles.size();
+
+        return effective_sample_size;
+    }
+
+
 
     /** 
      * returns current status of particle set in a general form
