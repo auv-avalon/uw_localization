@@ -104,7 +104,7 @@ void ParticleSetVisualization::updateMainNode(osg::Node* node)
 	  
 	  pointsOSG->push_back(osg::Vec3(it->position[0], it->position[1], 0.0));
 	  pointsOSG->push_back(osg::Vec3(it->position[0], it->position[1], (it->main_confidence / max )  ));
-	  osg::Vec4f newColor( hsv2rgb(it->main_confidence / max ,1,1 ) );	
+	  osg::Vec4f newColor(default_feature_color.x(), default_feature_color.y(),  default_feature_color.z(), default_feature_color.w());	
 	  color->push_back(newColor);
 	}	
 	
