@@ -61,6 +61,11 @@ public:
 
   virtual int getNodeType() const { return NODE_LINE; }
   
+  /**
+   * @param caption: label of the nodes
+   * @param v: meassurement
+   * @param x: start point of meassurement (vehicle postion)
+   */
   virtual boost::tuple<Node*, double, Eigen::Vector3d> getNearestDistance(const std::string& caption, 
 	const Eigen::Vector3d& v, const Eigen::Vector3d& x);
 
@@ -107,6 +112,9 @@ public:
   virtual boost::tuple<Node*, double, Eigen::Vector3d> getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x);
   
   virtual Eigen::Vector3d draw();
+  
+  Eigen::Vector3d getPosition();
+  Eigen::Vector3d getSpan();
   
 private:
   Eigen::Vector3d position;
