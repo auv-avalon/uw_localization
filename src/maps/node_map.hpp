@@ -135,7 +135,7 @@ private:
 
 class NodeMap : public Map {
 public:
-  NodeMap(const std::string& map);
+  NodeMap();
   NodeMap(const Eigen::Vector3d& limits, const Eigen::Vector3d& t, Node* root);
   virtual ~NodeMap();
 
@@ -145,6 +145,8 @@ public:
 	const Eigen::Vector3d& v, const Eigen::Vector3d& x) const;
  
   virtual Environment getEnvironment();
+
+  bool fromYaml(const std::string  &filename);
 
   bool toYaml(std::ostream& stream);
   bool fromYaml(std::istream& stream);

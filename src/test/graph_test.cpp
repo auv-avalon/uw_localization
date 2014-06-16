@@ -11,7 +11,8 @@ int main(int argc, char** argv)
     
     
     NodeMap* map;
-    map = new NodeMap("/home/fabio/avalon/avalon/uw_localization/src/test/map.yml");
+    map = new NodeMap();
+    map->fromYaml("/home/fabio/avalon/avalon/uw_localization/src/test/map.yml");
     
     Eigen::Vector3d pos, direction, direction_wall;
     pos << -7.0, 0.0, 0.0;

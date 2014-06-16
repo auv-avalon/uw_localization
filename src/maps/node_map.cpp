@@ -325,12 +325,18 @@ Eigen::Vector3d BoxNode::getSpan()
 
 // ----------------------------------------------------------------------------
 
-NodeMap::NodeMap(const std::string& map) : Map(), root(0) 
+NodeMap::NodeMap() : Map(), root(0) 
 {
-    std::ifstream fin(map.c_str());
-    fromYaml(fin);
 }
 
+bool NodeMap::fromYaml(const std::string &filename){
+    std::ifstream fin(filename.c_str());
+    if(fin.fail()) {
+        std::cerr << "Could not open input stream from file" << filename.c_str() << std::endl;
+        return false;
+    }
+    return fromYaml(fin);
+}
 
 NodeMap::NodeMap(const Eigen::Vector3d& limits, const Eigen::Vector3d& t, Node* root)
     : Map(limits, t), root(root)
