@@ -66,13 +66,14 @@ void MapVisualization::updateMainNode(osg::Node* node)
 
 void MapVisualization::setMap(const QString& p) 
 {
-    uw_localization::NodeMap m(p.toAscii().data());
-
-    std::cout << "Map: " << p.toAscii().data() << std::endl;
-
-    data_env = m.getEnvironment();
-
-    updated = true;
+    uw_localization::NodeMap m;
+    if(!m.fromYaml(p.toAscii().data())){
+        std::cerr << "Could not load map " <<  p.toAscii().data() << std::endl;
+    }else{
+        std::cout << "Map: " << p.toAscii().data() << std::endl;
+        data_env = m.getEnvironment();
+        updated = true;
+    }
 }
 
 
