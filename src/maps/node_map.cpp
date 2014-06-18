@@ -71,7 +71,7 @@ boost::tuple<Node*, double, Eigen::Vector3d> Node::getNearestDistance(const std:
         current = caption;
     }
 
-    boost::tuple<Node*, double, Eigen::Vector3d> min(0, std::numeric_limits<double>::max());
+    boost::tuple<Node*, double, Eigen::Vector3d> min(0, INFINITY);
 
     if(getCaption() == current || current.empty()) {
         for(unsigned i = 0; i < children.size(); i++) {
@@ -299,10 +299,6 @@ boost::tuple<Node*, double, Eigen::Vector3d> BoxNode::getNearestDistance(const s
   
   if(isnan(distance))
     distance = INFINITY;
-  
-  std::cout << "Pos: " << x.transpose() << std::endl;
-  std::cout << "Intersection: " << intersection.transpose() << std::endl;
-  std::cout << "Distance: " << distance << std::endl;
   
   return boost::tuple<Node*, double, Eigen::Vector3d>(this, distance , intersection);
 }

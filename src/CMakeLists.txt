@@ -3,8 +3,11 @@ set(CPP_FILES
     filters/particle_filter.cpp
     maps/map.cpp
     maps/node_map.cpp
+    maps/grid_map.cpp
     model/uw_motion_model.cpp
-    test/graph_test.cpp
+    #test/graph_test.cpp
+    #dp_slam/dp_slam.cpp
+    #dp_slam/node_tree.cpp
     )
 
 set(HPP_FILES
@@ -16,7 +19,10 @@ set(HPP_FILES
     types/info.hpp
     maps/map.hpp
     maps/node_map.hpp
+    maps/grid_map.hpp
     model/uw_motion_model.hpp
+    #dp_slam/dp_slam.hpp
+    #dp_slam/node_tree.hpp
     )
 
 rock_library(uw_localization

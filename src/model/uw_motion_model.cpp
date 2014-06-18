@@ -28,9 +28,14 @@ void UwMotionModel::init(const UwVehicleParameter& params)
 const Vector6d& UwMotionModel::transition(const Vector6d& x_t, double t, const base::samples::Joints& status)
 {
     Eigen::Array<double, 6, 1> Volt;
-
-    for(unsigned i = 0; i < status.size() && i < 6; i++) {
+    
+    unsigned i;
+    for(i = 0; i < status.size() && i < 6; i++) {
         Volt(i) = status[i].raw * parameter.ThrusterVoltage;
+    }
+    
+    for(; i < 6; i++){
+      Volt(i) = 0.0;
     }
     
     Vector6d tCoefficient = parameter.ThrusterCoefficient 

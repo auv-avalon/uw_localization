@@ -18,6 +18,7 @@ public:
 
   virtual void setWorldLimitations(double width, double height, double depth);
   virtual Eigen::Vector3d getLimitations() const;
+  virtual Eigen::Vector3d getTranslation() const;
 
 protected:
   Eigen::Vector3d limitations;

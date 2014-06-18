@@ -31,6 +31,11 @@ Eigen::Vector3d Map::getLimitations() const
     return limitations;
 }
 
+Eigen::Vector3d Map::getTranslation() const
+{
+  return translation;
+}
+
 
 bool Map::belongsToWorld(const Eigen::Vector3d& p) const
 {

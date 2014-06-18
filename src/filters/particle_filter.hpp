@@ -41,7 +41,7 @@ class Perception {
      * \param map current representation for a given map hypothesis
      * \return updated state and probability of a plausible particle set (can be a constant if not used)
      */
-    virtual double perception(const P& p, const Z& sensor, const M& map) {
+    virtual double perception(const P& p, const Z& sensor, M& map) {
 	throw new std::runtime_error("perception model is required");
 	return 0.0;
     }
@@ -85,7 +85,7 @@ bool compare_particles(const P& x, const P& y) {
  * already provides importance resampling with a low variance sampler and uses a given estimation 
  * model for processing each particle representation
  */
-template <typename P, typename M>
+template <typename P>
 class ParticleFilter {
   public:
     ParticleFilter() : generation(0), first_perception_received(true)
@@ -253,8 +253,8 @@ class ParticleFilter {
 	timestamp = model->getTimestamp(motion);
     }
 
-    template<typename Z>
-    double observe(const Z& z, const M& m, double ratio = 1.0)
+    template<typename Z, typename M>
+    double observe(const Z& z, M& m, double ratio = 1.0)
     {
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
@@ -310,8 +310,8 @@ class ParticleFilter {
         return effective_sample_size;
     }
 
-    template<typename Z>
-    double observe_markov(const Z& z, const M& m, double ratio = 1.0)
+    template<typename Z, typename M>
+    double observe_markov(const Z& z, M& m, double ratio = 1.0)
     {
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
