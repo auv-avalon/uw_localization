@@ -247,7 +247,7 @@ boost::tuple<Node*, double, Eigen::Vector3d> BoxNode::getNearestDistance(const s
   
   //Check, if the object is in scanning depth.
   if( position[2] + (0.5 * span[2]) < x[2] - verticalScanWidth || position[2] - (0.5 * span[2]) > x[2] + verticalScanWidth){
-    std::cout << "Out of scanning depth" << std::endl;
+    //std::cout << "Out of scanning depth" << std::endl;
     return boost::tuple<Node*, double, Eigen::Vector3d>(this, INFINITY, x);
   }
    
@@ -260,10 +260,10 @@ boost::tuple<Node*, double, Eigen::Vector3d> BoxNode::getNearestDistance(const s
     std::cout << "Scan from " << scan.from().transpose() << " to " << scan.to().transpose() << std::endl; */
   
   //Check, if the object is out ouf the scan. If outside, ignore the box
-  if( scan.distance(position) > radius){
-    //std::cout << "Out of direction" << std::endl;
+/*  if( scan.distance(position) > radius){
+    std::cout << "Out of direction" <<scan.distance(position) << " r " << radius << std::endl;
     return boost::tuple<Node*, double, Eigen::Vector3d>(this, INFINITY, x);
-  }
+  }*/
     
   //if scan crosses the object, calculte intersections with object lines    
   double distance;
@@ -297,9 +297,11 @@ boost::tuple<Node*, double, Eigen::Vector3d> BoxNode::getNearestDistance(const s
     intersection = temp_intersection;
   }
   
-  if(isnan(distance))
+  if(isnan(distance)){
     distance = INFINITY;
-  
+    //std::cout << "nan" << std::endl;
+  }
+    
   return boost::tuple<Node*, double, Eigen::Vector3d>(this, distance , intersection);
 }
 

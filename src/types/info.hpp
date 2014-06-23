@@ -9,7 +9,7 @@
 namespace uw_localization {
 
 enum PointStatus {
-    OUT_OF_RANGE, NOT_IN_WORLD, OKAY, MAP_INVALID
+    OUT_OF_RANGE, NOT_IN_WORLD, OKAY, MAP_INVALID, OBSTACLE
 };
 
 struct PointInfo {

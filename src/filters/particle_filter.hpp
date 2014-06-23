@@ -318,7 +318,6 @@ class ParticleFilter {
         double Neff = 0.0;
         double weight;
         double sum = 0.0;
-        unsigned i;
 
         // calculate all perceptions
         for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
