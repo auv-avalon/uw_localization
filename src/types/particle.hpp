@@ -60,6 +60,7 @@ struct PoseParticle {
   base::Time timestamp;
 
   double main_confidence;
+  bool valid;
 
   static base::samples::RigidBodyState* pose;
   

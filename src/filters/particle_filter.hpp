@@ -171,6 +171,14 @@ class ParticleFilter {
      */
     virtual base::samples::RigidBodyState orientation(const P& X) const = 0;
 
+    
+    /**
+     * checks, if a particle is valid, and should be used for position estimation
+     * @param state of type P
+     * @return true, if particle is valid
+     */
+    virtual bool isValid(const P& X) const = 0;
+    
     /**
      *
      */
@@ -214,6 +222,10 @@ class ParticleFilter {
         double sum_conf = 0.0;
 
         for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+            
+            if(!isValid(*it))
+              continue;
+          
             base::Vector3d pos_s = position(*it) - mean_position;
             variance += pos_s * pos_s.transpose();
             
