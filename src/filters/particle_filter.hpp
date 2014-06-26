@@ -50,7 +50,7 @@ class Perception {
 
 
 
-template<typename P, typename U>
+template<typename P, typename U, typename M>
 class Dynamic {
  public:
     /**
@@ -64,7 +64,7 @@ class Dynamic {
      * \returns updated state sample depending on we were in state xt-1 and we move with ut and
      *     measurement plausibility (can be a constant if not used)
      */
-    virtual void dynamic(P& state, const U& motion) = 0;
+    virtual void dynamic(P& state, const U& motion, const M& map) = 0;
 
     /**
      * get current timestamp for this motion command
@@ -234,10 +234,16 @@ class ParticleFilter {
         }
 
         state = orientation(*best);
-
-        state.position = best_pos / sum_conf;
-        state.cov_position = variance / (particles.size() + 1);
-
+        
+        if(sum_conf > 0){
+          state.position = best_pos / sum_conf;
+          state.cov_position = variance / (particles.size() + 1);
+        }
+        else{
+          state.position = base::Vector3d(0.0, 0.0, 0.0);
+          state.cov_position = base::Matrix3d::Identity() * INFINITY;
+        }
+          
         return state;
     }    
     
@@ -248,16 +254,16 @@ class ParticleFilter {
      *
      * \param motion representation of a motion call
      */
-    template<typename U>
-    void update(const U& motion) {
+    template<typename U, typename M>
+    void update(const U& motion, const M& map) {
 
         // brutal hack and performance could suffer a little, but it works
-        Dynamic<P, U>* model = dynamic_cast<Dynamic<P, U>*>(this);
+        Dynamic<P, U, M>* model = dynamic_cast<Dynamic<P, U, M>*>(this);
 
 	base::Position mean = base::Position::Zero();
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
-	    model->dynamic(*it, motion);
+	    model->dynamic(*it, motion, map);
 	    mean += position(*it);
 	}
 

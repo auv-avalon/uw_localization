@@ -43,8 +43,7 @@ bool Map::belongsToWorld(const Eigen::Vector3d& p) const
     Eigen::Vector3d l = translation + limitations;
 
     return (p.x() >= ref.x() && p.x() <= l.x()) 
-        && (p.y() >= ref.y() && p.y() <= l.y())
-        && (p.z() >= ref.z() && p.z() <= l.z());
+        && (p.y() >= ref.y() && p.y() <= l.y()) ;
 }
 
 }
