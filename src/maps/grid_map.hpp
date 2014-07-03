@@ -4,6 +4,7 @@
 #include <base/samples/RigidBodyState.hpp>
 #include <base/samples/Pointcloud.hpp>
 #include <vector>
+#include <iostream>
 
 namespace uw_localization {
  
