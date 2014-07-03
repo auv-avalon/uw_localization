@@ -2,6 +2,7 @@
 #define UW_LOCALIZATION_MAPS_GRIDMAP_HPP
 
 #include <base/samples/RigidBodyState.hpp>
+#include <base/samples/Pointcloud.hpp>
 #include <vector>
 
 namespace uw_localization {
@@ -9,12 +10,16 @@ namespace uw_localization {
   struct GridElement{
     
     GridElement():
-      confidence(0.0),
+      depth_confidence(-1.0),
       depth(0.0),
+      obstacle_confidence(-1.0),
+      obstacle(false),
       pos(base::Vector2d(0,0)){}
     
-    double confidence;
+    double depth_confidence;
     double depth;
+    bool obstacle;
+    double obstacle_confidence;
     base::Vector2d pos;
   };  
   
@@ -32,7 +37,9 @@ namespace uw_localization {
    
  double getDepth( double x, double y);
  void setDepth(double x, double y, double depth, double confidence);
- std::vector<base::Vector3d> getCloud();
+ bool getObstacle(double x, double y);
+ void setObstacle(double x, double y, bool obstalce, double confidence);
+ base::samples::Pointcloud getCloud();
  
  
  private:
