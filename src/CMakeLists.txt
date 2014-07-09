@@ -4,6 +4,7 @@ set(CPP_FILES
     maps/map.cpp
     maps/node_map.cpp
     maps/grid_map.cpp
+    maps/depth_obstacle_grid.cpp
     model/uw_motion_model.cpp
     #test/graph_test.cpp
     #dp_slam/dp_slam.cpp
@@ -20,6 +21,7 @@ set(HPP_FILES
     maps/map.hpp
     maps/node_map.hpp
     maps/grid_map.hpp
+    maps/depth_obstacle_grid.hpp
     model/uw_motion_model.hpp
     #dp_slam/dp_slam.hpp
     #dp_slam/node_tree.hpp
