@@ -7,7 +7,7 @@ set(CPP_FILES
     maps/depth_obstacle_grid.cpp
     model/uw_motion_model.cpp
     #test/graph_test.cpp
-    #dp_slam/dp_slam.cpp
+    dp_slam/dp_slam.cpp
     #dp_slam/node_tree.cpp
     )
 
@@ -23,7 +23,8 @@ set(HPP_FILES
     maps/grid_map.hpp
     maps/depth_obstacle_grid.hpp
     model/uw_motion_model.hpp
-    #dp_slam/dp_slam.hpp
+    dp_slam/dp_slam.hpp
+    dp_slam/dp_types.hpp
     #dp_slam/node_tree.hpp
     )
 

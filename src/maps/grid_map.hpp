@@ -100,10 +100,15 @@ public:
    * Return the cell-ID of a given coordinate
    * Use this funktion for the grid-getter and setter methods
    */
-  virtual std::pair<int, int> getCellID(double x, double y){
-    std::pair<int, int> result;
-    result.first = ((x + position.x()) / span.x()) * (span.x()/resolution);
-    result.second = ((y + position.y()) / span.y()) * (span.y()/resolution);
+  virtual Eigen::Vector2i getCellID(double x, double y){
+    Eigen::Vector2i result;
+    result.x() = ((x + position.x()) / span.x()) * (span.x()/resolution);
+    result.y() = ((y + position.y()) / span.y()) * (span.y()/resolution);
+    
+    int entry = (y * (span.x()/resolution) ) + x;
+    if(entry >= grid.size() || entry < 0){
+      return Eigen::Vector2i(NAN, NAN);
+    }
     
     return result;    
   }
@@ -114,14 +119,8 @@ public:
    * @param x,y: Grid IDs
    */
   //template<typename E>
-  virtual void set(int x, int y, E val){
-    int id = (y * (span.x()/resolution) ) + x;
-    if( id < grid.size() && id >= 0)
-      grid[ (y * (span.x()/resolution) ) + x ] = val;
-    else{
-      //std::cout << "Invalid get:   x: " << x << " y: " << y << " id: " << id << " girdsize: " << grid.size() << std::endl;
-    }
-    
+  virtual void set(int x, int y, const E &val){
+    grid[ (y * (span.x()/resolution) ) + x ] = val;        
   }
 
   /**
@@ -129,15 +128,10 @@ public:
    * @param x,y: Grid Ids
    */
   //template<typename E>
-  virtual E get(int x, int y){
+  virtual E& get(int x, int y){
     int id = (y * (span.x()/resolution) ) + x;
-    
-    if( id  < grid.size() && id >= 0)
-      return grid[ (y * (span.x()/resolution) ) + x];
-    else{
-      //std::cout << "Invalid set:  x: " << x << " y: " << y << " id: " << id << " gridsize: " << grid.size() << std::endl;
-      return E();
-    }
+
+    return grid[ id];
   }
 
   /**

@@ -8,9 +8,12 @@ DepthObstacleGrid::~DepthObstacleGrid(){}
 
 double DepthObstacleGrid::getDepth( double x, double y){
   
-  std::pair<int, int > ID = getCellID(x,y);
+  Eigen::Vector2i ID = getCellID(x,y);
   
-  GridElement elem = get(ID.first, ID.second);
+  if(ID.x() < 0)
+    return NAN;
+  
+  GridElement elem = get(ID.x(), ID.y());
   
   if(elem.depth_confidence <= 0.0)
     return NAN;
@@ -21,10 +24,13 @@ double DepthObstacleGrid::getDepth( double x, double y){
 
 void DepthObstacleGrid::setDepth(double x, double y, double depth, double confidence){
   
-  std::pair<int, int > ID = getCellID(x,y);
+  Eigen::Vector2i ID = getCellID(x,y);
   //std::cout << "idX: " << idX << " span: " << span.x() << " resolution: " << resolution << " x: " << x << " pos: " << position.x() << std::endl;
   
-  GridElement elem = get(ID.first, ID.second);
+  if(ID.x() < 0)
+    return;
+  
+  GridElement elem = get(ID.x(), ID.y());
    //std::cout << "Set depth: " << depth << " conf: " << confidence << " elemconf: " << elem.depth_confidence << " x: " << x << " y: " << y << std::endl;
   if(confidence > elem.depth_confidence){
     
@@ -35,16 +41,19 @@ void DepthObstacleGrid::setDepth(double x, double y, double depth, double confid
     elem.depth = depth;
     
     //std::cout << "Set depth: " << elem.depth << " conf: " << elem.depth_confidence << " x: " << idX << " y: " << idY << std::endl;
-    set(ID.first, ID.second, elem);
+    set(ID.x(), ID.y(), elem);
   }  
   
 }
 
 bool DepthObstacleGrid::getObstacle( double x, double y){
   
-  std::pair<int, int > ID = getCellID(x,y);
+  Eigen::Vector2i ID = getCellID(x,y);
   
-  GridElement elem = get(ID.first, ID.second);
+  if(ID.x() < 0)
+    return false;
+  
+  GridElement elem = get(ID.x(), ID.y());
   
   if(elem.obstacle_confidence <= 0.0)
     return false;
@@ -55,10 +64,13 @@ bool DepthObstacleGrid::getObstacle( double x, double y){
 
 void DepthObstacleGrid::setObstacle(double x, double y, bool obstacle, double confidence){
 
-  std::pair<int, int > ID = getCellID(x,y);
+  Eigen::Vector2i ID = getCellID(x,y);
   //std::cout << "idX: " << idX << " span: " << span.x() << " resolution: " << resolution << " x: " << x << " pos: " << position.x() << std::endl;
   
-  GridElement elem = get(ID.first, ID.second);
+  if(ID.x() < 0)
+    return;
+  
+  GridElement elem = get(ID.x(), ID.y());
   
   if(!obstacle && elem.obstacle){
     elem.obstacle_weight -= confidence;
@@ -67,7 +79,7 @@ void DepthObstacleGrid::setObstacle(double x, double y, bool obstacle, double co
       elem.obstacle = false;
     
     elem.obstacle_confidence = confidence;
-    set(ID.first, ID.second, elem);
+    set(ID.x(), ID.y(), elem);
     
   }
   
@@ -81,7 +93,7 @@ void DepthObstacleGrid::setObstacle(double x, double y, bool obstacle, double co
     elem.obstacle = true;
     elem.obstacle_confidence = confidence;
     std::cout << "Set obstacle true: " << x << " " << y << " weight: " << elem.obstacle_weight << std::endl;
-    set(ID.first, ID.second, elem);    
+    set(ID.x(), ID.y(), elem);    
   }
    
 }

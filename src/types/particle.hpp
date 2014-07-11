@@ -12,8 +12,8 @@
 #include <base/time.h>
 #include <base/samples/RigidBodyState.hpp>
 #include <vector>
-//#include "../dp_slam/node_tree.hpp"
-//#include "../dp_slam/dp_slam.hpp"
+#include <list>
+
 
 namespace uw_localization {
 
@@ -34,20 +34,6 @@ struct Particle {
     double main_confidence;
 };
 
-
-/**
- * Explicit representation of position particles used by uw_particle_filter
- *
-struct PoseSlamParticle {
-  base::Position p_position;
-  base::Vector3d p_velocity;
-  base::Time timestamp;
-
-  double main_confidence;
-
-  static base::samples::RigidBodyState* pose;
-  std::vector<GridCell*> grid_refs; 
-};*/
 
 
 /**
