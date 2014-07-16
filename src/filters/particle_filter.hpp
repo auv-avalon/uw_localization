@@ -41,7 +41,7 @@ class Perception {
      * \param map current representation for a given map hypothesis
      * \return updated state and probability of a plausible particle set (can be a constant if not used)
      */
-    virtual double perception(const P& p, const Z& sensor, M& map) {
+    virtual double perception(P& p, const Z& sensor, M& map) {
 	throw new std::runtime_error("perception model is required");
 	return 0.0;
     }
