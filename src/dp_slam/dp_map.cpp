@@ -1,16 +1,15 @@
-#include "dp_slam.hpp"
+#include "dp_map.hpp"
 
 using namespace uw_localization;
 
 
 
 
-DPSlam::~DPSlam(){
- 
+DPMap::~DPMap(){ 
   
 }
 
-double DPSlam::getDepth( double x, double y, int64_t id){
+double DPMap::getDepth( double x, double y, int64_t id){
   
   Eigen::Vector2i ID = getCellID(x,y);
   
@@ -29,12 +28,12 @@ double DPSlam::getDepth( double x, double y, int64_t id){
   
 }
 
-int64_t DPSlam::setDepth(double x, double y, double depth, double confidence, int64_t id){
+int64_t DPMap::setDepth(double x, double y, double depth, double confidence, int64_t id){
   
   Eigen::Vector2i ID = getCellID(x,y);
   
   if(ID.x() < 0)
-    return NAN;
+    return 0;
   
   GridCell elem = get( ID.x(), ID.y());
   
@@ -75,7 +74,7 @@ int64_t DPSlam::setDepth(double x, double y, double depth, double confidence, in
 
 }
 
-bool DPSlam::getObstacle( double x, double y, int64_t id){
+bool DPMap::getObstacle( double x, double y, int64_t id){
 
   Eigen::Vector2i ID = getCellID(x,y);
   
@@ -94,7 +93,7 @@ bool DPSlam::getObstacle( double x, double y, int64_t id){
   
 }
 
-int64_t DPSlam::setObstacle(double x, double y, bool obstacle, double confidence, int64_t id){
+int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence, int64_t id){
 
   Eigen::Vector2i ID = getCellID(x,y);
   
@@ -135,7 +134,7 @@ int64_t DPSlam::setObstacle(double x, double y, bool obstacle, double confidence
 
 }
 
-Feature DPSlam::getFeature(GridCell &cell, int64_t id, bool flag){
+Feature DPMap::getFeature(GridCell &cell, int64_t id, bool flag){
  
   for(std::list<Feature>::iterator it = cell.features.begin(); it != cell.features.end(); it++){
     
@@ -156,7 +155,7 @@ Feature DPSlam::getFeature(GridCell &cell, int64_t id, bool flag){
 }
 
 
-void DPSlam::setFeature(GridCell &cell, int64_t id, Feature feature){
+void DPMap::setFeature(GridCell &cell, int64_t id, Feature feature){
   
   for(std::list<Feature>::iterator it = cell.features.begin(); it != cell.features.end(); it++){
     
@@ -170,13 +169,19 @@ void DPSlam::setFeature(GridCell &cell, int64_t id, Feature feature){
 }
 
 
-base::samples::Pointcloud DPSlam::getCloud(std::list<std::pair<Eigen::Vector2i,int64_t > > cells){
+base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+                                          std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells){
   
   base::samples::Pointcloud result;
    
-  for(std::list<std::pair<Eigen::Vector2i,int64_t > >::iterator it = cells.begin(); it != cells.end(); it++){
+  for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
       
-      GridCell cell = get(it->first.x(), it->first.y());
+      Eigen::Vector2i ID = getCellID(it->first.x(), it->first.y());
+      
+      if(ID.x() < 0)
+        continue;
+      
+      GridCell cell = get(ID.x(), ID.y());
     
       for(std::list<Feature>::iterator it_features = cell.features.begin(); it_features != cell.features.end(); it_features++){
     
@@ -190,6 +195,24 @@ base::samples::Pointcloud DPSlam::getCloud(std::list<std::pair<Eigen::Vector2i,i
           result.colors.push_back(base::Vector4d(it_features->depth_confidence, it_features->depth_confidence, it_features->depth_confidence, 1.0  ) );
         }
         
+      }
+    
+  }
+  
+  for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = obstacle_cells.begin(); it != obstacle_cells.end(); it++){
+      
+      Eigen::Vector2i ID = getCellID(it->first.x(), it->first.y());
+      
+      if(ID.x() < 0)
+        continue;    
+    
+      GridCell cell = get(ID.x(), ID.y()); 
+    
+      for(std::list<Feature>::iterator it_features = cell.features.begin(); it_features != cell.features.end(); it_features++){
+    
+        if(it_features->id != it->second)
+          continue;
+        
         if(it_features->obstacle_confidence > 0.0 && it_features->obstacle){
           
           base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->obstacle_confidence);
@@ -198,13 +221,41 @@ base::samples::Pointcloud DPSlam::getCloud(std::list<std::pair<Eigen::Vector2i,i
         }
       }
     
-  }
+  }  
+  
+  
+  
   
   return result;
 }
 
-int64_t DPSlam::getNewID(){
+int64_t DPMap::getNewID(){
   lastID++;
-  return lastID;
+  return lastID;  
+}
+
+void DPMap::reduceFeatures(){
+
+  for(std::vector<GridCell>::iterator it = grid.begin(); it!= grid.end(); it++){
+    
+    for(std::list<Feature>::iterator it_f = it->features.begin(); it_f != it->features.end(); it_f++){
+      
+      if(!(it_f->used)){
+        it->features.erase(it_f);
+        
+        if(it_f == it->features.end())
+           continue;
+        
+      }
+      else{
+        it_f->used = false;
+        
+      }
+      
+    }
+    
+  }
   
 }
+
+

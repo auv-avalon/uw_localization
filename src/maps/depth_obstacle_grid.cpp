@@ -92,7 +92,7 @@ void DepthObstacleGrid::setObstacle(double x, double y, bool obstacle, double co
     
     elem.obstacle = true;
     elem.obstacle_confidence = confidence;
-    std::cout << "Set obstacle true: " << x << " " << y << " weight: " << elem.obstacle_weight << std::endl;
+    //std::cout << "Set obstacle true: " << x << " " << y << " weight: " << elem.obstacle_weight << std::endl;
     set(ID.x(), ID.y(), elem);    
   }
    

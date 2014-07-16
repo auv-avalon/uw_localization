@@ -1,5 +1,5 @@
-#ifndef UW_LOCALIZATION_DPSLAM_DPSLAM_HPP
-#define UW_LOCALIZATION_DPSLAM_DPSLAM_HPP
+#ifndef UW_LOCALIZATION_DPSLAM_DPMAP_HPP
+#define UW_LOCALIZATION_DPSLAM_DPMAP_HPP
 
 #include <base/samples/RigidBodyState.hpp>
 //#include "node_tree.hpp"
@@ -12,12 +12,12 @@ namespace uw_localization{
   
  
  
- class DPSlam : GridMap<GridCell>{
+ class DPMap : public GridMap<GridCell>{
    
  public:
    
-   DPSlam(base::Vector2d pos, base::Vector2d span, double resolution) : GridMap(position, span, resolution), lastID(1) {}
-   ~DPSlam();
+   DPMap(base::Vector2d pos, base::Vector2d span, double resolution) : GridMap(position, span, resolution), lastID(1) {}
+   ~DPMap();
    
    virtual void initCoord(double x, double y){ setDepth(x, y, 0.0, 0.0, getNewID()); }
    
@@ -41,7 +41,8 @@ namespace uw_localization{
    bool getObstacle(double x, double y, int64_t id);
    int64_t setObstacle(double x, double y, bool obstacle, double confidence, int64_t id);
    
-   base::samples::Pointcloud getCloud(std::list<std::pair<Eigen::Vector2i,int64_t > >cells);
+   base::samples::Pointcloud getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+                                      std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells);
    
    /**
     * Get a new, unique id
@@ -56,6 +57,11 @@ namespace uw_localization{
    Feature getFeature(GridCell &cell, int64_t id, bool flag = false);
    
    void setFeature(GridCell &cell, int64_t id, Feature feature);
+   
+   /**
+    * Remove all unused features
+    */ 
+   void reduceFeatures();
    
  private:
    int64_t lastID;

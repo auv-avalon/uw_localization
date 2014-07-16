@@ -105,7 +105,7 @@ public:
     result.x() = ((x + position.x()) / span.x()) * (span.x()/resolution);
     result.y() = ((y + position.y()) / span.y()) * (span.y()/resolution);
     
-    int entry = (y * (span.x()/resolution) ) + x;
+    int entry = (result.y() * (span.x()/resolution) ) + result.x();
     if(entry >= grid.size() || entry < 0){
       return Eigen::Vector2i(NAN, NAN);
     }
@@ -148,11 +148,11 @@ public:
     base::Vector2d lastCell;
     double cos_angle = std::cos(angle);
     double sin_angle = std::sin(angle);
-    std::cout << "Get grid cells: pos " << pos.transpose() << " - angle " << angle << " - min_dist " << min_dist << " -max_dist " << max_dist << std::endl;
+    
     for(double dist = min_dist; dist < max_dist; dist += resolution){
       
       base::Vector2d v = getGridCoord(pos.x() + (cos_angle * dist), pos.y() + (sin_angle * dist) );
-      std::cout << "V: " << v.transpose() << std::endl;
+      
       if(v != lastCell && !isnan(v.x()) )
         result.push_back(v);
       

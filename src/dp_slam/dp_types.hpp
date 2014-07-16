@@ -1,9 +1,11 @@
 #ifndef UW_LOCALIZATION_DPSLAM_DPSLAMTYPES_HPP
-#define UW_LOCALIZATION_DPSLAM_DPSLAMTYPEs_HPP 
+#define UW_LOCALIZATION_DPSLAM_DPSLAMTYPES_HPP 
  
 #include <base/samples/RigidBodyState.hpp>
 #include <list>
- 
+
+namespace uw_localization{
+
  struct Feature{
    
    Feature():
@@ -25,7 +27,18 @@
    
    base::Vector2d pos;
    std::list<Feature> features;   
- };  
+ }; 
+ 
+ struct SonarFeature{
+   double dist; //Distance of the feature in m
+   double confidence; //Confidence of the feature
+ };
+ 
+ struct SonarMeasurement{
+   double angle; //Sonar yaw in global alllignment
+   std::list<SonarFeature> features;
+   
+ };
   
 /**
  * Explicit representation of position particles used by uw_particle_filter
@@ -36,10 +49,13 @@ struct PoseSlamParticle {
   base::Time timestamp;
 
   double main_confidence;
+  bool valid;
 
   static base::samples::RigidBodyState* pose;
-  std::list<std::pair<Eigen::Vector2i,float > > depth_cells; //List of effected refs, with float-id of the assosiated ids
-  std::list<std::pair<Eigen::Vector2i,float > > obstacle_cells;
+  std::list<std::pair<Eigen::Vector2d,int64_t > > depth_cells; //List of effected refs, with float-id of the assosiated ids
+  std::list<std::pair<Eigen::Vector2d,int64_t > > obstacle_cells;
 }; 
+
+}
 
 #endif
