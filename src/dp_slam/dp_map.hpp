@@ -4,6 +4,8 @@
 #include <base/samples/RigidBodyState.hpp>
 //#include "node_tree.hpp"
 #include "../maps/grid_map.hpp"
+#include "../maps/node_map.hpp"
+#include "../types/environment.hpp"
 #include "dp_types.hpp"
 #include <vector>
 #include <list>
@@ -16,10 +18,16 @@ namespace uw_localization{
    
  public:
    
-   DPMap(base::Vector2d pos, base::Vector2d span, double resolution) : GridMap(position, span, resolution), lastID(1) {}
+   DPMap(base::Vector2d pos, base::Vector2d span, double resolution) : GridMap(pos, span, resolution), lastID(1) {}
    ~DPMap();
    
-   virtual void initCoord(double x, double y){ setDepth(x, y, 0.0, 0.0, getNewID()); }
+   virtual void initCoord(double x, double y){ setDepth(x, y, 0.0, 0.0, 0.0); }
+   
+   /**
+    * Add static elements to the grid_map
+    * Map-planes will be transformed to static grid cells;
+    */
+   void initalize_statics(NodeMap *map);
    
    /**
     * Return the depth in one cell

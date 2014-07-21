@@ -23,10 +23,12 @@ namespace uw_localization{
  struct GridCell{
    
    GridCell():
-    pos(base::Vector2d(NAN, NAN)) {}
-   
+    pos(base::Vector2d(NAN, NAN)), is_static(false) {}
+      
    base::Vector2d pos;
-   std::list<Feature> features;   
+   std::list<Feature> features;
+   bool is_static; //Is there a static feature, e.g prior walls?
+   
  }; 
  
  struct SonarFeature{

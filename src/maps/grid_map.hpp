@@ -99,6 +99,7 @@ public:
   /**
    * Return the cell-ID of a given coordinate
    * Use this funktion for the grid-getter and setter methods
+   * Returns -1, if coordinates are invalid
    */
   virtual Eigen::Vector2i getCellID(double x, double y){
     Eigen::Vector2i result;
@@ -107,7 +108,7 @@ public:
     
     int entry = (result.y() * (span.x()/resolution) ) + result.x();
     if(entry >= grid.size() || entry < 0){
-      return Eigen::Vector2i(NAN, NAN);
+      return Eigen::Vector2i(-1, -1);
     }
     
     return result;    
