@@ -106,7 +106,7 @@ public:
     result.x() = ((x + position.x()) / span.x()) * (span.x()/resolution);
     result.y() = ((y + position.y()) / span.y()) * (span.y()/resolution);
     
-    int entry = (result.y() * (span.x()/resolution) ) + result.x();
+    int entry = (result.y() * ((span.x()/resolution) +1 ) ) + result.x();
     if(entry >= grid.size() || entry < 0){
       return Eigen::Vector2i(-1, -1);
     }
@@ -121,7 +121,7 @@ public:
    */
   //template<typename E>
   virtual void set(int x, int y, const E &val){
-    grid[ (y * (span.x()/resolution) ) + x ] = val;        
+    grid[ (y * ( (span.x()/resolution) +1  ) ) + x ] = val;        
   }
 
   /**
@@ -130,7 +130,7 @@ public:
    */
   //template<typename E>
   virtual E& get(int x, int y){
-    int id = (y * (span.x()/resolution) ) + x;
+    int id = (y * ( (span.x()/resolution) +1 ) ) + x;
 
     return grid[ id];
   }
