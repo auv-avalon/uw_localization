@@ -71,6 +71,14 @@ namespace uw_localization{
     */ 
    void reduceFeatures();
    
+   /**
+    * Return observed obstacle cells
+    * @param cells: list of cells, to be checked
+    * @param id: list of all observations
+    * @return: list of checked cells, which have obstacles and are part of the observation list
+    */
+   std::list< std::pair<Eigen::Vector2d, double > > getObservedCells(std::vector<Eigen::Vector2d> &cells, std::list<std::pair<Eigen::Vector2d,int64_t > > &ids);
+   
  private:
    int64_t lastID;
 

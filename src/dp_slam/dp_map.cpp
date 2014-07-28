@@ -17,9 +17,9 @@ void DPMap::initalize_statics(NodeMap *map){
   for(std::vector<Plane>::iterator it = env.planes.begin(); it != env.planes.end(); it++){
     
     double plane_length = Eigen::Vector2d( it->span_horizontal.x(), it->span_horizontal.y() ).norm();
-    Eigen::Vector2d step = Eigen::Vector2d( it->span_horizontal.x(), it->span_horizontal.y() ) / (plane_length / (2.0 * resolution) );
+    Eigen::Vector2d step = Eigen::Vector2d( it->span_horizontal.x(), it->span_horizontal.y() ) / (plane_length / (0.5 * resolution) );
     double step_length = step.norm();
-    
+        
     Eigen::Vector2d lastCell(NAN, NAN);
     Eigen::Vector2d pos = Eigen::Vector2d(it->position.x(), it->position.y());
     
@@ -29,20 +29,23 @@ void DPMap::initalize_statics(NodeMap *map){
       Eigen::Vector2d cell_coord = getGridCoord( pos.x(), pos.y() );
       
       //step was not wide enough, we are still in the same cell
-      if(cell_coord == lastCell)
-        continue;
+      if(cell_coord != lastCell){       
       
-      lastCell = cell_coord;
-      
-      Eigen::Vector2i ID = getCellID(cell_coord.x(), cell_coord.y());
-      
-      //Step was invalid, we are outside the grid
-      if(ID.x() == -1)
-        continue;
-      
-      //Set the cell static
-      GridCell &elem = get(ID.x(), ID.y());      
-      elem.is_static = true;
+        lastCell = cell_coord;
+        
+        Eigen::Vector2i ID = getCellID(cell_coord.x(), cell_coord.y());
+        
+        //Step was invalid, we are outside the grid
+        if(ID.x() == -1){
+          pos += step;
+          continue;
+        }
+        
+        //Set the cell static
+        GridCell &elem = get(ID.x(), ID.y());      
+        elem.is_static = true;
+                
+      }
       
       pos += step;
       
@@ -182,6 +185,10 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
       feature.obstacle = obstacle;
     }
       
+    if(f.obstacle_confidence <= 0.0){
+      f.obstacle = false;
+    }
+      
     feature.id = id;
     feature.used = true;
     //std::cout << "Set feature again, x: " << x << " y: " << y << " id: " << id << std::endl;
@@ -259,7 +266,8 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
       }
     
   }
-  std::cout << "Obstacle cells: " << obstacle_cells.size() << std::endl;
+  
+  //std::cout << "Obstacle cells: " << obstacle_cells.size() << std::endl;
   int feature_count = 0;
   int feature_match = 0;
   int valid_cells = 0;
@@ -307,10 +315,9 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
     }
     
   }
+   
   
-  
-  
-  std::cout << "Valid cells: " << valid_cells << " Feature count: " << feature_count << " matches: " << feature_match << " zero_counts: " << zero_confidence_cells << std::endl;
+  //std::cout << "Valid cells: " << valid_cells << " Feature count: " << feature_count << " matches: " << feature_match << " zero_counts: " << zero_confidence_cells << std::endl;
   
   return result;
 }
@@ -322,10 +329,13 @@ int64_t DPMap::getNewID(){
 
 void DPMap::reduceFeatures(){
 
+  //Iterate through grid cells
   for(std::vector<GridCell>::iterator it = grid.begin(); it!= grid.end(); it++){
     
+    //Iterate through features per cell
     for(std::list<Feature>::iterator it_f = it->features.begin(); it_f != it->features.end(); it_f++){
       
+      //Delete features, if they were unused
       if(!(it_f->used)){
         it_f = it->features.erase(it_f);
         
@@ -342,6 +352,49 @@ void DPMap::reduceFeatures(){
     
   }
   
+}
+
+std::list< std::pair<Eigen::Vector2d, double > > DPMap::getObservedCells(std::vector<Eigen::Vector2d> &cells, std::list<std::pair<Eigen::Vector2d,int64_t > > &ids){
+  
+  std::list< std::pair<Eigen::Vector2d, double > > result;
+  
+  //Search through cell list, and find static cells or observed cells
+  for(std::vector<Eigen::Vector2d>::iterator it = cells.begin(); it != cells.end(); it++){
+    
+    Eigen::Vector2i ID = getCellID(it->x(), it->y());
+      
+    //Is cell id valid?
+    if(ID.x() < 0)
+      continue;    
+         
+    GridCell &cell = get(ID.x(), ID.y());
+     
+    //Cell is static, we dont need to search for observations
+    if(cell.is_static){
+      result.push_back( std::make_pair(*it, 1.0) );
+      continue;
+    }
+        
+    //Search for coresponding observation
+    for(std::list<std::pair<Eigen::Vector2d, int64_t > >::iterator it_id = ids.begin(); it_id != ids.end(); it_id++){
+      
+      //Chec id      
+      if(*it != it_id->first)
+        continue;     
+
+      Feature f = getFeature(cell, it_id->second, true);
+        
+      if(f.id != 0 && f.obstacle && f.obstacle_confidence > 0.0){
+        result.push_back( std::make_pair(*it, f.obstacle_confidence ) );
+
+      }
+      
+      
+    }    
+    
+  }
+  
+  return result;
 }
 
 

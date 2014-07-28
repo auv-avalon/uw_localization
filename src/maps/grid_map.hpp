@@ -18,8 +18,8 @@ template<typename E>
 class GridMap{
   
 protected:
-  base::Vector2d position;
-  base::Vector2d span;
+  Eigen::Vector2d position;
+  Eigen::Vector2d span;
   double resolution;
   
   std::vector<E> grid;
@@ -33,7 +33,7 @@ public:
     * @param span: size of the grid
     * @param resolution: size of a single gridelement
     */
-  GridMap(base::Vector2d position, base::Vector2d span, double resolution  ){
+  GridMap(Eigen::Vector2d position, Eigen::Vector2d span, double resolution  ){
     
     std::cout << "Set up grid map:" << std::endl;
     std::cout << "Center: " << position.transpose() << std::endl;
@@ -81,14 +81,14 @@ public:
   /**
    * Return an discrete grid-coordinate
    */
-  virtual base::Vector2d getGridCoord(double x, double y){
+  virtual Eigen::Vector2d getGridCoord(double x, double y){
     
-    base::Vector2d result;
+    Eigen::Vector2d result;
     
     //Check if coordinate is inside the grid
     if(x + position.x() > span.x() || x + position.x() < 0.0 
       || y + position.y() > span.y() || y + position.y() < 0.0)
-        return base::Vector2d(NAN, NAN);
+        return Eigen::Vector2d(NAN, NAN);
     
     result.x() = (std::floor(x / resolution)) * resolution;
     result.y() = (std::floor(y / resolution)) * resolution;  
@@ -143,16 +143,16 @@ public:
    * @param max_dist: Maximal distance of the scan. 
    * @return: Vector of cell-coordinates
    */
-  virtual std::vector<base::Vector2d> getGridCells(Eigen::Vector2d pos, double angle, double min_dist, double max_dist){
+  virtual std::vector<Eigen::Vector2d> getGridCells(Eigen::Vector2d pos, double angle, double min_dist, double max_dist){
     
-    std::vector<base::Vector2d> result;
-    base::Vector2d lastCell;
+    std::vector<Eigen::Vector2d> result;
+    Eigen::Vector2d lastCell;
     double cos_angle = std::cos(angle);
     double sin_angle = std::sin(angle);
     
     for(double dist = min_dist; dist < max_dist; dist += resolution){
       
-      base::Vector2d v = getGridCoord(pos.x() + (cos_angle * dist), pos.y() + (sin_angle * dist) );
+      Eigen::Vector2d v = getGridCoord(pos.x() + (cos_angle * dist), pos.y() + (sin_angle * dist) );
       
       if(v != lastCell && !isnan(v.x()) )
         result.push_back(v);
