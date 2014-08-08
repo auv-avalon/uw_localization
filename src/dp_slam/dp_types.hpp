@@ -9,7 +9,7 @@ namespace uw_localization{
  struct Feature{
    
    Feature():
-    id(0) {}
+    id(0), depth(NAN) {}
    
    int64_t id;
    bool obstacle;
