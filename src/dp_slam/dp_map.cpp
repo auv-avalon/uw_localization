@@ -66,7 +66,7 @@ double DPMap::getDepth( double x, double y, int64_t id){
   
   Feature f = getFeature(elem, id, true);
   
-  if(f.id != id || f.depth_confidence <= 0.0){
+  if(f.id != id || f.depth_variance <= 0.0){
     return NAN;    
   }
   
@@ -74,7 +74,7 @@ double DPMap::getDepth( double x, double y, int64_t id){
   
 }
 
-int64_t DPMap::setDepth(double x, double y, double depth, double confidence, int64_t id){
+int64_t DPMap::setDepth(double x, double y, double depth, double variance, int64_t id){
   
   Eigen::Vector2i ID = getCellID(x,y);
   
@@ -84,7 +84,7 @@ int64_t DPMap::setDepth(double x, double y, double depth, double confidence, int
   GridCell& elem = get( ID.x(), ID.y());
   
   //Initial set. return nothing
-  if(std::isnan(elem.pos.x()) || confidence == 0.0){
+  if(std::isnan(elem.pos.x()) || variance == 0.0){
     elem.pos = base::Vector2d(x,y);
     
     //set(ID.x(), ID.y(), elem);
@@ -99,18 +99,20 @@ int64_t DPMap::setDepth(double x, double y, double depth, double confidence, int
     
     f.id = id;
     f.depth = depth;
-    f.depth_confidence = confidence;
+    f.depth_variance = variance;
     f.used = true;
     elem.features.push_back(f);
     return id;    
   }
-  
-  if(f.depth_confidence < confidence){
+  else if(variance > 0.0){
     id = getNewID();
     
     f.id = id;
-    f.depth = depth;
-    f.depth_confidence = confidence;
+    
+    double k = variance / (variance + f.depth_variance);
+    
+    f.depth = f.depth + ( k * (depth - f.depth ) ) ;
+    f.depth_variance = f.depth_variance - (k * variance);
     f.used = true;
     elem.features.push_back(f);
     return id;
@@ -175,18 +177,27 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
     id = getNewID();
     Feature feature;
         
-    if(obstacle == false && f.obstacle && confidence > 0){ //reduce feature confidence
-      feature.obstacle_confidence = ((1.0 - confidence) + f.obstacle_confidence) * 0.5;
+    if(obstacle == false && f.obstacle && confidence > 0){ //we do not see an old feature --> reduce feature confidence
+      //feature.obstacle_confidence = ((1.0 - confidence) + f.obstacle_confidence) * 0.5;
+      
+      //Confidence, that the cell is empty
+      double confidence_empty = (1.0 - f.obstacle_confidence) + confidence - ((1.0 - f.obstacle_confidence) * confidence);
+      
+      //Obstacle ceonfidence is reverse of empty-confidence
+      feature.obstacle_confidence = 1.0 - confidence_empty;
       
     }else if(obstacle == f.obstacle && obstacle && confidence > 0){ // We recognized the feature before, update the confidence 
-      feature.obstacle_confidence = (confidence + f.obstacle_confidence) * 0.5 ;
+      //feature.obstacle_confidence = (confidence + f.obstacle_confidence) * 0.5 ;
+      feature.obstacle_confidence = f.obstacle_confidence + confidence - (f.obstacle_confidence * confidence);
     }
-    else if(obstacle && f.obstacle == false && confidence > 0){
+    else if(obstacle && f.obstacle == false && confidence > 0){ //we recognize this feature for the first time
       feature.obstacle = true;
-      feature.obstacle_confidence = (confidence + 0.5) * 0.5; //The first confidence is unknown (0.5) 
+      
+       //The confidence before was 0.5, because we did not know, if the cell is empty or occupied
+      feature.obstacle_confidence = confidence + 0.5 - (confidence * 0.5);
     }
       
-    if(f.obstacle_confidence <= 0.0){
+    if(f.obstacle_confidence <= 0.0){ // We have no confidence in this feature
       f.obstacle = false;
     }
       
@@ -241,7 +252,7 @@ void DPMap::setFeature(GridCell &cell, int64_t id, Feature feature){
 base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                           std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                           double confidence_threshold){
-  
+
   base::samples::Pointcloud result;
   
   //Create depth output
@@ -259,17 +270,17 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
         if(it_features->id != it->second)
           continue;
         
-        if(it_features->depth_confidence > confidence_threshold){
+        if(it_features->depth_variance > 0.0){
       
           base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->depth);
           result.points.push_back(vec);
-          result.colors.push_back(base::Vector4d(it_features->depth_confidence, it_features->depth_confidence, it_features->depth_confidence, 1.0  ) );
+          result.colors.push_back(base::Vector4d(1.0, 1.0, 1.0, 1.0  ) );
         }
         
       }
     
   }
-  
+  int i = 0;
   //Create obstacle output
   for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = obstacle_cells.begin(); it != obstacle_cells.end(); it++){
       
@@ -287,23 +298,25 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
           continue;
         
 
-        if(it_features->obstacle_confidence > confidence_threshold && it_features->obstacle){
+        if(confidence_threshold < 1.0 && it_features->obstacle_confidence > confidence_threshold && it_features->obstacle){
           
           base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->obstacle_confidence);
           result.points.push_back(vec);
           
-          double sat = it_features->obstacle_confidence;
+          double sat = (it_features->obstacle_confidence - confidence_threshold) / (1.0 - confidence_threshold) ;
           
           if(sat > 1.0)
             sat = 1.0;
           
-          result.colors.push_back(base::Vector4d(sat, 1.0 - sat, 1.0 - sat, 1.0 ) );        
+          result.colors.push_back(base::Vector4d(sat, 0.0, 0.0 , 1.0 ) );        
+        }else{
+          i++;
         }
         
       }
     
   }
-  
+  //std::cout << "Filtered " << i << std::endl;
   //Search for static cells
   for(std::vector<GridCell>::iterator it = grid.begin(); it != grid.end(); it++){
     
@@ -315,7 +328,6 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
     }
     
   }
-  
   
   return result;
 }
@@ -331,11 +343,10 @@ void DPMap::reduceFeatures(double confidence_threshold){
   for(std::vector<GridCell>::iterator it = grid.begin(); it!= grid.end(); it++){
     
     //Iterate through features per cell
-    for(std::list<Feature>::iterator it_f = it->features.begin(); it_f != it->features.end(); it_f++){
+    for(std::list<Feature>::iterator it_f = it->features.begin(); it_f != it->features.end(); ){
       
-      //Delete features, if they were unused
-      if(!(it_f->used) || (it_f->obstacle && it_f->obstacle_confidence < confidence_threshold)
-        || (!std::isnan(it_f->depth) && it_f->depth_confidence < confidence_threshold) )
+      //Delete features, if they were unused or if obstacle confidence is below threshold
+      if( ((!it_f->used) &&  (!isnan(it_f->depth) ) ) || (it_f->obstacle && it_f->obstacle_confidence < confidence_threshold) )
       {
         it_f = it->features.erase(it_f);
                 
@@ -344,13 +355,14 @@ void DPMap::reduceFeatures(double confidence_threshold){
         
       }
       else{
-        it_f->used = false;        
+        it_f->used = false;
+        ++it_f;
       }
       
     }
     
   }
-  
+
 }
 
 std::list< std::pair<Eigen::Vector2d, double > > DPMap::getObservedCells(std::vector<Eigen::Vector2d> &cells, std::list<std::pair<Eigen::Vector2d,int64_t > > &ids){

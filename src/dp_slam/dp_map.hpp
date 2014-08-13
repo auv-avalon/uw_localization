@@ -41,11 +41,11 @@ namespace uw_localization{
     * Set the depth on one coordinate
     * @param x,y: Coordinate of the cell
     * @param depth: Meassured depth
-    * @param confidence: confidence of the measurement
+    * @param confidence: variance of the measurement
     * @param id: 
     * @return: Used feature id
     */
-   int64_t setDepth(double x, double y, double depth, double confidence, int64_t id);
+   int64_t setDepth(double x, double y, double depth, double variance, int64_t id);
    bool getObstacle(double x, double y, int64_t id);
    int64_t setObstacle(double x, double y, bool obstacle, double confidence, int64_t id);
    

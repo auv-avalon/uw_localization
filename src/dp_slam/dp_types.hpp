@@ -15,7 +15,7 @@ namespace uw_localization{
    bool obstacle;
    double obstacle_confidence;
    double depth;
-   double depth_confidence;
+   double depth_variance;
    bool used;
    
  };
