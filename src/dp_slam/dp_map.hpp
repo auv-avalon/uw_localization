@@ -51,7 +51,7 @@ namespace uw_localization{
    
    base::samples::Pointcloud getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
-                                      double confidence_threshold = 0.0);
+                                      double confidence_threshold = 0.0, int count_threshold = 0);
    
    /**
     * Get a new, unique id
@@ -69,8 +69,10 @@ namespace uw_localization{
    
    /**
     * Remove all unused features
+    * @param confidence_threshold: features below this threshold will be removed
+    * @param count_threshold: features with a count above this threshold will be saved
     */ 
-   void reduceFeatures(double confidence_threshold);
+   void reduceFeatures(double confidence_threshold, int count_threshold);
    
    /**
     * Return observed obstacle cells

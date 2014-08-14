@@ -240,7 +240,8 @@ class ParticleFilter {
           state.cov_position = variance / (particles.size() + 1);
         }
         else{
-          state.position = base::Vector3d(0.0, 0.0, 0.0);
+          state.position[0] = 0.0;
+          state.position[1] = 0.0;
           state.cov_position = base::Matrix3d::Identity() * INFINITY;
         }
           

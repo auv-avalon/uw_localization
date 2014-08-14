@@ -9,14 +9,15 @@ namespace uw_localization{
  struct Feature{
    
    Feature():
-    id(0), depth(NAN) {}
+    id(0), obstacle(false), obstacle_confidence(0.5), depth(NAN), obstacle_count(0), used(true) {}
    
    int64_t id;
-   bool obstacle;
-   double obstacle_confidence;
-   double depth;
-   double depth_variance;
-   bool used;
+   bool obstacle; //true, if ther eis an obstacle in the cell
+   double obstacle_confidence; // confidence in the obstacle observation
+   int obstacle_count;  //How many times the obstacle was observed
+   double depth; //Depth of the cell
+   double depth_variance; // Variance of the depth-observation
+   bool used; //Is this feature still used
    
  };
   
