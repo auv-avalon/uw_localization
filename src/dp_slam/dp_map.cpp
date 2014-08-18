@@ -55,6 +55,15 @@ void DPMap::initalize_statics(NodeMap *map){
   
 }
 
+void DPMap::init_depth_obstacle_config(double min_depth, double max_depth, double depth_resolution){
+  
+  this->max_depth = max_depth;
+  this->min_depth = min_depth;
+  this->depth_resolution = depth_resolution;
+  
+}
+
+
 double DPMap::getDepth( double x, double y, int64_t id){
   
   Eigen::Vector2i ID = getCellID(x,y);
@@ -149,7 +158,7 @@ bool DPMap::getObstacle( double x, double y, int64_t id){
   
 }
 
-int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence, int64_t id){
+int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence, double min_depth, double max_depth, int64_t id){
 
   Eigen::Vector2i ID = getCellID(x,y);
   
@@ -167,8 +176,10 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
   if(f.id == 0){
     id = getNewID();
     Feature feature;
+    feature.init_confidences(min_depth, max_depth, depth_resolution);
     feature.obstacle = obstacle;
-    feature.obstacle_confidence = confidence * 0.5;
+    feature.obstacle_confidence = confidence + 0.5 - (confidence * 0.5);
+    setObstacleDepthConfidence(feature.obstacle_depth_confidence, min_depth, max_depth, confidence, obstacle);
     feature.obstacle_count++;
     feature.id = id;
     feature.used = true;
@@ -181,6 +192,8 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
   if(confidence > 0){
     id = getNewID();
     Feature feature;
+    feature.obstacle_depth_confidence = f.obstacle_depth_confidence;
+    setObstacleDepthConfidence(feature.obstacle_depth_confidence, min_depth, max_depth, confidence, obstacle);
         
     if(obstacle == false && f.obstacle && confidence > 0){ //we do not see an old feature --> reduce feature confidence
       //feature.obstacle_confidence = ((1.0 - confidence) + f.obstacle_confidence) * 0.5;
@@ -204,8 +217,8 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
       feature.obstacle_count++;
     }
       
-    if(f.obstacle_confidence <= 0.0){ // We have no confidence in this feature
-      f.obstacle = false;
+    if(feature.obstacle_confidence <= 0.0 && !feature.is_obstacle(0.0000001)){ // We have no confidence in this feature
+      feature.obstacle = false;
     }
       
     feature.id = id;
@@ -250,6 +263,45 @@ void DPMap::setFeature(GridCell &cell, int64_t id, Feature feature){
     if(it->id == id){
       *it = feature;
     }
+    
+  }  
+  
+}
+
+void DPMap::setObstacleDepthConfidence(std::vector<ObstacleDepthConfidence> &depth_vector, double min, double max, double confidence, bool obstacle){
+  
+  for(std::vector<ObstacleDepthConfidence>::iterator it = depth_vector.begin(); it != depth_vector.end(); it++){
+    
+    //Is this observation grid inside our observation?
+    if( max >= it->lower_border && min < it->upper_border){
+      
+      if(obstacle == false && it->obstacle && confidence > 0){ //we do not see an old feature --> reduce feature confidence
+        //feature.obstacle_confidence = ((1.0 - confidence) + f.obstacle_confidence) * 0.5;
+        
+        //Confidence, that the cell is empty
+        double confidence_empty = (1.0 - it->confidence) + confidence - ((1.0 - it->confidence) * confidence);
+        
+        //Obstacle ceonfidence is reverse of empty-confidence
+        it->confidence = 1.0 - confidence_empty;
+        
+      }else if(obstacle == it->obstacle && obstacle && confidence > 0){ // We recognized the feature before, update the confidence 
+        //feature.obstacle_confidence = (confidence + f.obstacle_confidence) * 0.5 ;
+        it->confidence = it->confidence + confidence - (it->confidence * confidence);
+        
+      }
+      else if(obstacle && it->obstacle == false && confidence > 0){ //we recognize this feature for the first time
+        it->obstacle = true;
+        
+        //The confidence before was 0.5, because we did not know, if the cell is empty or occupied
+        it->confidence = confidence + 0.5 - (confidence * 0.5);
+        
+      }
+      
+      if(it->obstacle && it->confidence <= 0.0){
+        it->obstacle = false;
+      }      
+      
+    }    
     
   }  
   
@@ -318,8 +370,8 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
           continue;
         
         //Use feature, if it is an obstacle and has a strong confidence or was obsered many times
-        if(confidence_threshold < 1.0 && it_features->obstacle && 
-          ( it_features->obstacle_confidence > confidence_threshold || it_features->obstacle_count > count_threshold) ){
+        if(confidence_threshold < 1.0 && it_features->obstacle   && 
+          ( it_features->obstacle_confidence > confidence_threshold || it_features->obstacle_count > count_threshold || it_features->is_obstacle(confidence_threshold) ) ){
           
           base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->obstacle_confidence);
           result.points.push_back(vec);
@@ -333,8 +385,12 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
             sat = 0.0;
           }
           
-          
-          result.colors.push_back(base::Vector4d(sat, 0.0, 0.0 , 1.0 ) );        
+          if( it_features->obstacle_count > count_threshold){
+            result.colors.push_back(base::Vector4d(0.0, 0.0, 1.0, 1.0) );
+          }
+          else{
+            result.colors.push_back(base::Vector4d(sat, 0.0, 0.0 , 1.0 ) );
+          }
         }else{
           i++;
         }
@@ -373,7 +429,8 @@ void DPMap::reduceFeatures(double confidence_threshold, int count_threshold){
       
       //Delete features, if they were unused or if obstacle confidence is below threshold
       if( ((!it_f->used) &&  (!isnan(it_f->depth) ) ) ||
-        (it_f->obstacle && it_f->obstacle_confidence < confidence_threshold && it_f->obstacle_count < count_threshold) )
+        (it_f->obstacle && it_f->obstacle_confidence < confidence_threshold 
+        && it_f->obstacle_count < count_threshold && !it_f->is_obstacle(confidence_threshold)  ) )
       {
         it_f = it->features.erase(it_f);
                 

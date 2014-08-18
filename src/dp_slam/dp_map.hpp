@@ -29,6 +29,8 @@ namespace uw_localization{
     */
    void initalize_statics(NodeMap *map);
    
+   void init_depth_obstacle_config(double min_depth, double max_depth, double depth_resolution);
+   
    /**
     * Return the depth in one cell
     * @param x,y: Coordinate of the cell
@@ -47,7 +49,7 @@ namespace uw_localization{
     */
    int64_t setDepth(double x, double y, double depth, double variance, int64_t id);
    bool getObstacle(double x, double y, int64_t id);
-   int64_t setObstacle(double x, double y, bool obstacle, double confidence, int64_t id);
+   int64_t setObstacle(double x, double y, bool obstacle, double confidence, double min_depth, double max_depth, int64_t id);
    
    base::samples::Pointcloud getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
@@ -82,8 +84,24 @@ namespace uw_localization{
     */
    std::list< std::pair<Eigen::Vector2d, double > > getObservedCells(std::vector<Eigen::Vector2d> &cells, std::list<std::pair<Eigen::Vector2d,int64_t > > &ids);
    
+   
+   /**
+    * Sets the confidence of an obstacle, based on an observation and observation depth
+    * @param depth_vector: vector of depth confidences
+    * @param min: minimum depth of the observation
+    * @param max: maximum depth of the observation
+    * @param confidence: confidence of the observation
+    * @param obstacle: did we saw an obstacle in this cell
+    */
+   void setObstacleDepthConfidence(std::vector<ObstacleDepthConfidence> &depth_vector, double min, double max, double confidence, bool obstacle);
+   
+   
  private:
    int64_t lastID;
+   
+   double max_depth;
+   double min_depth;
+   double depth_resolution;
 
  };
   

@@ -6,6 +6,16 @@
 
 namespace uw_localization{
 
+ struct ObstacleDepthConfidence{
+   
+    double lower_border;
+    double upper_border;
+    double confidence;
+    bool obstacle;
+   
+ };
+  
+  
  struct Feature{
    
    Feature():
@@ -14,10 +24,44 @@ namespace uw_localization{
    int64_t id;
    bool obstacle; //true, if ther eis an obstacle in the cell
    double obstacle_confidence; // confidence in the obstacle observation
+   std::vector<ObstacleDepthConfidence> obstacle_depth_confidence;
    int obstacle_count;  //How many times the obstacle was observed
    double depth; //Depth of the cell
    double depth_variance; // Variance of the depth-observation
    bool used; //Is this feature still used
+   
+   
+   void init_confidences(double min, double max, double resolution){
+     
+     for(double d = min; d < max; d += resolution){
+       
+       ObstacleDepthConfidence elem;
+       elem.confidence = 0.5;
+       elem.lower_border = d;
+       elem.upper_border = d + resolution;
+       elem.obstacle = false;
+       
+       obstacle_depth_confidence.push_back(elem);
+       
+     }
+     
+     
+   }
+   
+   bool is_obstacle(double threshold){
+     
+    for(std::vector<ObstacleDepthConfidence>::iterator it = obstacle_depth_confidence.begin(); it != obstacle_depth_confidence.end(); it++){
+      
+      if(it->obstacle && it->confidence > threshold){
+        return true;
+      }
+      
+    }
+     
+    return false;
+          
+   }
+   
    
  };
   
