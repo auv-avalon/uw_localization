@@ -144,6 +144,8 @@ class ParticleFilter {
 
        mean_position = mean_pos / particles.size();
        effective_sample_size = (1.0 / neff) / particles.size();
+       
+       changed_particles = true;
    }
 
 
@@ -195,19 +197,33 @@ class ParticleFilter {
 
         ParticleIterator best = particles.begin();
 
-        for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
-            base::Vector3d pos_s = position(*it) - mean_position;
-            variance += pos_s * pos_s.transpose();
+        //Only calculate a new estimate, if we have a new observation or update
+        if(changed_particles){
+        
+          for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+              base::Vector3d pos_s = position(*it) - mean_position;
+              variance += pos_s * pos_s.transpose();
 
-            if( confidence(*best) < confidence(*it) )
-                best = it;
+              if( confidence(*best) < confidence(*it) )
+                  best = it;
+          }
+
+          state = orientation(*best);
+
+          state.position = position(*best);
+          state.cov_position = variance / (particles.size() + 1);
         }
-
-        state = orientation(*best);
-
-        state.position = position(*best);
-        state.cov_position = variance / (particles.size() + 1);
-
+        else{
+          state = orientation(*best);
+          state.position.x() = last_pose.x();
+          state.position.y() = last_pose.y();
+          state.cov_position = last_cov;
+        }
+        
+        changed_particles = false;
+        last_pose = state.position;
+        last_cov = state.cov_position;
+        
         return state;
     }
     
@@ -221,29 +237,46 @@ class ParticleFilter {
         base::Vector3d best_pos(0.0, 0.0, 0.0);
         double sum_conf = 0.0;
 
-        for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
-            
-            if(!isValid(*it))
-              continue;
-          
-            base::Vector3d pos_s = position(*it) - mean_position;
-            variance += pos_s * pos_s.transpose();
-            
-            sum_conf += confidence(*it);
-            best_pos += confidence(*it) * position(*it);
-        }
-
-        state = orientation(*best);
+        //Estimate a new position, only if we had an update or an observation!
+        if(changed_particles){
         
-        if(sum_conf > 0){
-          state.position = best_pos / sum_conf;
-          state.cov_position = variance / (particles.size() + 1);
+          for(ParticleIterator it = particles.begin(); it != particles.end(); ++it) {
+              
+              if(!isValid(*it))
+                continue;
+            
+              base::Vector3d pos_s = position(*it) - mean_position;
+              variance += pos_s * pos_s.transpose();
+              
+              sum_conf += confidence(*it);
+              best_pos += confidence(*it) * position(*it);
+          }
+
+          state = orientation(*best);      
+
+          
+          if(sum_conf > 0){
+            Eigen::Vector3d pos = best_pos / sum_conf;
+            state.position.x() = pos.x();
+            state.position.y() = pos.y();
+            state.cov_position = variance / (particles.size() + 1);
+          }
+          else{
+            state.position.x() = 0.0;
+            state.position.y() = 0.0;
+            state.cov_position = base::Matrix3d::Identity() * INFINITY;
+          }
+          
+        }else{
+          state = orientation(*best);
+          state.position.x() = last_pose.x();
+          state.position.y() = last_pose.y();
+          state.cov_position = last_cov;
         }
-        else{
-          state.position[0] = 0.0;
-          state.position[1] = 0.0;
-          state.cov_position = base::Matrix3d::Identity() * INFINITY;
-        }
+          
+        last_pose = state.position;
+        last_cov = state.cov_position;
+        changed_particles = false;         
           
         return state;
     }    
@@ -270,6 +303,8 @@ class ParticleFilter {
 
 	mean_position = mean / particles.size();
 	timestamp = model->getTimestamp(motion);
+        
+        changed_particles = true;
     }
 
     template<typename Z, typename M>
@@ -282,6 +317,8 @@ class ParticleFilter {
         double sum_main_confidence = 0.0;
         double Neff = 0.0;
         unsigned i;
+        
+        changed_particles = true;
 
         // calculate all perceptions
         for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
@@ -363,6 +400,8 @@ class ParticleFilter {
         else
           effective_sample_size = (1.0 / Neff) / particles.size();
 
+        changed_particles = true;
+        
         return effective_sample_size;
     }
 
@@ -432,7 +471,8 @@ class ParticleFilter {
           normalizeParticles();
 
           generation++;
-          //effective_sample_size = (1.0 / neff) / particles.size();
+          
+          changed_particles = true;
 
       }
   
@@ -440,11 +480,14 @@ class ParticleFilter {
       std::list<P> particles;
 
       base::Time timestamp;
-
+      
       double effective_sample_size;
       unsigned int generation;
       bool first_perception_received;
-
+      bool changed_particles; //True, if after last estimate update or observe was called
+      Eigen::Vector3d last_pose;
+      Eigen::Matrix3d last_cov;
+      
       base::Position mean_position;
 
       ParticleSet ps;
