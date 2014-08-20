@@ -141,16 +141,18 @@ public:
    * @param angle: Angle of the scan, in world orientation and radion
    * @param min_dist: Start distanc of the scan. cells below this range will be ignored
    * @param max_dist: Maximal distance of the scan. 
+   * @param infinite_scan: If true, there is no maximum distance restriction
    * @return: Vector of cell-coordinates
    */
-  virtual std::vector<Eigen::Vector2d> getGridCells(Eigen::Vector2d pos, double angle, double min_dist, double max_dist){
+  virtual std::vector<Eigen::Vector2d> getGridCells(Eigen::Vector2d pos, double angle, double min_dist, double max_dist, bool infinite_scan){
     
     std::vector<Eigen::Vector2d> result;
     Eigen::Vector2d lastCell;
     double cos_angle = std::cos(angle);
     double sin_angle = std::sin(angle);
-    
-    for(double dist = min_dist; dist < max_dist; dist += resolution){
+    double map_size = span.norm();
+        
+    for(double dist = min_dist; dist < max_dist || ( infinite_scan && dist < map_size ); dist += resolution){
       
       Eigen::Vector2d v = getGridCoord(pos.x() + (cos_angle * dist), pos.y() + (sin_angle * dist) );
       

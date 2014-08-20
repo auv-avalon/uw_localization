@@ -21,7 +21,7 @@ namespace uw_localization{
    DPMap(base::Vector2d pos, base::Vector2d span, double resolution) : GridMap(pos, span, resolution), lastID(1) {}
    ~DPMap();
    
-   virtual void initCoord(double x, double y){ setDepth(x, y, 0.0, 0.0, 0.0); }
+   virtual void initCoord(double x, double y){ setDepth(x, y, 0.0, 0.0, 0); }
    
    /**
     * Add static elements to the grid_map

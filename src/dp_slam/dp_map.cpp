@@ -103,7 +103,7 @@ int64_t DPMap::setDepth(double x, double y, double depth, double variance, int64
   Feature f = getFeature(elem, id, true);
   
   //There is no feature for this cell
-  if(f.id == 0 || f.depth_variance == 0.0){
+  if(id == 0 || f.id == 0 || f.depth_variance == std::numeric_limits<double>::infinity()){
     id = getNewID();
     
     f.id = id;
@@ -121,10 +121,11 @@ int64_t DPMap::setDepth(double x, double y, double depth, double variance, int64
     
     double k = f.depth_variance / (variance + f.depth_variance);
     
+    double temp_depth = f.depth;
     f.depth = f.depth + ( k * (depth - f.depth ) ) ;
     f.depth_variance = f.depth_variance - (k * f.depth_variance);
     
-    //std::cout << "Correct old depth - new depth: " << f.depth << " k: " << k << " depth_variance: " << f.depth_variance << std::endl;
+    //std::cout << "Correct depth: " << depth << " - old depth: " << temp_depth << " - new depth: " << f.depth << " k: " << k << " depth_variance: " << f.depth_variance << std::endl;
     
     f.used = true;
     elem.features.push_back(f);
@@ -132,7 +133,7 @@ int64_t DPMap::setDepth(double x, double y, double depth, double variance, int64
     
   }
   
-  return id;
+  return 0;
 
 }
 
@@ -163,7 +164,7 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
   Eigen::Vector2i ID = getCellID(x,y);
   
   if(ID.x() < 0)
-    return id;
+    return 0;
   
   GridCell& elem = get(ID.x(), ID.y());
   
@@ -239,7 +240,7 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
   
   //std::cout << "There is an old, better feature" << std::endl;
   //There is alredy a better feature
-  return id;
+  return 0;
 }
 
 void DPMap::touchFeature(double x, double y, int64_t id){
@@ -362,6 +363,7 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
           var_i++;
           
           base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->depth);
+          std::cout << "Output depth: " << it_features->depth << " at " << cell.pos.transpose() << std::endl;
           result.points.push_back(vec);
           result.colors.push_back(base::Vector4d(1.0, 1.0, 1.0, 1.0  ) );
         }

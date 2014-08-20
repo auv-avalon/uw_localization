@@ -3,6 +3,7 @@
  
 #include <base/samples/RigidBodyState.hpp>
 #include <list>
+#include <limits>
 
 namespace uw_localization{
 
@@ -25,7 +26,7 @@ namespace uw_localization{
  struct Feature{
    
    Feature():
-    id(0), obstacle(false), obstacle_confidence(0.5), depth(NAN), obstacle_count(0), used(true) {}
+    id(0), obstacle(false), obstacle_confidence(0.5), depth(NAN), depth_variance(std::numeric_limits<double>::infinity()), obstacle_count(0), used(true) {}
    
    int64_t id;
    bool obstacle; //true, if there is an obstacle in the cell
@@ -83,11 +84,12 @@ namespace uw_localization{
  struct GridCell{
    
    GridCell():
-    pos(base::Vector2d(NAN, NAN)), is_static(false) {}
+    pos(base::Vector2d(NAN, NAN)), is_static(false), static_depth(NAN) {}
       
    base::Vector2d pos;
    std::list<Feature> features;
    bool is_static; //Is there a static feature, e.g prior walls?
+   double static_depth; //Static depth_value, eg prior depth_map?
    
  }; 
  
