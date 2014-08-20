@@ -29,6 +29,9 @@ namespace uw_localization{
     */
    void initalize_statics(NodeMap *map);
    
+   /**
+    * Set resolution and span for vertical observation confidences
+    */
    void init_depth_obstacle_config(double min_depth, double max_depth, double depth_resolution);
    
    /**
@@ -49,8 +52,30 @@ namespace uw_localization{
     */
    int64_t setDepth(double x, double y, double depth, double variance, int64_t id);
    bool getObstacle(double x, double y, int64_t id);
+   
+   /**
+    * Set an obstacle
+    * @param x,y : coordinate of the obstacle
+    * @param obstacle: true, if we saw an obstacle on this position
+    * @param confidence: confidence of this observation
+    * @param min_depth: minimum depth, at which this observation holds
+    * @param max_depth: maximum_depth, at which this observation holds
+    * @param id: id, of the last observation for this cell
+    */
    int64_t setObstacle(double x, double y, bool obstacle, double confidence, double min_depth, double max_depth, int64_t id);
    
+   /**
+    * Touch a feature at a given cell, to propose, that the feature is used
+    */
+   void touchFeature(double x, double y, int64_t id);
+   
+   /**
+    * Get a pointcloud-representation of the map
+    * @param depth_cell: list of cells and observation-ids, coreponding to one particle
+    * @param obstacle_cells: list of cell and observation-id, coresponding to one particle
+    * @param confidence_threshold: observations, with confidence below this threshold will be ignored
+    * @param count_threshold: ignore observation_confidence, if a obstacle was observed this often
+    */
    base::samples::Pointcloud getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);

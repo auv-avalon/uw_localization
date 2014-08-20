@@ -6,6 +6,9 @@
 
 namespace uw_localization{
 
+  /**
+   * Contains the confidence for an obstacle at a given depth-range
+   */
  struct ObstacleDepthConfidence{
    
     double lower_border;
@@ -15,14 +18,17 @@ namespace uw_localization{
    
  };
   
-  
+  /**
+   * One single feature
+   * This could be an obstacle or a depth-observation
+   */
  struct Feature{
    
    Feature():
     id(0), obstacle(false), obstacle_confidence(0.5), depth(NAN), obstacle_count(0), used(true) {}
    
    int64_t id;
-   bool obstacle; //true, if ther eis an obstacle in the cell
+   bool obstacle; //true, if there is an obstacle in the cell
    double obstacle_confidence; // confidence in the obstacle observation
    std::vector<ObstacleDepthConfidence> obstacle_depth_confidence;
    int obstacle_count;  //How many times the obstacle was observed
@@ -30,7 +36,9 @@ namespace uw_localization{
    double depth_variance; // Variance of the depth-observation
    bool used; //Is this feature still used
    
-   
+   /**
+    * Initialie the depth_confidence for this particles
+    */
    void init_confidences(double min, double max, double resolution){
      
      for(double d = min; d < max; d += resolution){
@@ -48,6 +56,9 @@ namespace uw_localization{
      
    }
    
+   /**
+    * returns true, if one depth_cell is above the confidence-threshold
+    */ 
    bool is_obstacle(double threshold){
      
     for(std::vector<ObstacleDepthConfidence>::iterator it = obstacle_depth_confidence.begin(); it != obstacle_depth_confidence.end(); it++){
@@ -64,7 +75,11 @@ namespace uw_localization{
    
    
  };
-  
+ 
+ /**
+  * One grid cell
+  * This could be a list of observed features or a static element
+  */
  struct GridCell{
    
    GridCell():

@@ -426,12 +426,14 @@ class ParticleFilter {
               set.push_back(*it);
           }
 
+          
+          particles = set;
+          
           normalizeParticles();
 
           generation++;
           //effective_sample_size = (1.0 / neff) / particles.size();
 
-          particles = set;
       }
   
   protected:
