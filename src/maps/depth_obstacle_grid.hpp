@@ -35,13 +35,16 @@ namespace uw_localization {
  class DepthObstacleGrid : public GridMap<GridElement>{
  public:   
 
+ DepthObstacleGrid() : GridMap<GridElement>( base::Vector2d(0.0, 0.0), base::Vector2d(1.0, 1.0), 1.0) {} 
+   
+   
     /**
     * Constructor
     * @param position: middle of the grid
     * @param span: size of the grid
     * @param resolution: size of a single gridelement
     */
-  DepthObstacleGrid(base::Vector2d position, base::Vector2d span, double resolution  ) : GridMap(position, span, resolution) {}
+  DepthObstacleGrid(base::Vector2d position, base::Vector2d span, double resolution  ) : GridMap<GridElement>(position, span, resolution) {}
   
   ~DepthObstacleGrid();
   

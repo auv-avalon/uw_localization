@@ -20,21 +20,19 @@ namespace uw_localization{
  };
   
   /**
-   * One single feature
-   * This could be an obstacle or a depth-observation
+   * One single obstacle feature
    */
- struct Feature{
+ struct ObstacleFeature{
    
-   Feature():
-    id(0), obstacle(false), obstacle_confidence(0.5), depth(NAN), depth_variance(std::numeric_limits<double>::infinity()), obstacle_count(0), used(true) {}
+   ObstacleFeature():
+    id(0), obstacle(false), obstacle_confidence(0.5), obstacle_count(0), used(true) {}
    
    int64_t id;
    bool obstacle; //true, if there is an obstacle in the cell
    double obstacle_confidence; // confidence in the obstacle observation
    std::vector<ObstacleDepthConfidence> obstacle_depth_confidence;
    int obstacle_count;  //How many times the obstacle was observed
-   double depth; //Depth of the cell
-   double depth_variance; // Variance of the depth-observation
+
    bool used; //Is this feature still used
    
    /**
@@ -77,6 +75,22 @@ namespace uw_localization{
    
  };
  
+  /**
+   * One single depth feature
+   * This could be an obstacle or a depth-observation
+   */
+ struct DepthFeature{
+   
+   DepthFeature():
+    id(0), depth(NAN), depth_variance(std::numeric_limits<double>::infinity()), used(true) {}
+   
+   int64_t id;
+   double depth; //Depth of the cell
+   double depth_variance; // Variance of the depth-observation
+   bool used; //Is this feature still used  
+   
+ };  
+ 
  /**
   * One grid cell
   * This could be a list of observed features or a static element
@@ -84,12 +98,14 @@ namespace uw_localization{
  struct GridCell{
    
    GridCell():
-    pos(base::Vector2d(NAN, NAN)), is_static(false), static_depth(NAN) {}
+    pos(base::Vector2d(NAN, NAN)), is_static(false), static_depth(NAN), static_depth_variance(INFINITY) {}
       
    base::Vector2d pos;
-   std::list<Feature> features;
+   std::list<DepthFeature> depth_features;
+   std::list<ObstacleFeature> obstacle_features;
    bool is_static; //Is there a static feature, e.g prior walls?
    double static_depth; //Static depth_value, eg prior depth_map?
+   double static_depth_variance;
    
  }; 
  

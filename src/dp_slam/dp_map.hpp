@@ -6,9 +6,14 @@
 #include "../maps/grid_map.hpp"
 #include "../maps/node_map.hpp"
 #include "../types/environment.hpp"
+#include "../types/map.hpp"
 #include "dp_types.hpp"
 #include <vector>
 #include <list>
+#include <string>
+#include <yaml-cpp/yaml.h>
+#include <iostream>
+#include <fstream>
 
 namespace uw_localization{
   
@@ -27,12 +32,18 @@ namespace uw_localization{
     * Add static elements to the grid_map
     * Map-planes will be transformed to static grid cells;
     */
-   void initalize_statics(NodeMap *map);
+   void initalizeStatics(NodeMap *map);
+   
+   /**
+    * Add static depths to the grid map
+    * Filename should refere to a yaml filename
+    */
+   bool initalizeStaticDepth(const std::string &filename); 
    
    /**
     * Set resolution and span for vertical observation confidences
     */
-   void init_depth_obstacle_config(double min_depth, double max_depth, double depth_resolution);
+   void initDepthObstacleConfig(double min_depth, double max_depth, double depth_resolution);
    
    /**
     * Return the depth in one cell
@@ -51,6 +62,9 @@ namespace uw_localization{
     * @return: Used feature id
     */
    int64_t setDepth(double x, double y, double depth, double variance, int64_t id);
+   
+   void setStaticDepth(double x, double y, double depth, double variance);
+   
    bool getObstacle(double x, double y, int64_t id);
    
    /**
@@ -67,7 +81,8 @@ namespace uw_localization{
    /**
     * Touch a feature at a given cell, to propose, that the feature is used
     */
-   void touchFeature(double x, double y, int64_t id);
+   void touchDepthFeature(double x, double y, int64_t id);
+   void touchObstacleFeature(double x, double y, int64_t id);
    
    /**
     * Get a pointcloud-representation of the map
@@ -80,6 +95,11 @@ namespace uw_localization{
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);
    
+   uw_localization::SimpleGrid getSimpleGrid(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+                                      std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
+                                      double confidence_threshold = 0.0, int count_threshold = 0);   
+   
+   
    /**
     * Get a new, unique id
     */
@@ -90,9 +110,11 @@ namespace uw_localization{
     * If no w feature was foud, return empty feature with id 0
     * @param flag: set a flag at the feature
     */
-   Feature getFeature(GridCell &cell, int64_t id, bool flag = false);
+   DepthFeature getDepthFeature(GridCell &cell, int64_t id, bool flag = false);
+   ObstacleFeature getObstacleFeature(GridCell &cell, int64_t id, bool flag = false);
    
-   void setFeature(GridCell &cell, int64_t id, Feature feature);
+   void setDepthFeature(GridCell &cell, int64_t id, DepthFeature feature);
+   void setObstacleFeature(GridCell &cell, int64_t id, ObstacleFeature feature);
    
    /**
     * Remove all unused features
