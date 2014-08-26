@@ -4,6 +4,7 @@
 #include "MapVisualization.hpp"
 #include "MonitorVisualization.hpp"
 #include "SonarPointVisualization.hpp"
+#include "SimpleGridVisualization.hpp"
 
 
 namespace uw_localization {
@@ -20,12 +21,13 @@ namespace uw_localization {
 	*/
         virtual QStringList* getAvailablePlugins() const
 	{
-	    QStringList *pluginNames = new QStringList();
-	    pluginNames->push_back("ParticleSetVisualization");
-	    pluginNames->push_back("ParticleVisualization");
-	    pluginNames->push_back("MapVisualization");
-	    pluginNames->push_back("MonitorVisualization");
-	    pluginNames->push_back("SonarPointVisualization");
+            QStringList *pluginNames = new QStringList();
+            pluginNames->push_back("ParticleSetVisualization");
+            pluginNames->push_back("ParticleVisualization");
+            pluginNames->push_back("MapVisualization");
+            pluginNames->push_back("MonitorVisualization");
+            pluginNames->push_back("SonarPointVisualization");
+            pluginNames->push_back("SimpleGridVisualization");
 
 	    return pluginNames;
 	}
@@ -52,7 +54,11 @@ namespace uw_localization {
 	    else if(pluginName == "SonarPointVisualization")
 	    {
 	      plugin = new vizkit3d::SonarPointVisualization();
-	    }	    
+	    }
+	    else if(pluginName == "SimpleGridVisualization")
+           {
+              plugin = new vizkit3d::SimpleGridVisualization();
+           }
 	    else{
 	      std::cout << "No pluginmatch" << std::endl;
 	    }

@@ -14,3 +14,6 @@ Vizkit::UiLoader.register_3d_plugin_for('MonitorVisualization', 'uw_localization
 
 Vizkit::UiLoader.register_3d_plugin('SonarPointVisualization', 'uw_localization', 'SonarPointVisualization')
 Vizkit::UiLoader.register_3d_plugin_for('SonarPointVisualization', 'uw_localization/PointInfo', :updateInfo)
+
+Vizkit::UiLoader.register_3d_plugin('SimpleGridVisualization', 'uw_localization', 'SimpleGridVisualization')
+Vizkit::UiLoader.register_3d_plugin_for('SimpleGridVisualization', "uw_localization/SimpleGrid", :updateSimpleGrid)
