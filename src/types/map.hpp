@@ -8,7 +8,8 @@
 #ifndef UW_LOCALIZATION_SAMPLES_MAP_HPP_
 #define UW_LOCALIZATION_SAMPLES_MAP_HPP_
 
-#include <base/eigen.h>
+#include <base/Eigen.hpp>
+#include <base/Time.hpp>
 #include <string>
 #include <limits>
 #include <vector>
@@ -31,6 +32,8 @@ namespace uw_localization {
   
   struct SimpleGrid{
     
+    
+    base::Time time;
     std::vector<SimpleGridElement> grid;
     base::Vector2d origin;
     base::Vector2d span;
