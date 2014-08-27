@@ -128,10 +128,19 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
                 
                 color->push_back(osg::Vec4f(val, 0.0, 0.0, 1.0 ));
                 color->push_back(osg::Vec4f(val, 0.0, 0.0, 1.0 ));
-              }
+              }              
               
-            }
+            }else if(elem.obstacle && elem.static_object){
+                
+                pointsOSG->push_back(osg::Vec3d(x, y, 0.0));
+                pointsOSG->push_back(osg::Vec3d(x, y, 2.0));
+                
+                color->push_back(osg::Vec4f(0.0, 1.0, 0.0, 1.0));
+                color->push_back(osg::Vec4f(0.0, 1.0, 0.0, 1.0));
+                
+            } 
             
+                        
             
             if(!std::isnan(elem.depth)){
             
@@ -204,16 +213,13 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
         
       }
       
-        std::cout << "PointsOSG size: " << pointsOSG->size() << " color size: " << color->size() << std::endl;
-        std::cout << "Invalid count: " << count_invalid << " from " << grid.grid.size() << std::endl;
+//        std::cout << "PointsOSG size: " << pointsOSG->size() << " color size: " << color->size() << std::endl;
+//        std::cout << "Invalid count: " << count_invalid << " from " << grid.grid.size() << std::endl;
         
         drawArrays->setCount(pointsOSG->size());
         pointGeom->setVertexArray(pointsOSG);
         pointGeom->setColorArray(color);
         
-        //if(color->size() > 0){
-        //  pointGeom->setColorArray(color);      
-        //}
     }
 
 }

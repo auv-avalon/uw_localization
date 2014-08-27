@@ -21,12 +21,13 @@ namespace uw_localization {
   struct SimpleGridElement{
     
     SimpleGridElement() :
-      depth(NAN), obstacle(false), obstacle_conf(0.0) {}
+      depth(NAN), obstacle(false), obstacle_conf(0.0), static_object(false), flag(false) {}
 
     double depth;
     bool obstacle;
-    double obstacle_conf;  
-      
+    double obstacle_conf;
+    bool static_object;
+    bool flag;  
       
   };
   

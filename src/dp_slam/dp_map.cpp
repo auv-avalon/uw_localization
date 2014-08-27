@@ -646,13 +646,20 @@ uw_localization::SimpleGrid DPMap::getSimpleGrid(std::list<std::pair<Eigen::Vect
 
   for(std::vector<GridCell>::iterator it = grid.begin(); it != grid.end(); it++){
     
-    /*
+    
     if(it->is_static){
       
-      result.points.push_back( base::Vector3d(it->pos.x(), it->pos.y(), 0.0) );
-      result.colors.push_back(base::Vector4d(0.0, 1.0, 0.0, 1.0) );
+      uw_localization::SimpleGridElement elem;
       
-    }*/
+      result.getCell(it->pos.x(), it->pos.y(), elem);
+      
+      elem.obstacle = true;
+      elem.static_object = true;
+      elem.obstacle_conf = NAN;
+      
+      result.setCell(it->pos.x(), it->pos.y(), elem);
+      
+    }
     
     if( !std::isinf(it->static_depth_variance) ){
       
