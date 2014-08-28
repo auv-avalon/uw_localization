@@ -365,7 +365,7 @@ ObstacleFeature DPMap::getObstacleFeature(GridCell &cell, int64_t id, bool flag)
 
 
 
-void DPMap::setDepthFeature(GridCell &cell, int64_t id, DepthFeature feature){
+void DPMap::setDepthFeature(GridCell &cell, int64_t id, DepthFeature &feature){
   
   for(std::list<DepthFeature>::iterator it = cell.depth_features.begin(); it != cell.depth_features.end(); it++){
     
@@ -377,7 +377,7 @@ void DPMap::setDepthFeature(GridCell &cell, int64_t id, DepthFeature feature){
   
 }
 
-void DPMap::setObstacleFeature(GridCell &cell, int64_t id, ObstacleFeature feature){
+void DPMap::setObstacleFeature(GridCell &cell, int64_t id, ObstacleFeature &feature){
   
   for(std::list<ObstacleFeature>::iterator it = cell.obstacle_features.begin(); it != cell.obstacle_features.end(); it++){
     
@@ -562,12 +562,11 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
   return result;
 }
 
-uw_localization::SimpleGrid DPMap::getSimpleGrid(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+void DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                           std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                           double confidence_threshold, int count_threshold){
 
-  uw_localization::SimpleGrid result;
-  result.init(position, span, resolution);
+  simple_grid.init(position, span, resolution);
   
 
   for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
@@ -589,11 +588,11 @@ uw_localization::SimpleGrid DPMap::getSimpleGrid(std::list<std::pair<Eigen::Vect
 
           SimpleGridElement elem;
           
-          result.getCell(it->first.x(), it->first.y(), elem);
+          simple_grid.getCell(it->first.x(), it->first.y(), elem);
           
           elem.depth = it_features->depth;
           
-          result.setCell(it->first.x(), it->first.y(), elem);
+          simple_grid.setCell(it->first.x(), it->first.y(), elem);
           
 
         }
@@ -625,7 +624,7 @@ uw_localization::SimpleGrid DPMap::getSimpleGrid(std::list<std::pair<Eigen::Vect
           ( it_features->obstacle_confidence > confidence_threshold || it_features->obstacle_count > count_threshold || it_features->is_obstacle(confidence_threshold) ) ){
 
           SimpleGridElement elem;
-          result.getCell(it->first.x(), it->first.y(), elem);
+          simple_grid.getCell(it->first.x(), it->first.y(), elem);
         
           elem.obstacle = true;
         
@@ -636,7 +635,7 @@ uw_localization::SimpleGrid DPMap::getSimpleGrid(std::list<std::pair<Eigen::Vect
             elem.obstacle_conf = 1.0;
           }
            
-          result.setCell(it->first.x(), it->first.y(), elem); 
+          simple_grid.setCell(it->first.x(), it->first.y(), elem); 
 
         }
         
@@ -651,13 +650,13 @@ uw_localization::SimpleGrid DPMap::getSimpleGrid(std::list<std::pair<Eigen::Vect
       
       uw_localization::SimpleGridElement elem;
       
-      result.getCell(it->pos.x(), it->pos.y(), elem);
+      simple_grid.getCell(it->pos.x(), it->pos.y(), elem);
       
       elem.obstacle = true;
       elem.static_object = true;
       elem.obstacle_conf = NAN;
       
-      result.setCell(it->pos.x(), it->pos.y(), elem);
+      simple_grid.setCell(it->pos.x(), it->pos.y(), elem);
       
     }
     
@@ -665,17 +664,16 @@ uw_localization::SimpleGrid DPMap::getSimpleGrid(std::list<std::pair<Eigen::Vect
       
         uw_localization::SimpleGridElement elem;
       
-        result.getCell(it->pos.x(), it->pos.y(), elem);
+        simple_grid.getCell(it->pos.x(), it->pos.y(), elem);
         
         elem.depth = it->static_depth;
         
-        result.setCell(it->pos.x(), it->pos.y(), elem);     
+        simple_grid.setCell(it->pos.x(), it->pos.y(), elem);     
       
     }
     
   }
   
-  return result;
 }
 
 

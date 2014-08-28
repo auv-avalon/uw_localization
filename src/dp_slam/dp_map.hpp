@@ -95,7 +95,7 @@ namespace uw_localization{
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);
    
-   uw_localization::SimpleGrid getSimpleGrid(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+   void getSimpleGrid( uw_localization::SimpleGrid &grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);   
    
@@ -113,8 +113,8 @@ namespace uw_localization{
    DepthFeature getDepthFeature(GridCell &cell, int64_t id, bool flag = false);
    ObstacleFeature getObstacleFeature(GridCell &cell, int64_t id, bool flag = false);
    
-   void setDepthFeature(GridCell &cell, int64_t id, DepthFeature feature);
-   void setObstacleFeature(GridCell &cell, int64_t id, ObstacleFeature feature);
+   void setDepthFeature(GridCell &cell, int64_t id, DepthFeature &feature);
+   void setObstacleFeature(GridCell &cell, int64_t id, ObstacleFeature &feature);
    
    /**
     * Remove all unused features
