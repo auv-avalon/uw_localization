@@ -13,7 +13,6 @@
 #include <string>
 #include <limits>
 #include <vector>
-#include "../maps/depth_obstacle_grid.hpp"
 
 namespace uw_localization {
 

@@ -95,7 +95,11 @@ namespace uw_localization{
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);
    
-   void getSimpleGrid( uw_localization::SimpleGrid &grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+   /**
+    * Params like getCloud
+    * Return is the maximum number of features per cell
+    */
+   int getSimpleGrid( uw_localization::SimpleGrid &grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                       std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);   
    

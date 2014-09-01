@@ -562,12 +562,12 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
   return result;
 }
 
-void DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+int DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                           std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                           double confidence_threshold, int count_threshold){
 
   simple_grid.init(position, span, resolution);
-  
+  int max_features_per_cell = 0;
 
   for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
       
@@ -645,6 +645,10 @@ void DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid, std::list<st
 
   for(std::vector<GridCell>::iterator it = grid.begin(); it != grid.end(); it++){
     
+    if(it->obstacle_features.size() > max_features_per_cell){
+      max_features_per_cell = it->obstacle_features.size();
+    }
+    
     
     if(it->is_static){
       
@@ -674,6 +678,8 @@ void DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid, std::list<st
     
   }
   
+  return max_features_per_cell;
+  
 }
 
 
@@ -684,6 +690,9 @@ int64_t DPMap::getNewID(){
 
 void DPMap::reduceFeatures(double confidence_threshold, int count_threshold){
 
+  std::cout << "Reduce features" << std::endl;
+  int i = 0;
+  
   //Iterate through grid cells
   for(std::vector<GridCell>::iterator it = grid.begin(); it!= grid.end(); it++){
     
@@ -696,7 +705,8 @@ void DPMap::reduceFeatures(double confidence_threshold, int count_threshold){
         && it_f->obstacle_count < count_threshold && !it_f->is_obstacle(confidence_threshold)  ) )
       {
         it_f = it->obstacle_features.erase(it_f);
-                
+        i++;    
+        
         if(it_f == it->obstacle_features.end())
            break;
         
@@ -731,6 +741,9 @@ void DPMap::reduceFeatures(double confidence_threshold, int count_threshold){
     
   }
 
+  std::cout << "Deleted " << i << " features." << std::endl;
+  std::cout << "################" << std::endl;
+  
 }
 
 
