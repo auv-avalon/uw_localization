@@ -182,6 +182,11 @@ class ParticleFilter {
     virtual bool isValid(const P& X) const = 0;
     
     /**
+     * Sets a particle to valid or invalid
+     */
+    virtual void setValid(P& X, bool flag) const = 0;
+    
+    /**
      *
      */
     virtual double confidence(const P& X) const = 0;
@@ -479,6 +484,29 @@ class ParticleFilter {
           changed_particles = true;
 
       }
+      
+void teleportParticles(const base::samples::RigidBodyState& pose)
+{
+   
+    for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
+        position(*it) = pose.position;
+        setConfidence(*it, 1.0 / particles.size() );
+      
+    }
+}
+
+
+/**
+* Sets all particles in valid-mode. This method should be called after a resampling
+*/
+void setParticlesValid(){
+
+  for(ParticleIterator it = particles.begin(); it != particles.end(); it++){
+    setValid(*it, true);
+  }
+  
+  
+}
   
   protected:
       std::list<P> particles;
