@@ -184,7 +184,7 @@ class ParticleFilter {
     /**
      * Sets a particle to valid or invalid
      */
-    virtual void setValid(P& X, bool flag) const = 0;
+    virtual void setValid(P& X, bool flag) = 0;
     
     /**
      *
