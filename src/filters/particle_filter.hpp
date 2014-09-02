@@ -273,7 +273,11 @@ class ParticleFilter {
           state.position.y() = last_pose.y();
           state.cov_position = last_cov;
         }
-          
+        
+        state.cov_velocity = base::Matrix3d::Identity();
+        state.cov_orientation = base::Matrix3d::Identity();
+        state.cov_angular_velocity = base::Matrix3d::Identity();
+        
         last_pose = state.position;
         last_cov = state.cov_position;
         changed_particles = false;         

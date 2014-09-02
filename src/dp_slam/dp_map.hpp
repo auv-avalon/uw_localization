@@ -91,16 +91,17 @@ namespace uw_localization{
     * @param confidence_threshold: observations, with confidence below this threshold will be ignored
     * @param count_threshold: ignore observation_confidence, if a obstacle was observed this often
     */
-   base::samples::Pointcloud getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
-                                      std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
+   base::samples::Pointcloud getCloud(std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+                                      std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);
    
    /**
     * Params like getCloud
     * Return is the maximum number of features per cell
     */
-   int getSimpleGrid( uw_localization::SimpleGrid &grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
-                                      std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
+   int getSimpleGrid( uw_localization::SimpleGrid &grid,
+                                      std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+                                      std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);   
    
    
@@ -133,7 +134,8 @@ namespace uw_localization{
     * @param id: list of all observations
     * @return: list of checked cells, which have obstacles and are part of the observation list
     */
-   std::list< std::pair<Eigen::Vector2d, double > > getObservedCells(std::vector<Eigen::Vector2d> &cells, std::list<std::pair<Eigen::Vector2d,int64_t > > &ids);
+   std::list< std::pair<Eigen::Vector2d, double > > getObservedCells(std::vector<Eigen::Vector2d> &cells,
+                                                                     std::map< std::pair<double,double>, std::pair<Eigen::Vector2d,int64_t > > &ids);
    
    
    /**

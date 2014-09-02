@@ -162,7 +162,7 @@ int64_t DPMap::setDepth(double x, double y, double depth, double variance, int64
     f.depth = depth;
     f.depth_variance = variance;
     f.used = true;
-    elem.depth_features.push_back(f);
+    elem.depth_features[id] = f;
     return id;    
     //std::cout << "Set new depth: " << depth << " var: " << f.depth_variance << std::endl;
   }
@@ -180,7 +180,7 @@ int64_t DPMap::setDepth(double x, double y, double depth, double variance, int64
     //std::cout << "Correct depth: " << depth << " - old depth: " << temp_depth << " - new depth: " << f.depth << " k: " << k << " depth_variance: " << f.depth_variance << std::endl;
     
     f.used = true;
-    elem.depth_features.push_back(f);
+    elem.depth_features[id] = f;
     return id;
     
   }
@@ -240,7 +240,7 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
       feature.id = id;
       feature.used = true;
       //std::cout << "Set new feature, x: " << x << " y: " << y << " id: " << id << std::endl;
-      elem.obstacle_features.push_back(feature);
+      elem.obstacle_features[id] = feature;
       return id;
     }
     else{  //Do not set initial empty cells!
@@ -285,7 +285,7 @@ int64_t DPMap::setObstacle(double x, double y, bool obstacle, double confidence,
     feature.id = id;
     feature.used = true;
     //std::cout << "Set feature again, x: " << x << " y: " << y << " id: " << id << std::endl;
-    elem.obstacle_features.push_back(feature);
+    elem.obstacle_features[id] = feature;
     return id;  
     
   }
@@ -325,41 +325,23 @@ void DPMap::touchObstacleFeature(double x, double y, int64_t id){
 
 DepthFeature DPMap::getDepthFeature(GridCell &cell, int64_t id, bool flag){
  
-  for(std::list<DepthFeature>::iterator it = cell.depth_features.begin(); it != cell.depth_features.end(); it++){
-    
-    if(it->id == id){
-      
-      if(flag){
-        it->used = true;
-      }
-      
-      return *it;
-    
-    }
-      
-  }
+  std::map<int64_t, DepthFeature>::iterator it = cell.depth_features.find(id);
   
-  return DepthFeature();
+  if(it == cell.depth_features.end())
+    return DepthFeature();
+  
+  return it->second;  
   
 }
 
 ObstacleFeature DPMap::getObstacleFeature(GridCell &cell, int64_t id, bool flag){
  
-  for(std::list<ObstacleFeature>::iterator it = cell.obstacle_features.begin(); it != cell.obstacle_features.end(); it++){
-    
-    if(it->id == id){
-      
-      if(flag){
-        it->used = true;
-      }
-      
-      return *it;
-    
-    }
-      
-  }
+  std::map<int64_t, ObstacleFeature >::iterator it = cell.obstacle_features.find(id);
   
-  return ObstacleFeature();
+  if(it == cell.obstacle_features.end())
+    return ObstacleFeature();
+  
+  return it->second;
   
 }
 
@@ -367,25 +349,14 @@ ObstacleFeature DPMap::getObstacleFeature(GridCell &cell, int64_t id, bool flag)
 
 void DPMap::setDepthFeature(GridCell &cell, int64_t id, DepthFeature &feature){
   
-  for(std::list<DepthFeature>::iterator it = cell.depth_features.begin(); it != cell.depth_features.end(); it++){
-    
-    if(it->id == id){
-      *it = feature;
-    }
-    
-  }  
+  cell.depth_features[id] = feature;
+
   
 }
 
 void DPMap::setObstacleFeature(GridCell &cell, int64_t id, ObstacleFeature &feature){
   
-  for(std::list<ObstacleFeature>::iterator it = cell.obstacle_features.begin(); it != cell.obstacle_features.end(); it++){
-    
-    if(it->id == id){
-      *it = feature;
-    }
-    
-  }  
+  cell.obstacle_features[id] = feature;
   
 }
 
@@ -429,8 +400,8 @@ void DPMap::setObstacleDepthConfidence(std::vector<ObstacleDepthConfidence> &dep
 }
 
 
-base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
-                                          std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
+base::samples::Pointcloud DPMap::getCloud(std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+                                          std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                           double confidence_threshold, int count_threshold){
 
   base::samples::Pointcloud result;
@@ -442,27 +413,26 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
   int i = 0;
   int var_i = 0;
   //Create depth output
-  for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
+  for(std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
       
-      Eigen::Vector2i ID = getCellID(it->first.x(), it->first.y());
+      Eigen::Vector2i ID = getCellID(it->second.first.x(), it->second.first.y());
       
       if(ID.x() < 0)
         continue;
       
       GridCell cell = get(ID.x(), ID.y());
-          
-      for(std::list<DepthFeature>::iterator it_features = cell.depth_features.begin(); it_features != cell.depth_features.end(); it_features++){
-    
-        if(it_features->id != it->second)
-          continue;
+      
+      std::map<int64_t, DepthFeature>::iterator it_features = cell.depth_features.find( it->second.second);
+      
+      if(it_features != cell.depth_features.end()){
         
         i++;
         
-        if(it_features->depth_variance > 0.0){
+        if(it_features->second.depth_variance > 0.0){
           
           var_i++;
           
-          base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->depth);
+          base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->second.depth);
           result.points.push_back(vec);
           result.colors.push_back(base::Vector4d(1.0, 1.0, 1.0, 1.0  ) );
         }
@@ -480,31 +450,28 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
   int below_count_threshold = 0;
   
   //Create obstacle output
-  for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = obstacle_cells.begin(); it != obstacle_cells.end(); it++){
+  for(std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > >::iterator it = obstacle_cells.begin(); it != obstacle_cells.end(); it++){
       
-      Eigen::Vector2i ID = getCellID(it->first.x(), it->first.y());
+      Eigen::Vector2i ID = getCellID(it->second.first.x(), it->second.first.y());
       
       if(ID.x() < 0)
         continue;    
     
       GridCell cell = get(ID.x(), ID.y()); 
+      
+      std::map<int64_t, ObstacleFeature>::iterator it_features = cell.obstacle_features.find( it->second.second);
     
-      //Search for features with correspoding id
-      for(std::list<ObstacleFeature>::iterator it_features = cell.obstacle_features.begin(); it_features != cell.obstacle_features.end(); it_features++){
-    
-        //Wrong id
-        if(it_features->id != it->second){
-          continue;
-        }
+      if(it_features != cell.obstacle_features.end()){
+      
           
         //Use feature, if it is an obstacle and has a strong confidence or was obsered many times
-        if(confidence_threshold < 1.0 && it_features->obstacle   && 
-          ( it_features->obstacle_confidence > confidence_threshold || it_features->obstacle_count > count_threshold || it_features->is_obstacle(confidence_threshold) ) ){
+        if(confidence_threshold < 1.0 && it_features->second.obstacle   && 
+          ( it_features->second.obstacle_confidence > confidence_threshold || it_features->second.obstacle_count > count_threshold || it_features->second.is_obstacle(confidence_threshold) ) ){
           
-          base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->obstacle_confidence);
+          base::Vector3d vec(cell.pos.x(), cell.pos.y(), it_features->second.obstacle_confidence);
           result.points.push_back(vec);
           
-          double sat = (it_features->obstacle_confidence - confidence_threshold) / (1.0 - confidence_threshold) ;
+          double sat = (it_features->second.obstacle_confidence - confidence_threshold) / (1.0 - confidence_threshold) ;
           
           if(sat > 1.0){
             sat = 1.0;
@@ -513,7 +480,7 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
             sat = 0.0;
           }
           
-          if( it_features->obstacle_count > count_threshold){
+          if( it_features->second.obstacle_count > count_threshold){
             result.colors.push_back(base::Vector4d(0.0, 0.0, 1.0, 1.0) );
           }
           else{
@@ -522,16 +489,16 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
         }else{
           i++;
           
-          if(!it_features->obstacle)
+          if(!it_features->second.obstacle)
             no_obstacle_count++;
           
-          if(it_features->obstacle_confidence <= confidence_threshold)
+          if(it_features->second.obstacle_confidence <= confidence_threshold)
             below_confidence_threshold++;
           
-          if(it_features->obstacle_count <= count_threshold)
+          if(it_features->second.obstacle_count <= count_threshold)
             below_count_threshold++;
           
-          if(!it_features->is_obstacle(confidence_threshold))
+          if(!it_features->second.is_obstacle(confidence_threshold))
             below_depth_obstacle_threshold++;
           
         }
@@ -562,37 +529,37 @@ base::samples::Pointcloud DPMap::getCloud(std::list<std::pair<Eigen::Vector2d,in
   return result;
 }
 
-int DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid, std::list<std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
-                                          std::list<std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
-                                          double confidence_threshold, int count_threshold){
+int DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid,
+                         std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
+                         std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
+                         double confidence_threshold, int count_threshold){
 
   simple_grid.init(position, span, resolution);
   int max_features_per_cell = 0;
 
-  for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
+  for(std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
       
-      Eigen::Vector2i ID = getCellID(it->first.x(), it->first.y());
+      Eigen::Vector2i ID = getCellID(it->second.first.x(), it->second.first.y());
       
       if(ID.x() < 0)
         continue;
       
       GridCell cell = get(ID.x(), ID.y());
+      
+      std::map<int64_t, DepthFeature>::iterator it_features = cell.depth_features.find( it->second.second);
           
-      for(std::list<DepthFeature>::iterator it_features = cell.depth_features.begin(); it_features != cell.depth_features.end(); it_features++){
-    
-        if(it_features->id != it->second)
-          continue;
+      if(it_features != cell.depth_features.end()){
         
         
-        if(it_features->depth_variance > 0.0){
+        if(it_features->second.depth_variance > 0.0){
 
           SimpleGridElement elem;
           
-          simple_grid.getCell(it->first.x(), it->first.y(), elem);
+          simple_grid.getCell(it->second.first.x(), it->second.first.y(), elem);
           
-          elem.depth = it_features->depth;
+          elem.depth = it_features->second.depth;
           
-          simple_grid.setCell(it->first.x(), it->first.y(), elem);
+          simple_grid.setCell(it->second.first.x(), it->second.first.y(), elem);
           
 
         }
@@ -602,40 +569,37 @@ int DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid, std::list<std
 
   
   //Create obstacle output
-  for(std::list<std::pair<Eigen::Vector2d,int64_t > >::iterator it = obstacle_cells.begin(); it != obstacle_cells.end(); it++){
+  for(std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > >::iterator it = obstacle_cells.begin(); it != obstacle_cells.end(); it++){
       
-      Eigen::Vector2i ID = getCellID(it->first.x(), it->first.y());
+      Eigen::Vector2i ID = getCellID(it->second.first.x(), it->second.first.y());
       
       if(ID.x() < 0)
         continue;    
     
       GridCell cell = get(ID.x(), ID.y()); 
+      
+      std::map<int64_t, ObstacleFeature>::iterator it_features = cell.obstacle_features.find( it->second.second);
     
-      //Search for features with correspoding id
-      for(std::list<ObstacleFeature>::iterator it_features = cell.obstacle_features.begin(); it_features != cell.obstacle_features.end(); it_features++){
-    
-        //Wrong id
-        if(it_features->id != it->second){
-          continue;
-        }
+      if(it_features != cell.obstacle_features.end()){
+      
           
         //Use feature, if it is an obstacle and has a strong confidence or was obsered many times
-        if(confidence_threshold < 1.0 && it_features->obstacle   && 
-          ( it_features->obstacle_confidence > confidence_threshold || it_features->obstacle_count > count_threshold || it_features->is_obstacle(confidence_threshold) ) ){
+        if(confidence_threshold < 1.0 && it_features->second.obstacle   && 
+          ( it_features->second.obstacle_confidence > confidence_threshold || it_features->second.obstacle_count > count_threshold || it_features->second.is_obstacle(confidence_threshold) ) ){
 
           SimpleGridElement elem;
-          simple_grid.getCell(it->first.x(), it->first.y(), elem);
+          simple_grid.getCell(it->second.first.x(), it->second.first.y(), elem);
         
           elem.obstacle = true;
         
-          if(it_features->obstacle_count < count_threshold){
-            elem.obstacle_conf = it_features->obstacle_confidence;
+          if(it_features->second.obstacle_count < count_threshold){
+            elem.obstacle_conf = it_features->second.obstacle_confidence;
           }
           else{
             elem.obstacle_conf = 1.0;
           }
            
-          simple_grid.setCell(it->first.x(), it->first.y(), elem); 
+          simple_grid.setCell(it->second.first.x(), it->second.first.y(), elem); 
 
         }
         
@@ -697,14 +661,15 @@ void DPMap::reduceFeatures(double confidence_threshold, int count_threshold){
   for(std::vector<GridCell>::iterator it = grid.begin(); it!= grid.end(); it++){
     
     //Iterate through features per cell
-    for(std::list<ObstacleFeature>::iterator it_f = it->obstacle_features.begin(); it_f != it->obstacle_features.end(); ){
+    for(std::map<int64_t, ObstacleFeature>::iterator it_f = it->obstacle_features.begin(); it_f != it->obstacle_features.end(); ){
       
       //Delete features, if they were unused or if obstacle confidence is below threshold
-      if( (!it_f->used) ||
-        (it_f->obstacle && it_f->obstacle_confidence < confidence_threshold 
-        && it_f->obstacle_count < count_threshold && !it_f->is_obstacle(confidence_threshold)  ) )
+      if( (!it_f->second.used) ||
+        (it_f->second.obstacle && it_f->second.obstacle_confidence < confidence_threshold 
+        && it_f->second.obstacle_count < count_threshold && !it_f->second.is_obstacle(confidence_threshold)  ) )
       {
-        it_f = it->obstacle_features.erase(it_f);
+        it->obstacle_features.erase(it_f);
+        ++it_f;
         i++;    
         
         if(it_f == it->obstacle_features.end())
@@ -712,19 +677,19 @@ void DPMap::reduceFeatures(double confidence_threshold, int count_threshold){
         
       }
       else{
-        it_f->used = false;
+        it_f->second.used = false;
         ++it_f;
       }
       
     }
     
     //Iterate through features per cell
-    for(std::list<DepthFeature>::iterator it_f = it->depth_features.begin(); it_f != it->depth_features.end(); ){
+    for(std::map<int64_t, DepthFeature>::iterator it_f = it->depth_features.begin(); it_f != it->depth_features.end(); it_f++ ){
       
       //Delete features, if they were unused or if obstacle confidence is below threshold
-      if( (!it_f->used) ||  isnan(it_f->depth) )
+      if( (!it_f->second.used) ||  isnan(it_f->second.depth) )
       {
-        it_f = it->depth_features.erase(it_f);
+        it->depth_features.erase(it_f);
                 
         if(it_f == it->depth_features.end())
            break;
@@ -749,7 +714,8 @@ void DPMap::reduceFeatures(double confidence_threshold, int count_threshold){
 
 
 
-std::list< std::pair<Eigen::Vector2d, double > > DPMap::getObservedCells(std::vector<Eigen::Vector2d> &cells, std::list<std::pair<Eigen::Vector2d,int64_t > > &ids){
+std::list< std::pair<Eigen::Vector2d, double > > DPMap::getObservedCells(std::vector<Eigen::Vector2d> &cells,
+                                                                         std::map< std::pair<double,double>  ,std::pair<Eigen::Vector2d,int64_t > > &ids){
   
   std::list< std::pair<Eigen::Vector2d, double > > result;
   
@@ -771,13 +737,11 @@ std::list< std::pair<Eigen::Vector2d, double > > DPMap::getObservedCells(std::ve
     }
         
     //Search for coresponding observation
-    for(std::list<std::pair<Eigen::Vector2d, int64_t > >::iterator it_id = ids.begin(); it_id != ids.end(); it_id++){
-      
-      //Check id      
-      if(*it != it_id->first)
-        continue;     
+    std::map< std::pair<double,double>  ,std::pair<Eigen::Vector2d,int64_t > >::iterator it_id = ids.find( std::make_pair( it->x(), it->y()) );
+    
+    if(it_id != ids.end()){
 
-      ObstacleFeature f = getObstacleFeature(cell, it_id->second, true);
+      ObstacleFeature f = getObstacleFeature(cell, it_id->second.second, true);
         
       if(f.id != 0 && f.obstacle && f.obstacle_confidence > 0.0){
         result.push_back( std::make_pair(*it, f.obstacle_confidence ) );

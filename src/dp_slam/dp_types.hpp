@@ -4,6 +4,7 @@
 #include <base/samples/RigidBodyState.hpp>
 #include <list>
 #include <limits>
+#include <map>
 
 namespace uw_localization{
 
@@ -101,8 +102,8 @@ namespace uw_localization{
     pos(base::Vector2d(NAN, NAN)), is_static(false), static_depth(NAN), static_depth_variance(INFINITY) {}
       
    base::Vector2d pos;
-   std::list<DepthFeature> depth_features;
-   std::list<ObstacleFeature> obstacle_features;
+   std::map<int64_t, DepthFeature> depth_features;
+   std::map<int64_t, ObstacleFeature> obstacle_features;
    bool is_static; //Is there a static feature, e.g prior walls?
    double static_depth; //Static depth_value, eg prior depth_map?
    double static_depth_variance;
@@ -132,8 +133,12 @@ struct PoseSlamParticle {
   bool valid;
 
   static base::samples::RigidBodyState* pose;
-  std::list<std::pair<Eigen::Vector2d,int64_t > > depth_cells; //List of effected refs, with float-id of the assosiated ids
-  std::list<std::pair<Eigen::Vector2d,int64_t > > obstacle_cells;
+  
+  /**
+   * Map of all observations: key is a coordinate pair, value is a air of the observed cell and the observation-id
+   */
+  std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > depth_cells; //List of effected refs, with float-id of the assosiated ids
+  std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > obstacle_cells;
 }; 
 
 }
