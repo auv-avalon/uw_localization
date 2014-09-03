@@ -12,7 +12,60 @@ void DepthObstacleGrid::initDepthObstacleConfig(double min_depth, double max_dep
   this->min_depth = min_depth;
   this->depth_resolution = depth_resolution;
   
-} 
+}
+
+void DepthObstacleGrid::initThresholds(double confidence_threshold, double count_threshold){
+  
+  obstacle_confidence_threshold = confidence_threshold;
+  obstacle_count_threshold = count_threshold;
+  
+}
+
+void DepthObstacleGrid::initalizeStatics(NodeMap *map){
+  
+  Environment env = map->getEnvironment();
+  
+  for(std::vector<Plane>::iterator it = env.planes.begin(); it != env.planes.end(); it++){
+    
+    double plane_length = Eigen::Vector2d( it->span_horizontal.x(), it->span_horizontal.y() ).norm();
+    Eigen::Vector2d step = Eigen::Vector2d( it->span_horizontal.x(), it->span_horizontal.y() ) / (plane_length / (0.5 * resolution) );
+    double step_length = step.norm();
+        
+    Eigen::Vector2d lastCell(NAN, NAN);
+    Eigen::Vector2d pos = Eigen::Vector2d(it->position.x(), it->position.y());
+    
+    //iterate through the cells
+    for(double i = 0.0; i < plane_length; i += step_length){
+      
+      Eigen::Vector2d cell_coord = getGridCoord( pos.x(), pos.y() );
+      
+      //step was not wide enough, we are still in the same cell
+      if(cell_coord != lastCell){       
+      
+        lastCell = cell_coord;
+        
+        Eigen::Vector2i ID = getCellID(cell_coord.x(), cell_coord.y());
+        
+        //Step was invalid, we are outside the grid
+        if(ID.x() == -1){
+          pos += step;
+          continue;
+        }
+        
+        //Set the cell static
+        GridElement &elem = get(ID.x(), ID.y());      
+        elem.static_obstacle = true;
+                
+      }
+      
+      pos += step;
+      
+    }
+    
+  }
+  
+}
+
 
 
 double DepthObstacleGrid::getDepth( double x, double y){
@@ -90,7 +143,7 @@ void DepthObstacleGrid::setObstacle(double x, double y, bool obstacle, double co
       elem.obstacle_count++;
     
   }  
-  else if(obstacle && confidence > 0.0){
+  else if(confidence > 0.0){
    
     setObstacleDepthConfidence(elem.obstacle_depth_confidence, min_depth, max_depth, confidence, obstacle);
     
@@ -116,12 +169,10 @@ void DepthObstacleGrid::setObstacle(double x, double y, bool obstacle, double co
       elem.obstacle_count++;
     }
       
-    if(elem.obstacle_confidence <= 0.0 && !elem.is_obstacle(0.0000001)){ // We have no confidence in this feature
+    if(elem.obstacle_confidence <= obstacle_confidence_threshold && !elem.is_obstacle(obstacle_confidence_threshold) && elem.obstacle_count < obstacle_count_threshold){ // We have no confidence in this feature
       elem.obstacle = false; 
-    }    
-    
-    
-    
+      elem.obstacle_count = 0;
+    } 
     
   }
    
@@ -196,7 +247,7 @@ base::samples::Pointcloud DepthObstacleGrid::getCloud(){
 
 
 void DepthObstacleGrid::getSimpleGrid( uw_localization::SimpleGrid &simple_grid ,double confidence_threshold, int count_threshold ){
- std::cout << "Get simple grid " << std::endl; 
+ //std::cout << "Get simple grid " << std::endl; 
  simple_grid.init(position, span, resolution); 
   
  for(std::vector<GridElement>::iterator it = grid.begin(); it != grid.end(); it++){
@@ -212,7 +263,7 @@ void DepthObstacleGrid::getSimpleGrid( uw_localization::SimpleGrid &simple_grid 
           simple_grid.setCell(it->pos.x(), it->pos.y(), elem);    
    }
    
-   if( it->obstacle || it->obstacle_count > count_threshold){
+   if( (it->obstacle && it->obstacle_confidence > confidence_threshold) || it->is_obstacle(confidence_threshold) || it->obstacle_count > count_threshold){
      
           SimpleGridElement elem;
           
@@ -220,18 +271,34 @@ void DepthObstacleGrid::getSimpleGrid( uw_localization::SimpleGrid &simple_grid 
           
           elem.obstacle = true;
           elem.obstacle_conf = it->obstacle_confidence;
+          double conf_depth = it->get_obstacle_confidence();
           
           if(it->obstacle_count > count_threshold){
             elem.obstacle_conf = 1.0;
           }
+          else if(conf_depth > elem.obstacle_conf){
+            elem.obstacle_conf = conf_depth;
+          }
           
           simple_grid.setCell(it->pos.x(), it->pos.y(), elem);  
-          std::cout << "Add cell " << it->pos.transpose() << std::endl;
-   } 
+          //std::cout << "Add cell " << it->pos.transpose() << std::endl;
+   }
    
+   if( it->static_obstacle){
+     
+     SimpleGridElement elem;
+     simple_grid.getCell(it->pos.x(), it->pos.y(), elem);
+     
+     elem.static_object = true;
+     elem.obstacle = true;
+     
+     simple_grid.setCell(it->pos.x(), it->pos.y(), elem);
+     
+     
+   }   
    
  }
-  std::cout << "----------------" << std::endl;
+  //std::cout << "----------------" << std::endl;
   
 }
 
