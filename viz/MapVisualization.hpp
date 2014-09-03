@@ -7,6 +7,7 @@
 #include <osg/Geometry>
 #include <osg/Group>
 #include <uw_localization/types/environment.hpp>
+#include <base/samples/RigidBodyState.hpp>
 #include <QString>
 
 namespace vizkit3d {
@@ -45,7 +46,6 @@ class MapVisualization
      void updatePlaneNode(osg::Geode* geode, const uw_localization::Plane& plane);
 
  private:
-     osg::ref_ptr<osg::Group> plane_group;
      osg::ref_ptr<osg::Vec3Array> border_points;
      osg::ref_ptr<osg::Vec4Array> border_colors;
      osg::ref_ptr<osg::Geometry>  border_geom;
@@ -55,6 +55,13 @@ class MapVisualization
      osg::ref_ptr<osg::Vec3Array> landmark_points;
      osg::ref_ptr<osg::Vec4Array> landmark_colors;
      osg::ref_ptr<osg::Geometry>  landmark_geom;
+     
+     osg::ref_ptr<osg::Group> plane_group;
+     osg::ref_ptr<osg::Vec3Array> plane_points;
+     osg::ref_ptr<osg::Vec4Array> plane_colors;
+     osg::ref_ptr<osg::Geometry>  plane_geom;
+     osg::ref_ptr<osg::DrawArrays> plane_draw_array;
+     
 
      bool updated;
      int resolution;

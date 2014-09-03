@@ -20,6 +20,7 @@ osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
     osg::ref_ptr<osg::Group> root = new osg::Group;
     osg::ref_ptr<osg::Geode> border_geode(new osg::Geode);
     osg::ref_ptr<osg::Geode> landmark_geode(new osg::Geode);
+    osg::ref_ptr<osg::Geode> plane_geode(new osg::Geode);
     plane_group = new osg::Group;
 
     grid = new osg::DrawArrays(osg::PrimitiveSet::LINES, 18, 0);
@@ -35,6 +36,19 @@ osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
 
     border_geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     border_geode->addDrawable(border_geom.get());
+    
+    plane_points = new osg::Vec3Array;
+    plane_colors = new osg::Vec4Array;
+    plane_colors->push_back(osg::Vec4(1,1,0,1));
+
+    plane_geom = new osg::Geometry;
+    plane_draw_array = new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, plane_points->size());
+    plane_geom->addPrimitiveSet(plane_draw_array);
+    plane_geom->setColorArray(plane_colors.get());
+    plane_geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+
+    plane_geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    plane_geode->addDrawable(plane_geom.get());
  
     landmark_points = new osg::Vec3Array;
     landmark_colors = new osg::Vec4Array;
@@ -49,7 +63,7 @@ osg::ref_ptr<osg::Node> MapVisualization::createMainNode()
     landmark_geode->addDrawable(landmark_geom.get());
     
     root->addChild(border_geode.get());
-    root->addChild(plane_group.get());
+    root->addChild(plane_geode.get());
     root->addChild(landmark_geode.get());
 
     setDirty();
@@ -136,6 +150,7 @@ void MapVisualization::renderEnvironment(const uw_localization::Environment& env
 
     unsigned grid_vertices = 0;
 
+    /* TODO re-add for grid-visualization
     while( dy <= width * 0.5 ) {
         border_points->push_back(osg::Vec3d(centre_x - height / 2.0, centre_y + dy, R.z()));
         border_points->push_back(osg::Vec3d(centre_x + height / 2.0, centre_y + dy, R.z()));
@@ -156,27 +171,35 @@ void MapVisualization::renderEnvironment(const uw_localization::Environment& env
         dx += resolution;
         grid_vertices += 4;
     }
-
+*/
+    
     grid->setCount(grid_vertices);
-
-    while(env.planes.size() > plane_group->getNumChildren()) {
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-        osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
-
-        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 5)); 
-
-        geom->setColorBinding(osg::Geometry::BIND_OVERALL);
-        geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-        geode->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
-        geode->addDrawable(geom.get());
-
-        plane_group->addChild(geode);
+    
+    plane_points->clear();
+    plane_colors->clear();
+    
+/*    for(int i = 0; i < env.planes.size(); i++){
+          osg::Vec3d pos(env.planes[i].position.x(), env.planes[i].position.y(), env.planes[i].position.z());
+          osg::Vec3d sh(env.planes[i].span_horizontal.x(), env.planes[i].span_horizontal.y(), env.planes[i].span_horizontal.z());
+          osg::Vec3d sv(env.planes[i].span_vertical.x(), env.planes[i].span_vertical.y(), env.planes[i].span_vertical.z());
+      
+      if(base::samples::RigidBodyState::isValidValue(env.planes[i].position) &&
+        base::samples::RigidBodyState::isValidValue(env.planes[i].span_horizontal) &&
+        base::samples::RigidBodyState::isValidValue(env.planes[i].span_vertical) ){  
+            
+            plane_points->push_back(pos);
+            plane_points->push_back(pos + sh);
+            plane_points->push_back(pos + sh + sv);
+            plane_points->push_back(pos + sv);          
+            plane_colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.3));
+            plane_colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.3));
+            plane_colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.3));
+            plane_colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.3));      
+            
+      }
+      
     }
-
-    for(unsigned i = 0; i < plane_group->getNumChildren(); i++) {
-        updatePlaneNode(dynamic_cast<osg::Geode*>(plane_group->getChild(i)), env.planes[i]);
-    }
-
+*/
     border_geom->setColorArray(border_colors.get());
     border_geom->setVertexArray(border_points.get());
 
@@ -199,6 +222,10 @@ void MapVisualization::renderEnvironment(const uw_localization::Environment& env
             std::cout << "draw landmark" << std::endl;
         }
     }
+    
+    plane_draw_array->setCount(plane_points->size());
+    plane_geom->setColorArray(plane_colors.get());
+    plane_geom->setVertexArray(border_points.get());
 
     dynamic_cast<osg::DrawArrays*>(landmark_geom->getPrimitiveSet(0))->setCount(landmark_points->size());
     landmark_geom->setVertexArray(landmark_points.get());
@@ -219,15 +246,23 @@ void MapVisualization::updatePlaneNode(osg::Geode* geode, const uw_localization:
     osg::Vec3d sh(plane.span_horizontal.x(), plane.span_horizontal.y(), plane.span_horizontal.z());
     osg::Vec3d sv(plane.span_vertical.x(), plane.span_vertical.y(), plane.span_vertical.z());
     
-    vertices->push_back(pos);
-    vertices->push_back(pos + sh);
-    vertices->push_back(pos + sh + sv);
-    vertices->push_back(pos + sv);
+    if(base::samples::RigidBodyState::isValidValue(plane.position) &&
+      base::samples::RigidBodyState::isValidValue(plane.span_horizontal) &&
+      base::samples::RigidBodyState::isValidValue(plane.span_vertical) ){
+    
+        vertices->push_back(pos);
+        vertices->push_back(pos + sh);
+        vertices->push_back(pos + sh + sv);
+        vertices->push_back(pos + sv);
 
-    colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.3));
+        colors->push_back(osg::Vec4d(1.0, 1.0, 1.0, 0.3));
 
-    geom->setVertexArray(vertices.get());
-    geom->setColorArray(colors.get());
+        geom->setVertexArray(vertices.get());
+        geom->setColorArray(colors.get());
+      }
+      else{
+        std::cout << "Detected nan" << std::endl;
+      }
 }
 
 
