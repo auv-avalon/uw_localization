@@ -166,33 +166,7 @@ Eigen::Vector3d LineNode::draw()
     return Eigen::Vector3d();
 }
 
-/*
-boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x)
-{
-    Line measurement = Line::fromTwoPoints(x, v);
-    Point line_point;
 
-    double line_lambda = line.lambda(measurement);
-    if(line_lambda == INFINITY)
-	line_lambda = line.lambda(v);
-
-    if(line_lambda < 0.0)
-	line_point = line.from();
-    else if(line_lambda > 1.0)
-	line_point = line.to();
-    else
-	line_point = line.point(line_lambda);
-
-    double distance = (v - line_point).norm();
-
-    double direction = measurement.lambda(line);
-
-    if(direction <= 0.0 || direction == INFINITY)
-        distance = -distance;
-
-    return boost::tuple<Node*, double, Eigen::Vector3d>(this, distance, line_point);
-}
-*/
 
 boost::tuple<Node*, double, Eigen::Vector3d> LineNode::getNearestDistance(const std::string& caption, const Eigen::Vector3d& v, const Eigen::Vector3d& x){
   
@@ -254,18 +228,7 @@ boost::tuple<Node*, double, Eigen::Vector3d> BoxNode::getNearestDistance(const s
   //Create a line in the direction of the scan. Length is choosen as the distance between the particle and the objekt plus the radius of the object, to make sure, the line crosses the objekt
   Line scan = Line::fromPointDirection(x, Eigen::Vector3d( (distanceX2Point + radius) * cos(v[2]), (distanceX2Point + radius) * sin(v[2]), 0.0) );   
   
-/*
-    std::cout << "Box: " << position.transpose() << std::endl;
-    std::cout << "Radius: " << radius << " lamda: " << scan.distance(position) << std::endl;
-    std::cout << "Scan from " << scan.from().transpose() << " to " << scan.to().transpose() << std::endl; */
-  
-  //Check, if the object is out ouf the scan. If outside, ignore the box
-/*  if( scan.distance(position) > radius){
-    std::cout << "Out of direction" <<scan.distance(position) << " r " << radius << std::endl;
-    return boost::tuple<Node*, double, Eigen::Vector3d>(this, INFINITY, x);
-  }*/
-    
-  //if scan crosses the object, calculte intersections with object lines    
+   
   double distance;
 
   Line width_line;

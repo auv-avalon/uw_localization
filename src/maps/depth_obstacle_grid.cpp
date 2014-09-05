@@ -21,7 +21,7 @@ void DepthObstacleGrid::initThresholds(double confidence_threshold, double count
   
 }
 
-void DepthObstacleGrid::initalizeStatics(NodeMap *map){
+void DepthObstacleGrid::initializeStatics(NodeMap *map){
   
   Environment env = map->getEnvironment();
   
@@ -65,6 +65,64 @@ void DepthObstacleGrid::initalizeStatics(NodeMap *map){
   }
   
 }
+
+bool DepthObstacleGrid::initializeDepth(const std::string &filename, double depth_variance){
+    std::ifstream fin(filename.c_str());
+    if(fin.fail()) {
+        std::cerr << "Could not open input stream from file" << filename.c_str() << std::endl;
+        return false;
+    }
+    
+    YAML::Parser parser(fin);
+    YAML::Node doc;
+    Eigen::Vector3d vec;
+    Eigen::Vector3d last_vec(NAN, NAN, NAN);
+
+    std::cout << "Read yml" << std::endl;
+    
+    while(parser.GetNextDocument(doc)) {
+      std::cout << "Doc size: " << doc.size() << std::endl;
+      for(unsigned i=0;i<doc.size();i++) {
+      
+        doc["position"] >> vec;
+        std::cout << "Vec: " << vec.transpose() << std::endl;
+        
+        if(vec.y() == last_vec.y() && vec.x() - last_vec.x() > resolution ){
+          
+          for(double x = last_vec.x() ; x < vec.x(); x += resolution){
+            setDepth(x, vec.y(), last_vec.z(), depth_variance);
+          }          
+          
+        }
+        else if(vec.y() - last_vec.y() > resolution){ 
+        
+          for( double y = last_vec.y() + resolution; y < vec.y(); y+= resolution){
+           
+            for( double x = - position.x(); x < (- position.x()) + span.x() ; x += resolution){
+              
+              setDepth(x, y, last_vec.z(), depth_variance);
+              
+            }
+            
+          }       
+          
+        
+        }
+        else{
+        
+          setDepth(vec.x(), vec.y(), vec.z(), depth_variance);
+        }
+        
+        
+        last_vec = vec;
+        
+      }
+    }
+
+    return true;
+    
+}
+
 
 
 

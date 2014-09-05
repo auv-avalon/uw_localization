@@ -52,7 +52,7 @@ namespace uw_localization {
       int idx = ((x + origin.x()) / span.x()) * (span.x()/resolution);
       int idy = ((y + origin.y()) / span.y()) * (span.y()/resolution);
       
-      int id = (idy * ( (span.x()/resolution) +1 ) ) + idx;
+      unsigned int id = (idy * ( (span.x()/resolution) +1 ) ) + idx;
       
       if(id >= 0 && id < grid.size()){
         
@@ -70,7 +70,7 @@ namespace uw_localization {
       int idx = ((x + origin.x()) / span.x()) * (span.x()/resolution);
       int idy = ((y + origin.y()) / span.y()) * (span.y()/resolution);
       
-      int id = (idy * ( (span.x()/resolution) +1 ) ) + idx;
+      unsigned int id = (idy * ( (span.x()/resolution) +1 ) ) + idx;
       
       if(id >= 0 && id < grid.size()){
         

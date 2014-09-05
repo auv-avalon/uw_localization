@@ -70,12 +70,15 @@ bool DPMap::initalizeStaticDepth(const std::string &filename){
       
       for(unsigned i=0;i<doc.size();i++) {
       
-        doc[i] >> vec;
+        const YAML::Node& node = doc["values"];
+        node["position"] >> vec;
         setStaticDepth(vec.x(), vec.y(), vec.z(), 0.0);        
         
       }
     }
 
+    return true;
+    
 }
 
 void DPMap::initDepthObstacleConfig(double min_depth, double max_depth, double depth_resolution){
@@ -173,7 +176,6 @@ int64_t DPMap::setDepth(double x, double y, double depth, double variance, int64
     
     double k = f.depth_variance / (variance + f.depth_variance);
     
-    double temp_depth = f.depth;
     f.depth = f.depth + ( k * (depth - f.depth ) ) ;
     f.depth_variance = f.depth_variance - (k * f.depth_variance);
     
@@ -529,13 +531,13 @@ base::samples::Pointcloud DPMap::getCloud(std::map< std::pair<double, double>, s
   return result;
 }
 
-int DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid,
+unsigned int DPMap::getSimpleGrid(uw_localization::SimpleGrid &simple_grid,
                          std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                          std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                          double confidence_threshold, int count_threshold){
 
   simple_grid.init(position, span, resolution);
-  int max_features_per_cell = 0;
+  unsigned int max_features_per_cell = 0;
 
   for(std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > >::iterator it = depth_cells.begin(); it != depth_cells.end(); it++){
       

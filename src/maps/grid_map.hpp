@@ -106,8 +106,8 @@ public:
     result.x() = ((x + position.x()) / span.x()) * (span.x()/resolution);
     result.y() = ((y + position.y()) / span.y()) * (span.y()/resolution);
     
-    int entry = (result.y() * ((span.x()/resolution) +1 ) ) + result.x();
-    if(entry >= grid.size() || entry < 0){
+    unsigned int entry = (result.y() * ((span.x()/resolution) +1 ) ) + result.x();
+    if(result.x() < 0 || result.y() < 0 || entry >= grid.size() ){
       return Eigen::Vector2i(-1, -1);
     }
     

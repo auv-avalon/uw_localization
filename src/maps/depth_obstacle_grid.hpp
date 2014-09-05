@@ -5,8 +5,11 @@
 #include <base/samples/Pointcloud.hpp>
 #include <vector>
 #include <cmath>
-#include <iostream>
 #include <utility>
+#include <string>
+#include <yaml-cpp/yaml.h>
+#include <iostream>
+#include <fstream>
 #include "grid_map.hpp"
 #include "../types/map.hpp"
 #include "node_map.hpp"
@@ -28,8 +31,8 @@ namespace uw_localization {
     GridElement():
       depth_variance(INFINITY),
       depth(NAN),
-      obstacle_confidence(-1.0),
       obstacle(false),
+      obstacle_confidence(-1.0),      
       obstacle_weight(1.0),
       obstacle_count(0),
       pos(base::Vector2d(0,0)),
@@ -41,9 +44,9 @@ namespace uw_localization {
     double obstacle_confidence;
     std::vector<ObstacleConfidence> obstacle_depth_confidence;
     double obstacle_weight;
-    int obstacle_count;
-    bool static_obstacle;
+    int obstacle_count;    
     base::Vector2d pos;
+    bool static_obstacle;
     
    /**
     * Initialie the depth_confidence for this particles
@@ -127,11 +130,19 @@ namespace uw_localization {
  void initDepthObstacleConfig(double min_depth, double max_depth, double depth_resolution);
  void initThresholds(double confidence_threshold, double count_threshold);
  
+ 
+ /**
+  * Load an initial depthmap from a file
+  * @param filename: Path to a yaml-file
+  * @param depth_variance: variance of the depth-data (should be bigger than 0.0)
+  */
+ bool initializeDepth(const std::string &filename, double depth_variance);
+ 
     /**
     * Add static elements to the grid_map
     * Map-planes will be transformed to static grid cells;
     */
-  void initalizeStatics(NodeMap *map);
+  void initializeStatics(NodeMap *map);
  
  void setThresholds(double confidence_threshold, double count_threshold);
   

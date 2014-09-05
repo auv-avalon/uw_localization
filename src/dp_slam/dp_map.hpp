@@ -99,7 +99,7 @@ namespace uw_localization{
     * Params like getCloud
     * Return is the maximum number of features per cell
     */
-   int getSimpleGrid( uw_localization::SimpleGrid &grid,
+   unsigned int getSimpleGrid( uw_localization::SimpleGrid &grid,
                                       std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &depth_cells,
                                       std::map< std::pair<double, double>, std::pair<Eigen::Vector2d,int64_t > > &obstacle_cells,
                                       double confidence_threshold = 0.0, int count_threshold = 0);   
