@@ -44,7 +44,7 @@ namespace uw_localization {
       span = map_span;
       resolution = map_resolution;
       
-      grid.resize( (span.x()/resolution) * (span.y()/resolution));
+      grid.resize( ((span.x()/resolution) + 1) * ((span.y()/resolution) +1) );
     }
     
     bool getCell(double x, double y, SimpleGridElement &elem){

@@ -44,7 +44,7 @@ public:
     this->span = span;
     this->resolution = resolution;
     
-    grid.resize( (span.x()/resolution) * (span.y()/resolution));
+    grid.resize( ((span.x()/resolution) + 1) * ((span.y()/resolution) + 1)  );
 
     std::cout << "Map size: " << grid.size() << std::endl;
     

@@ -82,41 +82,61 @@ bool DepthObstacleGrid::initializeDepth(const std::string &filename, double dept
     
     while(parser.GetNextDocument(doc)) {
       std::cout << "Doc size: " << doc.size() << std::endl;
-      for(unsigned i=0;i<doc.size();i++) {
       
-        doc["position"] >> vec;
-        std::cout << "Vec: " << vec.transpose() << std::endl;
-        
-        if(vec.y() == last_vec.y() && vec.x() - last_vec.x() > resolution ){
+        for(int i = 0; i < doc.size(); i++){
+      
+          //const YAML::Node& node = doc["values"];
+          doc[i]["position"] >> vec;
+          std::cout << "Vec: " << vec.transpose() << std::endl;
           
-          for(double x = last_vec.x() ; x < vec.x(); x += resolution){
-            setDepth(x, vec.y(), last_vec.z(), depth_variance);
-          }          
+          if(vec.y() == last_vec.y() && vec.x() - last_vec.x() > resolution ){
+            
+            for(double x = last_vec.x() ; x < vec.x(); x += resolution){
+              setDepth(x, vec.y(), last_vec.z(), depth_variance);
+            }          
+            
+          }
           
-        }
-        else if(vec.y() - last_vec.y() > resolution){ 
-        
-          for( double y = last_vec.y() + resolution; y < vec.y(); y+= resolution){
-           
-            for( double x = - position.x(); x < (- position.x()) + span.x() ; x += resolution){
-              
-              setDepth(x, y, last_vec.z(), depth_variance);
-              
+          if(vec.y() != last_vec.y() && last_vec.x() < ( - position.x()) + span.x() ){
+            
+            for(double x = last_vec.x() + resolution; x <= (- position.x()) + span.x() ; x += resolution){
+              setDepth( x, last_vec.y(), last_vec.z(), depth_variance);
             }
             
-          }       
+          }
           
-        
-        }
-        else{
-        
+          if(vec.y() != last_vec.y() && vec.x() > ( - position.x())){
+            
+            for(double x = -position.x() ; x < vec.x() ; x += resolution){
+              setDepth( x, vec.y(), last_vec.z(), depth_variance);
+            }
+            
+          }
+          
+          
+          if(vec.y() - last_vec.y() > resolution){ 
+          
+            for( double y = last_vec.y() + resolution; y < vec.y(); y+= resolution){
+            
+              for( double x = - position.x(); x < (- position.x()) + span.x() ; x += resolution){
+                
+                setDepth(x, y, last_vec.z(), depth_variance);
+                
+              }
+              
+            }       
+            
+          
+          }
+          
           setDepth(vec.x(), vec.y(), vec.z(), depth_variance);
+          
+          
+          
+          last_vec = vec;
+        
         }
-        
-        
-        last_vec = vec;
-        
-      }
+     
     }
 
     return true;

@@ -110,7 +110,7 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
             //If obstacle, draw it
             if(elem.obstacle && elem.obstacle_conf > 0){
               pointsOSG->push_back(osg::Vec3d(x, y, 0.0));
-              pointsOSG->push_back(osg::Vec3d(x, y, elem.obstacle));
+              pointsOSG->push_back(osg::Vec3d(x, y, elem.obstacle_conf));
               
               if(elem.obstacle_conf > 1.0){
                 color->push_back(osg::Vec4f(0.0, 0.0, 1.0, 1.0));
