@@ -88,7 +88,7 @@ bool compare_particles(const P& x, const P& y) {
 template <typename P>
 class ParticleFilter {
   public:
-    ParticleFilter() : generation(0), first_perception_received(true)
+    ParticleFilter() : generation(0), first_perception_received(true), changed_particles(true)
     {}
 
     virtual ~ParticleFilter() {}
