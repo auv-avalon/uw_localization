@@ -137,6 +137,7 @@ namespace uw_localization {
   * @param depth_variance: variance of the depth-data (should be bigger than 0.0)
   */
  bool initializeDepth(const std::string &filename, double depth_variance);
+ void saveYML(const std::string &filename);
  
     /**
     * Add static elements to the grid_map

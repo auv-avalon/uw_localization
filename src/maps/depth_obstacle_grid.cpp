@@ -143,6 +143,32 @@ bool DepthObstacleGrid::initializeDepth(const std::string &filename, double dept
     
 }
 
+void DepthObstacleGrid::saveYML(const std::string &filename){
+  
+  YAML::Emitter out;
+  std::ofstream ofstr(filename.c_str());  
+  out << YAML::BeginSeq;
+  
+  for(std::vector<GridElement>::iterator it = grid.begin(); it != grid.end(); it++){
+    
+    if( (!std::isnan(it->depth_variance)) && (!std::isnan(it->depth) ) ){
+      out << YAML::BeginMap;
+      out << YAML::Key << "position";
+      std::vector<double> vals;
+      vals.push_back(it->pos.x());
+      vals.push_back(it->pos.y());
+      vals.push_back(it->depth);
+
+      out << YAML::Value << YAML::Flow << vals;
+      out << YAML::EndMap;
+    }
+    
+    
+  }
+  
+  out << YAML::EndSeq;
+  ofstr << out.c_str();
+}
 
 
 
@@ -393,5 +419,4 @@ void DepthObstacleGrid::reduce_weights(double val){
   }
 }
 
-  
 
