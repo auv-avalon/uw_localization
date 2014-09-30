@@ -20,13 +20,16 @@ namespace uw_localization {
   struct SimpleGridElement{
     
     SimpleGridElement() :
-      depth(NAN), obstacle(false), obstacle_conf(0.0), static_object(false), flag(false) {}
+      depth(NAN), obstacle(false), obstacle_conf(0.0), static_object(false), flag(false), buoy_object(false), buoy_color(base::Vector3d::Zero()) {}
 
     double depth;
     bool obstacle;
     double obstacle_conf;
     bool static_object;
-    bool flag;  
+    bool flag;
+    
+    bool buoy_object;
+    base::Vector3d buoy_color;
       
   };
   

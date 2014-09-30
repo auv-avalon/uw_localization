@@ -21,17 +21,27 @@ osg::ref_ptr< osg::Node > SimpleGridVisualization::createMainNode()
     
     // set up point cloud
     pointGeom = new osg::Geometry;
+    buoyGeom = new osg::Geometry;
     pointsOSG = new osg::Vec3Array;
+    buoyPointsOSG = new osg::Vec3Array;
     pointGeom->setVertexArray(pointsOSG);
+    buoyGeom->setVertexArray(buoyPointsOSG);
     color = new osg::Vec4Array;
+    buoyColor = new osg::Vec4Array;
     pointGeom->setColorArray(color);
-    pointGeom->setColorBinding(osg::Geometry::BIND_PER_VERTEX); //PRIMITIVE_SET);
-    pointGeom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF); 
+    pointGeom->setColorBinding(osg::Geometry::BIND_PER_VERTEX); //PRIMITIVE_SET);    
+    pointGeom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    buoyGeom->setColorArray(buoyColor);
+    buoyGeom->setColorBinding(osg::Geometry::BIND_PER_VERTEX); //PRIMITIVE_SET);    
+    buoyGeom->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);     
     drawArrays = new osg::DrawArrays( osg::PrimitiveSet::LINES, 0, pointsOSG->size() );
+    buoyArrays = new osg::DrawArrays( osg::PrimitiveSet::TRIANGLES, 0, buoyPointsOSG->size() );
     pointGeom->addPrimitiveSet(drawArrays.get());
-
+    buoyGeom->addPrimitiveSet(buoyArrays.get());
+    
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
     geode->addDrawable(pointGeom.get());
+    geode->addDrawable(buoyGeom.get());
     mainNode->addChild(geode);
     
     return mainNode;
@@ -89,7 +99,9 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
       
       updated = false;
       pointsOSG->clear();
-      color->clear();      
+      buoyPointsOSG->clear();
+      color->clear();
+      buoyColor->clear();
       
       base::Vector2d origin = grid.origin;
       base::Vector2d span = grid.span;
@@ -107,7 +119,7 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
           //Get cell for actual coordinates -> check if get is valid
           if(grid.getCell(x, y, elem)){
             
-            //If obstacle, draw it
+/*            //If obstacle, draw it
             if(elem.obstacle && elem.obstacle_conf > 0){
               pointsOSG->push_back(osg::Vec3d(x, y, 0.0));
               pointsOSG->push_back(osg::Vec3d(x, y, elem.obstacle_conf));
@@ -138,7 +150,7 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
                 color->push_back(osg::Vec4f(0.0, 1.0, 0.0, 1.0));
                 color->push_back(osg::Vec4f(0.0, 1.0, 0.0, 1.0));
                 
-            } 
+            } */
             
                         
             
@@ -204,6 +216,16 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
               
             }
             
+            if(elem.buoy_object){
+              
+              buoyPointsOSG->push_back( osg::Vec3(x + (0.5 * resolution), y, 0.0 ) );
+              buoyPointsOSG->push_back( osg::Vec3(x - (0.5 * resolution), y + (0.5 * resolution), 0.0 ) );
+              buoyPointsOSG->push_back( osg::Vec3(x - (0.5 * resolution), y - (0.5 * resolution), 0.0 ) );
+              buoyColor->push_back(osg::Vec4f(elem.buoy_color.x(), elem.buoy_color.y(), elem.buoy_color.z(), 1.0));
+              buoyColor->push_back(osg::Vec4f(elem.buoy_color.x(), elem.buoy_color.y(), elem.buoy_color.z(), 1.0));
+              buoyColor->push_back(osg::Vec4f(elem.buoy_color.x(), elem.buoy_color.y(), elem.buoy_color.z(), 1.0));
+            }
+            
           }
           else{
             count_invalid++;
@@ -217,8 +239,11 @@ void SimpleGridVisualization::updateMainNode(osg::Node* node)
 //        std::cout << "Invalid count: " << count_invalid << " from " << grid.grid.size() << std::endl;
         
         drawArrays->setCount(pointsOSG->size());
-        pointGeom->setVertexArray(pointsOSG);
+        buoyArrays->setCount(buoyPointsOSG->size());
+        pointGeom->setVertexArray(pointsOSG);        
         pointGeom->setColorArray(color);
+        buoyGeom->setVertexArray(buoyPointsOSG);
+        buoyGeom->setColorArray(buoyColor);
         
     }
 

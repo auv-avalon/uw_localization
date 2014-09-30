@@ -43,9 +43,13 @@ class SimpleGridVisualization : public vizkit3d::Vizkit3DPlugin< uw_localization
         osg::Vec4f default_feature_color;
         std::vector< base::Vector3d > channelInfos;
         osg::ref_ptr<osg::Vec3Array> pointsOSG;
+        osg::ref_ptr<osg::Vec3Array> buoyPointsOSG;
         osg::ref_ptr<osg::DrawArrays> drawArrays;
+        osg::ref_ptr<osg::DrawArrays> buoyArrays;
         osg::ref_ptr<osg::Geometry> pointGeom;
+        osg::ref_ptr<osg::Geometry> buoyGeom;
         osg::ref_ptr<osg::Vec4Array> color;
+        osg::ref_ptr<osg::Vec4Array> buoyColor;
         bool updated;
 };
 

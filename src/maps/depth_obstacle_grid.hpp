@@ -16,6 +16,10 @@
 
 namespace uw_localization {
  
+ enum BuoyColor{
+   WHITE, ORANGE, UNKNOWN, NO_BUOY
+ };
+  
  struct ObstacleConfidence{
    
     double lower_border;
@@ -36,7 +40,11 @@ namespace uw_localization {
       obstacle_weight(1.0),
       obstacle_count(0),
       pos(base::Vector2d(0,0)),
-      static_obstacle(false){}
+      static_obstacle(false),
+      buoy_confidence(0.0),
+      orange_buoy_confidence(0.0),
+      white_buoy_confidence(0.0)
+      {}
     
     double depth_variance;
     double depth;
@@ -47,6 +55,10 @@ namespace uw_localization {
     int obstacle_count;    
     base::Vector2d pos;
     bool static_obstacle;
+    
+    double buoy_confidence;
+    double orange_buoy_confidence;
+    double white_buoy_confidence;
     
    /**
     * Initialie the depth_confidence for this particles
@@ -151,8 +163,10 @@ namespace uw_localization {
  void setDepth(double x, double y, double depth, double variance);
  bool getObstacle(double x, double y);
  void setObstacle(double x, double y, bool obstalce, double confidence);
+ void setBuoy( double x, double y, BuoyColor color, double confidence);
+ BuoyColor getBuoy(double x, double y);
  base::samples::Pointcloud getCloud();
- void getSimpleGrid(uw_localization::SimpleGrid &simple_grid, double confidence_threshold = 0.0, int count_threshold = 0);
+ void getSimpleGrid(uw_localization::SimpleGrid &simple_grid, double confidence_threshold = 0.0, int count_threshold = 0, double buoy_threshold = 0.0);
  
  void setObstacleDepthConfidence(std::vector<ObstacleConfidence> &depth_vector, double min, double max, double confidence, bool obstacle); 
  
