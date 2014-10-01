@@ -17,7 +17,7 @@
 namespace uw_localization {
  
  enum BuoyColor{
-   WHITE, ORANGE, UNKNOWN, NO_BUOY
+   WHITE, ORANGE, YELLOW, UNKNOWN, NO_BUOY
  };
   
  struct ObstacleConfidence{
@@ -43,7 +43,8 @@ namespace uw_localization {
       static_obstacle(false),
       buoy_confidence(0.0),
       orange_buoy_confidence(0.0),
-      white_buoy_confidence(0.0)
+      white_buoy_confidence(0.0),
+      yellow_buoy_confidence(0.0)
       {}
     
     double depth_variance;
@@ -59,6 +60,7 @@ namespace uw_localization {
     double buoy_confidence;
     double orange_buoy_confidence;
     double white_buoy_confidence;
+    double yellow_buoy_confidence;
     
    /**
     * Initialie the depth_confidence for this particles

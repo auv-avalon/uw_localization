@@ -299,9 +299,12 @@ void DepthObstacleGrid::setBuoy( double x, double y, BuoyColor color, double con
     if(color == WHITE){
       elem.white_buoy_confidence = elem.white_buoy_confidence + confidence - (elem.white_buoy_confidence * confidence);
     }
-    else{
+    else if(color == ORANGE){
       elem.orange_buoy_confidence = elem.orange_buoy_confidence + confidence - (elem.orange_buoy_confidence * confidence);
     }
+    else if(color == YELLOW){
+      elem.yellow_buoy_confidence = elem.yellow_buoy_confidence + confidence - (elem.yellow_buoy_confidence * confidence);
+    }    
   }
   
 }  
@@ -460,11 +463,14 @@ void DepthObstacleGrid::getSimpleGrid( uw_localization::SimpleGrid &simple_grid 
      
      elem.buoy_object = true;
      
-     if( it->white_buoy_confidence > it->orange_buoy_confidence &&  it->white_buoy_confidence > buoy_threshold){
+     if( it->yellow_buoy_confidence > buoy_threshold){
+        elem.buoy_color = base::Vector3d(0.0, 1.0, 1.0);       
+     }else if( it->white_buoy_confidence < it->orange_buoy_confidence &&  it->orange_buoy_confidence > buoy_threshold){
        elem.buoy_color = base::Vector3d(1.0, 0.0, 0.0);
      }else if( it->white_buoy_confidence > it->orange_buoy_confidence &&  it->white_buoy_confidence > buoy_threshold){
        elem.buoy_color = base::Vector3d(1.0, 1.0, 1.0);
-     }else{
+     }
+     else{
        elem.buoy_color = base::Vector3d(0.0, 0.0, 1.0);
      }
      
