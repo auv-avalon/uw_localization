@@ -507,7 +507,7 @@ void DepthObstacleGrid::getSimpleGrid( uw_localization::SimpleGrid &simple_grid 
      
      Feature f;
      f.position = base::Vector3d( it->pos.x(), it->pos.y(), 0.0);
-     f.position = elem.buoy_color;
+     f.color = elem.buoy_color;
      
      simple_grid.feature_candidates.push_back(f);
      simple_grid.setCell(it->pos.x(), it->pos.y(), elem);
