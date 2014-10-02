@@ -33,11 +33,19 @@ namespace uw_localization {
       
   };
   
+  struct Feature{
+    
+    base::Vector3d color;
+    base::Vector3d position;
+    
+  };
+  
   struct SimpleGrid{
     
     
     base::Time time;
     std::vector<SimpleGridElement> grid;
+    std::vector<Feature> feature_candidates;
     base::Vector2d origin;
     base::Vector2d span;
     double resolution;

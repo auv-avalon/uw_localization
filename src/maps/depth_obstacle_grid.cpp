@@ -282,13 +282,43 @@ void DepthObstacleGrid::setObstacle(double x, double y, bool obstacle, double co
    
 }
 
-void DepthObstacleGrid::setBuoy( double x, double y, BuoyColor color, double confidence){
+bool DepthObstacleGrid::setBuoy( double x, double y, BuoyColor color, double confidence, bool no_neigbors){
   
   Eigen::Vector2i ID = getCellID(x,y);
   //std::cout << "idX: " << idX << " span: " << span.x() << " resolution: " << resolution << " x: " << x << " pos: " << position.x() << std::endl;
   
   if(ID.x() < 0)
-    return;
+    return false;
+  
+  bool ignore = false;
+  
+  if(no_neigbors){
+    
+    for(signed int i = -1; i <= 1; i++){
+     
+      for(signed int j = -1; j <= 1; j++){
+        
+        if(isValid( ID.x() + i, ID.y() + j)){
+          
+          GridElement neighbor = get(ID.x() + i, ID.y() + j);
+          
+          if(neighbor.buoy_confidence > 0.0){
+            ignore = true;
+          }
+          
+        }
+        
+      }      
+    }   
+    
+    
+  }else{
+    ignore = false;
+  }
+  
+  if(ignore){
+    return false;
+  }
   
   GridElement &elem = get(ID.x(), ID.y()); 
   
@@ -305,8 +335,9 @@ void DepthObstacleGrid::setBuoy( double x, double y, BuoyColor color, double con
     else if(color == YELLOW){
       elem.yellow_buoy_confidence = elem.yellow_buoy_confidence + confidence - (elem.yellow_buoy_confidence * confidence);
     }    
-  }
+  }  
   
+  return true;
 }  
   
 BuoyColor DepthObstacleGrid::getBuoy(double x, double y){
@@ -474,6 +505,11 @@ void DepthObstacleGrid::getSimpleGrid( uw_localization::SimpleGrid &simple_grid 
        elem.buoy_color = base::Vector3d(0.0, 0.0, 1.0);
      }
      
+     Feature f;
+     f.position = base::Vector3d( it->pos.x(), it->pos.y(), 0.0);
+     f.position = elem.buoy_color;
+     
+     simple_grid.feature_candidates.push_back(f);
      simple_grid.setCell(it->pos.x(), it->pos.y(), elem);
      
    }

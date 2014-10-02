@@ -134,6 +134,16 @@ public:
 
     return grid[ id];
   }
+  
+  virtual bool isValid(int x, int y){
+    
+    unsigned int entry = (y * ((x/resolution) +1 ) ) + x;
+    if(x < 0 || y < 0 || entry >= grid.size() ){
+      return false;
+    }  
+    
+    return true;
+  }
 
   /**
    * Get a list of gridcell, which intersects with a given scan

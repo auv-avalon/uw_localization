@@ -165,7 +165,7 @@ namespace uw_localization {
  void setDepth(double x, double y, double depth, double variance);
  bool getObstacle(double x, double y);
  void setObstacle(double x, double y, bool obstalce, double confidence);
- void setBuoy( double x, double y, BuoyColor color, double confidence);
+ bool setBuoy( double x, double y, BuoyColor color, double confidence, bool no_neigbors);
  BuoyColor getBuoy(double x, double y);
  base::samples::Pointcloud getCloud();
  void getSimpleGrid(uw_localization::SimpleGrid &simple_grid, double confidence_threshold = 0.0, int count_threshold = 0, double buoy_threshold = 0.0);
