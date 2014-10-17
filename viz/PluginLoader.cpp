@@ -5,7 +5,7 @@
 #include "MonitorVisualization.hpp"
 #include "SonarPointVisualization.hpp"
 #include "SimpleGridVisualization.hpp"
-
+#include <iostream>
 
 namespace uw_localization {
     class QtPluginVizkit : public vizkit3d::VizkitPluginFactory {

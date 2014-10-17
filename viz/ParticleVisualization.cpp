@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <osg/Geometry>
 #include <boost/assert.hpp>
+#include <iostream>
 
 namespace vizkit3d {
 
