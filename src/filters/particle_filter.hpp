@@ -88,7 +88,7 @@ bool compare_particles(const P& x, const P& y) {
 template <typename P>
 class ParticleFilter {
   public:
-    ParticleFilter() : generation(0), first_perception_received(true), changed_particles(true)
+    ParticleFilter() : generation(0), first_perception_received(true), changed_particles(true), mean_position( base::Vector3d::Zero())
     {}
 
     virtual ~ParticleFilter() {}
@@ -322,6 +322,7 @@ class ParticleFilter {
         Perception<P, Z, M>* model = dynamic_cast<Perception<P, Z, M>*>(this);
 
         std::vector<double> perception_weights;
+	perception_weights.reserve(particles.size());
         double sum_perception_weight = 0.0;
         double sum_main_confidence = 0.0;
         double Neff = 0.0;
@@ -345,12 +346,13 @@ class ParticleFilter {
             double uniform = 1.0 / particles.size();
             double w = 1.0 - ratio;
                    
-            double main_confidence = confidence(*it) * ((ratio * (perception_weights[i++] / sum_perception_weight)) 
+            double main_confidence = confidence(*it) * ((ratio * (perception_weights[i] / sum_perception_weight)) 
                 + w * uniform);
 
             setConfidence(*it, main_confidence);
 
             sum_main_confidence += main_confidence;
+	    i++;
         }
 
         // normalize overall confidence
@@ -421,7 +423,7 @@ class ParticleFilter {
      *
      * \return filled particle vector
      */
-    const ParticleSet& getParticleSet() { 
+    const ParticleSet& getParticleSet( base::Vector3d transformation = base::Vector3d::Zero()) { 
         assert(particles.size() > 0);
 
 	ps.particles.clear();
@@ -430,7 +432,7 @@ class ParticleFilter {
 
 	for(ParticleIterator it = particles.begin(); it != particles.end(); it++) {
             Particle p;
-	    p.position = position(*it);
+	    p.position = position(*it) + transformation;
             p.velocity = velocity(*it);
 	    p.yaw = base::getYaw(orientation(*it).orientation);
 	    p.main_confidence = confidence(*it);
